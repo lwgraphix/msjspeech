@@ -1,0 +1,14 @@
+{
+    "require": {
+        "silex/silex": "^2.0",
+        "ddesrosiers/silex-annotation-provider": "^2.0",
+        "twig/twig": "^2.4",
+        "symfony/twig-bridge": "^3.3"
+    },
+
+    "autoload": {
+        "psr-0": {
+            "App": "src/"
+        }
+    }
+}

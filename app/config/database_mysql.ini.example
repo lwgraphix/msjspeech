@@ -1,0 +1,8 @@
+# Database configuration
+# Available variables: host, port, user, pass, db
+
+host    = ""
+port    = ""
+user    = ""
+pass    = ""
+db      = ""

@@ -1,0 +1,9 @@
+_cache/*
+vendor/*
+migrations/vendor/*
+migrations/phinx.yml
+composer.lock
+.idea/*
+/app/config/database_mysql.ini
+/app/config/system.ini
+workspace.xml

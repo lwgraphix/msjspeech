@@ -1,0 +1,5 @@
+# System configuration
+# Variables:
+#   * debug - on/off: enables or disables debug
+
+debug = "on"
