@@ -8,15 +8,11 @@
         .StripeElement {
             background-color: white;
             padding: 8px 12px;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            box-shadow: 0 1px 3px 0 #e6ebf1;
-            -webkit-transition: box-shadow 150ms ease;
-            transition: box-shadow 150ms ease;
+            border: 1px solid #d2d6de;
         }
 
         .StripeElement--focus {
-            box-shadow: 0 1px 3px 0 #cfd7df;
+            border: 1px solid #66afe9;
         }
 
         .StripeElement--invalid {
@@ -38,27 +34,27 @@
 
         <div class="form-group">
             <label for="email">Email address <span style="color: red">*</span></label>
-            <input type="email" required class="form-control" id="email" placeholder="Email">
+            <input name="email" type="email" required class="form-control" id="email" placeholder="Email">
         </div>
 
         <div class="form-group">
             <label for="password">Password <span style="color: red">*</span></label>
-            <input type="password" required class="form-control" id="password" placeholder="Password">
+            <input name="password" onkeyup="passwords_equal()" type="password" required class="form-control" id="password" placeholder="Password">
         </div>
 
         <div class="form-group">
             <label for="confirm_password">Confirm password <span style="color: red">*</span></label>
-            <input type="password" required class="form-control" id="confirm_password" placeholder="Confirm password">
+            <input type="password" onkeyup="passwords_equal()" required class="form-control" id="confirm_password" placeholder="Confirm password">
         </div>
 
         <div class="form-group">
             <label for="first_name">First name <span style="color: red">*</span></label>
-            <input type="text" required class="form-control" id="first_name" placeholder="ex. Alex">
+            <input name="first_name" type="text" required class="form-control" id="first_name" placeholder="ex. Alex">
         </div>
 
         <div class="form-group">
             <label for="last_name">Last name <span style="color: red">*</span></label>
-            <input type="text" required class="form-control" id="last_name" placeholder="ex. Hoffman">
+            <input name="second_name" type="text" required class="form-control" id="last_name" placeholder="ex. Hoffman">
         </div>
 
         <blockquote>
@@ -67,34 +63,42 @@
 
         <div class="form-group">
             <label for="parent_email">Parent email</label>
-            <input type="email" class="form-control" id="parent_email" placeholder="Parent email">
+            <input name="parent_email" type="email" class="form-control" id="parent_email" placeholder="Parent email">
         </div>
 
         <div class="form-group">
             <label for="parent_first_name">Parent first name</label>
-            <input type="text" class="form-control" id="parent_first_name" placeholder="ex. Alex">
+            <input name="parent_first_name" type="text" class="form-control" id="parent_first_name" placeholder="ex. Alex">
         </div>
 
         <div class="form-group">
             <label for="parent_last_name">Parent last name</label>
-            <input type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
+            <input name="parent_last_name" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
         </div>
 
         <blockquote>
             <p>Membership fee</p>
         </blockquote>
-        <h4>Current membership fee: 25$</h4>
+        <h4>Recommended membership fee: 25$</h4>
         <p>It's not required, but if you want pay membership fee, enter your credit card data to form below. Remember, <b>we don't store</b> your credit card data on our servers.</p>
 
-        <div style="margin-bottom: 20px; width: 500px">
+        <div style="width: 500px">
             <div id="card-element"></div>
             <div id="card-errors" class="text-danger" role="alert"></div>
+        </div>
+
+        <div class="input-group" style="width: 180px; margin-bottom: 15px; margin-top: 10px">
+            <span class="input-group-addon">Amount:</span>
+            <input name="fee_amount" class="form-control" style="text-align:right" value="25" type="number">
+            <span class="input-group-addon"><i class="fa fa-usd"></i></span>
         </div>
 
 
         <div class="form-group">
             <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i> Sign up</button>
         </div>
+
+        <input type="hidden" id="stripe_token" name="stripe_token" value=""/>
     </form>
 
 {% endblock %}
@@ -102,6 +106,41 @@
 {% block javascript %}
     <script src="https://js.stripe.com/v3/"></script>
     <script>
+
+        function passwords_equal()
+        {
+            var cp = $("#confirm_password");
+            if (cp.val() === '') return;
+            var pe = $("#password").val() === cp.val();
+            if (pe)
+            {
+                cp.parent().removeClass('has-error').addClass('has-success');
+            }
+            else
+            {
+                cp.parent().removeClass('has-success').addClass('has-error');
+            }
+            return pe;
+        }
+
+        function register(form, token)
+        {
+            if (token !== null)
+            {
+                $("#stripe_token").val(token);
+            }
+
+            if (!passwords_equal())
+            {
+                $('html, body').animate({
+                    scrollTop: $("#confirm_password").offset().top - 25
+                }, 100);
+                return false;
+            }
+
+            form.submit();
+        }
+
         var stripe = Stripe('pk_test_6pRNASCoBOKtIshFeQd4XMUh');
         var elements = stripe.elements();
         var style = {
@@ -136,16 +175,21 @@
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            stripe.createToken(card).then(function(result) {
-                if (result.error) {
-                    // Inform the user if there was an error
-                    var errorElement = document.getElementById('card-errors');
-                    errorElement.textContent = result.error.message;
-                } else {
-                    // Send the token to your server
-                    alert(result.token);
-                }
-            });
+            if ($(".StripeElement--empty").length == 0)
+            {
+                stripe.createToken(card).then(function(result) {
+                    if (result.error) {
+                        var errorElement = document.getElementById('card-errors');
+                        errorElement.textContent = result.error.message;
+                    } else {
+                        register(form, result.token.id);
+                    }
+                });
+            }
+            else
+            {
+                register(form, null);
+            }
 
         });
     </script>
