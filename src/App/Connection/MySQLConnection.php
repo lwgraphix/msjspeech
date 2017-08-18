@@ -59,7 +59,7 @@ class MySQLConnection
             $statement = $this->dbh->prepare($sql);
             $statement->execute($data);
         } catch (PDOException $e) {
-            return false;
+            return $e->getMessage();
         }
 
         if ($returnID) return $this->dbh->lastInsertId();

@@ -22,7 +22,7 @@ class BaseController {
 
         $userRole = (Security::getUser() === null) ? 0 : Security::getUser()->getRole();
 
-        $this->twig->addGlobal('menu', MenuBuilder::build('', $userRole));
+        $this->twig->addGlobal('menu', MenuBuilder::build($userRole));
         $this->twig->addGlobal('user', Security::getUser());
 
         $flash = FlashMessage::get();

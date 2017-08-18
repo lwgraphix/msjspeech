@@ -21,14 +21,7 @@ class MenuBuilder
 
     public static function adminMenu($role)
     {
-        switch($role)
-        {
-            case UserType::ADMINISTRATOR:
-                self::addMenuItem('Admin menu item', '/user/profile', 'user');
-            case UserType::OFFICER:
-                self::addMenuItem('Officer menu item', '/user/profile', 'user');
-            break;
-        }
+        self::addMenuItem('Edit registration form', '/admin/signup/edit', 'user-plus');
 
         return self::generateHTML('', 'Administration');
     }
@@ -43,14 +36,14 @@ class MenuBuilder
     public static function build($role) {
         $menu = null;
 
-        if (!empty($role))
-        {
-            $menu .= self::userMenu();
-        }
-
         if ($role == UserType::ADMINISTRATOR || $role == UserType::OFFICER)
         {
             $menu .= self::adminMenu($role);
+        }
+
+        if (!empty($role))
+        {
+            $menu .= self::userMenu();
         }
 
         $menu .= self::pagesMenu();

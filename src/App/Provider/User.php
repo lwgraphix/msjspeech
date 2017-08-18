@@ -11,6 +11,7 @@ class User
 {
     private $id;
     private $email;
+    private $username;
     private $firstName;
     private $lastName;
     private $parentFirstName;
@@ -18,12 +19,13 @@ class User
     private $parentEmail;
     private $role;
 
-    public static function create($id, $email, $firstName, $lastName, $parentFirstName, $parentLastName, $parentEmail, $role)
+    public static function create($id, $email, $username, $firstName, $lastName, $parentFirstName, $parentLastName, $parentEmail, $role)
     {
         $object = new User();
 
         $object->setId($id);
         $object->setEmail($email);
+        $object->setUsername($username);
         $object->setFirstName($firstName);
         $object->setLastName($lastName);
         $object->setParentFirstName($parentFirstName);
@@ -45,6 +47,7 @@ class User
         return User::create(
             $user['id'],
             $user['email'],
+            $user['username'],
             $user['first_name'],
             $user['last_name'],
             $user['parent_first_name'],
@@ -67,6 +70,7 @@ class User
         return User::create(
             $data['id'],
             $data['email'],
+            $data['username'],
             $data['first_name'],
             $data['last_name'],
             $data['parent_first_name'],
@@ -81,6 +85,7 @@ class User
         $result = [
             'id' => $this->getId(),
             'email' => $this->getEmail(),
+            'username' => $this->getUsername(),
             'first_name' => $this->getFirstName(),
             'last_name' => $this->getLastName(),
             'parent_first_name' => $this->getParentFirstName(),
@@ -122,6 +127,11 @@ class User
     public function setEmail($email)
     {
         $this->email = $email;
+    }
+
+    public function getFullName()
+    {
+        return $this->getFirstName() . ' ' . $this->getLastName();
     }
 
     /**
@@ -218,6 +228,22 @@ class User
     public function setRole($role)
     {
         $this->role = $role;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUsername()
+    {
+        return $this->username;
+    }
+
+    /**
+     * @param mixed $username
+     */
+    public function setUsername($username)
+    {
+        $this->username = $username;
     }
 }
 

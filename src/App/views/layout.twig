@@ -30,12 +30,22 @@
             <!-- Navbar Right Menu -->
             <div class="navbar-custom-menu">
                 <ul class="nav navbar-nav">
-                    <li>
-                        <a href="/auth/login"><i class="fa fa-sign-in"></i> Sign in</a>
-                    </li>
-                    <li>
-                        <a href="/auth/register"><i class="fa fa-user-plus"></i> Sign up</a>
-                    </li>
+                    {% if user is not null %}
+                        <li>
+                            <a href="javascript:;">Welcome back, {{ user.fullName }}!</a>
+                        </li>
+                        <li>
+                            <a href="/auth/logout"><i class="fa fa-sign-out"></i> Logout</a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="/auth/login"><i class="fa fa-sign-in"></i> Sign in</a>
+                        </li>
+                        <li>
+                            <a href="/auth/register"><i class="fa fa-user-plus"></i> Sign up</a>
+                        </li>
+                    {% endif %}
+
                 </ul>
             </div>
 
@@ -60,16 +70,16 @@
         <section class="content-header">
             {% if flash_message is defined %}
                 {% if flash_message.status %}
-                    <div class="alert alert-success alert-dismissible">
+                    <div class="alert alert-success alert-dismissible" style="margin-bottom: 0">
                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                         <h4><i class="icon fa fa-check"></i> Successfully done</h4>
-                        {{ flash_message.text }}
+                        {{ flash_message.text|raw }}
                     </div>
                 {% else %}
-                    <div class="alert alert-danger alert-dismissible">
+                    <div class="alert alert-danger alert-dismissible" style="margin-bottom: 0">
                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                         <h4><i class="icon fa fa-ban"></i> Failed!</h4>
-                        {{ flash_message.text }}
+                        {{ flash_message.text|raw }}
                     </div>
                 {% endif %}
             {% endif %}
