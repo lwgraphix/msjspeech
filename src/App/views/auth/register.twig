@@ -76,6 +76,36 @@
             <input name="parent_last_name" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
         </div>
 
+        {% if attributes|length > 0 %}
+            <blockquote>
+                <p>Other information</p>
+            </blockquote>
+
+            {% for attribute in attributes %}
+                <div class="form-group">
+                    <label for="attr_{{ attribute.id }}">{{ attribute.label }} {{ (attribute.required) ? '<span style="color: red">*</span>' : '' }}</label>
+                    {% if attribute.type == 0 %}
+                        <input {{ (attribute.required) ? 'required' : '' }} name="attr_{{ attribute.id }}" type="text" class="form-control" id="attr_{{ attribute.id }}" placeholder="{{ attribute.placeholder }}">
+                    {% elseif attribute.type == 1 %}
+                        <select {{ (attribute.required) ? 'required' : '' }} class="form-control" name="attr_{{ attribute.id }}">
+                            {% for item in attribute.data %}
+                                <option value="{{ loop.index0 }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    {% elseif attribute.type == 2 %}
+                        <p>Not implemented</p>
+                    {% endif %}
+
+                    {% if attribute.help_text %}
+                        <p class="help-block">{{ attribute.help_text }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+
+
+
         <blockquote>
             <p>Membership fee</p>
         </blockquote>

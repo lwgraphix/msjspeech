@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Model\AlertModel;
 use App\Model\AttributeModel;
 use App\Model\UserModel;
+use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Type\AttributeGroupType;
@@ -53,5 +54,48 @@ class AdminController extends BaseController {
             'attribute_types' => AttributeType::NAMES,
             'attributes' => $attributes
         ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/signup/edit")
+     * )
+     */
+    public function saveSignupPageAction(Request $request)
+    {
+        foreach($request->get('data') as $field)
+        {
+            if (!isset($field['id']))
+            {
+                // create
+                $this->am->create(
+                    AttributeGroupType::REGISTER,
+                    $field['label'],
+                    $field['placeholder'],
+                    $field['help_text'],
+                    $field['type'],
+                    (isset($field['dropdown_item'])) ? $field['dropdown_item'] : null,
+                    $field['required'],
+                    $field['editable'],
+                    (isset($field['tournament_id'])) ? $field['tournament_id'] : null
+                );
+            }
+            else
+            {
+                // update
+                $this->am->update(
+                    $field['id'],
+                    $field['label'],
+                    $field['placeholder'],
+                    $field['help_text'],
+                    (isset($field['dropdown_item'])) ? $field['dropdown_item'] : null,
+                    $field['required'],
+                    $field['editable']
+                );
+            }
+        }
+
+        FlashMessage::set(true, 'Fields updated!');
+        return $this->out('ok');
     }
 }

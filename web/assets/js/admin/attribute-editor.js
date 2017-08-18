@@ -3,14 +3,14 @@ String.prototype.replaceAll = function(search, replacement) {
     return target.replace(new RegExp(search, 'g'), replacement);
 };
 
-var fields = [];
-var fields_count = fields.length;
-
 function addNewField()
 {
     var field_template = $("#input_template").html().replaceAll(/\$1/, fields_count);
-    fields_count++;
     $("#fields").append(field_template);
+    $('html, body').animate({
+        scrollTop: $("#attr_" + fields_count).offset().top - 25
+    }, 1000);
+    fields_count++;
 }
 
 function removeField(object)
@@ -21,9 +21,17 @@ function removeField(object)
 
 function saveFields()
 {
-    var data = $("#attr_0").serializeArray();
-    console.log(data);
-    console.log(_serializeToObject(data));
+    var fields = [];
+    $("#fields").children().each(function() {
+        var id = $(this).data('id');
+        var data = _serializeToObject($(this).serializeArray());
+        data["id"] = id;
+        fields.push(data);
+    });
+
+    $.post(window.location, {data: fields}, function(response) {
+        window.location = window.location; // refresh page scroll
+    });
 }
 
 function _serializeToObject(data)

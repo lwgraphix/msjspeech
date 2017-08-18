@@ -8,6 +8,7 @@ use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
+use App\Type\AttributeGroupType;
 use App\Type\UserType;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -125,7 +126,8 @@ class AuthController extends BaseController
      */
     public function registerUserPageAction(Request $request)
     {
-        return $this->out($this->twig->render('auth/register.twig'));
+        $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+        return $this->out($this->twig->render('auth/register.twig', ['attributes' => $attributes]));
     }
 
     /**
