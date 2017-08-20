@@ -32,13 +32,20 @@ class AttributeModel extends BaseModel
 
     public function getUserAttributes($userId)
     {
-        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, ua.value, a.id, a.placeholder
+        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, ua.value, a.id, ua.id as user_has_attribute, a.placeholder
                 FROM attributes a
                 LEFT JOIN user_attributes ua ON ua.attribute_id = a.id
                 WHERE ua.user_id = :uid OR ua.user_id IS NULL';
         $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
         foreach($data as &$row)
         {
+
+            if ($row['value'] === null && $row['user_has_attribute'] === null)
+            {
+                // user dont have needed attribute - unlock it for first time
+                $row['editable'] = 1;
+            }
+
             if ($row['type'] == AttributeType::DROPDOWN)
             {
                 $row['data'] = json_decode($row['data'], true);

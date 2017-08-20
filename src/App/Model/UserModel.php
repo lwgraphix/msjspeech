@@ -117,7 +117,7 @@ class UserModel extends BaseModel
 
         foreach($attributes as $attribute)
         {
-            if ($attribute['editable'])
+            if ($attribute['editable'] || !in_array($attribute['id'], $userAttributesIds))
             {
                 if (!isset($data['attr_' . $attribute['id']]))
                 {
