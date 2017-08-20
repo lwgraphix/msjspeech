@@ -162,7 +162,7 @@ class AuthController extends BaseController
      */
     public function authLogoutAction(Request $request)
     {
-        Security::setAccessLevel(UserType::SUSPENDED);
+        //Security::setAccessLevel(UserType::SUSPENDED);
         Security::getUserSession()->remove('user');
         return new RedirectResponse('/auth/login');
     }

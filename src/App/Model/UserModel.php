@@ -78,17 +78,18 @@ class UserModel extends BaseModel
         if ($user->getEmail() != $data['email'])
         {
             // check if email is exists
-            $user = MySQL::get()->fetchColumn('SELECT email FROM users WHERE email = :e', [
+            $checkUser = MySQL::get()->fetchColumn('SELECT email FROM users WHERE email = :e', [
                 'e' => $data['email']
             ]);
 
-            if ($user !== false)
+            if ($checkUser !== false)
             {
                 return StatusCode::USER_EMAIL_EXISTS;
             }
         }
 
         $sql = 'UPDATE users SET
+                email = :e,
                 first_name = :fn,
                 last_name = :ln,
                 parent_email = :pe,
@@ -98,6 +99,7 @@ class UserModel extends BaseModel
 
         MySQL::get()->exec($sql, [
             'id' => $user->getId(),
+            'e' => $data['email'],
             'fn' => $data['first_name'],
             'ln' => $data['last_name'],
             'pe' => $data['parent_email'],

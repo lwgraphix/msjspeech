@@ -91,7 +91,7 @@ class UserController extends BaseController
         {
             if ($status == StatusCode::USER_EMAIL_EXISTS)
             {
-                return $this->out(json_encode(['status' => false, 'message' => 'User with this email exists! Try another email or <a href="/auth/restore">restore</a> your account access.']), true);
+                return $this->out(json_encode(['status' => false, 'message' => 'User with this email exists! Try another email.']), true);
             }
             else
             {

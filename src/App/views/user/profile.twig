@@ -102,6 +102,10 @@
                                 {% elseif attribute.type == 2 %}
                                     <p>Not implemented</p>
                                 {% endif %}
+
+                                {% if attribute.help_text %}
+                                    <p class="help-block">{{ attribute.help_text }}</p>
+                                {% endif %}
                             </div>
                         {% endfor %}
 
@@ -127,7 +131,7 @@
             {
                 if (!response.status)
                 {
-                    $("#error-message-text").text(response.message);
+                    $("#error-message-text").html(response.message);
                     $("#error-message").show();
                 }
                 else

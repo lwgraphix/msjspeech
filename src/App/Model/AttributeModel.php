@@ -32,10 +32,9 @@ class AttributeModel extends BaseModel
 
     public function getUserAttributes($userId)
     {
-        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, ua.value, a.id, ua.id as user_has_attribute, a.placeholder
+        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, ua.value, a.id, ua.id as user_has_attribute, a.placeholder, a.help_text
                 FROM attributes a
-                LEFT JOIN user_attributes ua ON ua.attribute_id = a.id
-                WHERE ua.user_id = :uid OR ua.user_id IS NULL';
+                LEFT JOIN user_attributes ua ON ua.attribute_id = a.id AND ua.user_id = :uid';
         $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
         foreach($data as &$row)
         {
