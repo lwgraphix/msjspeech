@@ -3,7 +3,10 @@ namespace App\Model;
 
 use App\Code\StatusCode;
 use App\Connector\MySQL;
+use App\Provider\Model;
 use App\Provider\Security;
+use App\Provider\User;
+use App\Type\AttributeGroupType;
 use App\Type\UserType;
 
 class UserModel extends BaseModel
@@ -50,9 +53,84 @@ class UserModel extends BaseModel
             'i' => $userId
         ]);
 
-        // INSERT CUSTOM ATTRIBUTES!!!!
+        $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+        $attrSQL = 'INSERT INTO user_attributes (user_id, attribute_id, `value`) VALUES (:uid, :aid, :v)';
+        foreach($attributes as $attribute)
+        {
+            if (!isset($data['attr_' . $attribute['id']]))
+            {
+                $data['attr_' . $attribute['id']] = null;
+            }
+
+            MySQL::get()->exec($attrSQL, [
+                'uid' => $userId,
+                'aid' => $attribute['id'],
+                'v' => $data['attr_' . $attribute['id']]
+            ]);
+        }
+
         // TODO: if stripe_token available -> charge user and create transaction
         return true;
+    }
+
+    public function update(User $user, $data)
+    {
+        if ($user->getEmail() != $data['email'])
+        {
+            // check if email is exists
+            $user = MySQL::get()->fetchColumn('SELECT email FROM users WHERE email = :e', [
+                'e' => $data['email']
+            ]);
+
+            if ($user !== false)
+            {
+                return StatusCode::USER_EMAIL_EXISTS;
+            }
+        }
+
+        $sql = 'UPDATE users SET
+                first_name = :fn,
+                last_name = :ln,
+                parent_email = :pe,
+                parent_first_name = :pfn,
+                parent_last_name = :pln
+                WHERE id = :id';
+
+        MySQL::get()->exec($sql, [
+            'id' => $user->getId(),
+            'fn' => $data['first_name'],
+            'ln' => $data['last_name'],
+            'pe' => $data['parent_email'],
+            'pfn' => $data['parent_first_name'],
+            'pln' => $data['parent_last_name']
+        ]);
+
+        $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+        foreach($attributes as $attribute)
+        {
+            if ($attribute['editable'])
+            {
+                if (!isset($data['attr_' . $attribute['id']]))
+                {
+                    $data['attr_' . $attribute['id']] = null;
+                }
+
+                MySQL::get()->exec('UPDATE user_attributes SET `value` = :v WHERE id = :id AND user_id = :uid', [
+                    'v' => $data['attr_' . $attribute['id']],
+                    'id' => $attribute['id'],
+                    'uid' => $user->getId()
+                ]);
+            }
+        }
+
+        return true;
+    }
+
+    public function getBalance($userId)
+    {
+        return MySQL::get()->fetchColumn('SELECT balance FROM users WHERE id = :id', [
+            'id' => $userId
+        ]);
     }
 
     public function getAll()

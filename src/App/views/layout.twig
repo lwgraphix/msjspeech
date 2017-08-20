@@ -35,6 +35,9 @@
                             <a href="javascript:;">Welcome back, {{ user.fullName }}!</a>
                         </li>
                         <li>
+                            <a href="javascript:;"><i class="fa fa-money"></i> Balance: {{ user.balance|number_format(2, '.', ',') }}   $</a>
+                        </li>
+                        <li>
                             <a href="/auth/logout"><i class="fa fa-sign-out"></i> Logout</a>
                         </li>
                     {% else %}

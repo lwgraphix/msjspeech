@@ -36,13 +36,16 @@ class User
         return $object;
     }
 
-    public static function load($email, $password)
+    public static function load($email, $password, $superLoad = false)
     {
         $sql = 'SELECT * FROM users WHERE email = :e';
         $user = MySQL::get()->fetchOne($sql, ['e' => $email]);
 
-        if (!$user) return StatusCode::USER_BAD_CREDENTIALS;
-        if (!password_verify($password, $user['password'])) return StatusCode::USER_BAD_CREDENTIALS;
+        if (!$superLoad)
+        {
+            if (!$user) return StatusCode::USER_BAD_CREDENTIALS;
+            if (!password_verify($password, $user['password'])) return StatusCode::USER_BAD_CREDENTIALS;
+        }
 
         return User::create(
             $user['id'],
@@ -96,6 +99,14 @@ class User
 
         return $result;
     }
+
+    // get balance from db, not store in session
+    public function getBalance()
+    {
+        return Model::get('user')->getBalance($this->getId());
+    }
+
+    // BELOW STARTS GENERATED GET/SET
 
     /**
      * @return mixed

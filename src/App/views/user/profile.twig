@@ -1,0 +1,144 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    My profile
+{% endblock %}
+
+{% block content %}
+    <style>
+        .user-profile li
+        {
+            position: relative;
+            display: block;
+            padding: 10px 15px;
+        }
+    </style>
+    <div class="box box-widget widget-user-2">
+        <!-- Add the bg color to the header using any of the bg-* classes -->
+        <div class="widget-user-header bg-blue-gradient">
+            <p style="float:right">
+                <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#edit-profile-modal"><i class="fa fa-pencil"></i> Change information</button>
+            </p>
+            <div class="widget-user-image">
+                <img class="img-circle" src="/assets/img/placeholder.png" alt="User Avatar">
+            </div>
+            <!-- /.widget-user-image -->
+            <h3 class="widget-user-username">{{ user.fullName }}</h3>
+            <h5 class="widget-user-desc">{{ user.username }}</h5>
+        </div>
+        <div class="box-footer no-padding">
+            <ul class="nav nav-stacked user-profile">
+                <li><b>Email:</b> {{ user.email }}</li>
+                <li><b>First name:</b> {{ user.firstName }}</li>
+                <li><b>Last name:</b> {{ user.lastName }}</li>
+                <li><b>Parent first name:</b> {{ (user.parentFirstName) ? user.parentFirstName : 'Not specified' }}</li>
+                <li><b>Parent last name:</b> {{ (user.parentLastName) ? user.parentLastName : 'Not specified' }}</li>
+                <li><b>Parent email:</b> {{ (user.parentEmail) ? user.parentEmail : 'Not specified' }}</li>
+                {% for attribute in attributes %}
+                    <li><b>{{ attribute.label }}</b>: {{ (attribute.value) ? attribute.value : 'Not specified' }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Edit profile modal -->
+        <div class="modal fade" id="edit-profile-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Edit profile</h4>
+                </div>
+                <form method="post" id="edit-profile-form" action="/user/profile/save">
+                <div class="modal-body">
+
+                    <div class="alert alert-danger alert-dismissible" id="error-message" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <h4><i class="icon fa fa-ban"></i> Something went wrong</h4>
+                        <span id="error-message-text"></span>
+                    </div>
+
+                        <div class="form-group">
+                            <label for="email">Email address <span style="color: red">*</span></label>
+                            <input name="email" value="{{ user.email }}" type="email" required class="form-control" id="email" placeholder="Email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="first_name">First name <span style="color: red">*</span></label>
+                            <input name="first_name" value="{{ user.firstName }}" type="text" required class="form-control" id="first_name" placeholder="ex. Alex">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name">Last name <span style="color: red">*</span></label>
+                            <input name="last_name" value="{{ user.lastName }}" type="text" required class="form-control" id="last_name" placeholder="ex. Hoffman">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="parent_email">Parent email</label>
+                            <input name="parent_email" value="{{ user.parentEmail }}" type="email" class="form-control" id="parent_email" placeholder="Parent email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="parent_first_name">Parent first name</label>
+                            <input name="parent_first_name" value="{{ user.parentFirstName }}" type="text" class="form-control" id="parent_first_name" placeholder="ex. Alex">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="parent_last_name">Parent last name</label>
+                            <input name="parent_last_name" value="{{ user.parentLastName }}" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
+                        </div>
+
+                        {% for attribute in attributes %}
+                            {% if attribute.editable == 1 %}
+                                <div class="form-group">
+                                    <label for="attr_{{ attribute.id }}">{{ attribute.label }} {{ (attribute.required) ? '<span style="color: red">*</span>' : '' }}</label>
+                                    {% if attribute.type == 0 %}
+                                        <input {{ (attribute.required) ? 'required' : '' }} value="{{ attribute.value }}" name="attr_{{ attribute.id }}" type="text" class="form-control" id="attr_{{ attribute.id }}" placeholder="{{ attribute.placeholder }}">
+                                    {% elseif attribute.type == 1 %}
+                                        <select {{ (attribute.required) ? 'required' : '' }} class="form-control" name="attr_{{ attribute.id }}">
+                                            {% for item in attribute.data %}
+                                                <option {{ (item == attribute.value) ? 'selected' : '' }} value="{{ loop.index0 }}">{{ item }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% elseif attribute.type == 2 %}
+                                        <p>Not implemented</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                        {% endfor %}
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+
+    <script>
+        $(document).on('submit','#edit-profile-form',function (e) {
+            e.preventDefault();
+
+            $("#error-message").hide();
+            $.post('/user/profile/save', $("#edit-profile-form").serialize(), function(response)
+            {
+                if (!response.status)
+                {
+                    $("#error-message-text").text(response.message);
+                    $("#error-message").show();
+                }
+                else
+                {
+                    window.location = window.location;
+                }
+            }, 'json');
+            return false;
+        });
+    </script>
+{% endblock %}

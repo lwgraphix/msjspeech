@@ -11,6 +11,7 @@ use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
 use App\Type\LinkType;
 use App\Code\ProtocolCode;
+use App\Type\UserType;
 use Silex\Application;
 use DDesrosiers\SilexAnnotations\Annotations as SLX;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -36,7 +37,7 @@ class AdminController extends BaseController {
     public function __construct(Application $app)
     {
         parent::__construct($app);
-        Security::setAccessLevel(4);
+        Security::setAccessLevel(UserType::OFFICER);
         $this->um = Model::get('user');
         $this->am = Model::get('attribute');
     }
@@ -54,6 +55,18 @@ class AdminController extends BaseController {
             'attribute_types' => AttributeType::NAMES,
             'attributes' => $attributes
         ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/signup/delete")
+     * )
+     */
+    public function deleteSignupAttributeAction(Request $request)
+    {
+        $attributeId = $request->get('id');
+        $this->am->delete($attributeId, AttributeGroupType::REGISTER);
+        return $this->out('ok');
     }
 
     /**

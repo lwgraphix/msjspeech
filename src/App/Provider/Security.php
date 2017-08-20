@@ -28,6 +28,12 @@ class Security
         }
     }
 
+    public static function reloadUser($email)
+    {
+        $user = User::load($email, null, true);
+        self::$session->set('user', $user->serialize());
+    }
+
     public static function setAccessLevel($role)
     {
         if (self::$user === null)

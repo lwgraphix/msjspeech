@@ -17,6 +17,8 @@ class Attributes extends AbstractMigration
             ->addColumn('required', 'integer', ['null' => false, 'default' => 1])
             ->addColumn('editable', 'integer', ['null' => false, 'default' => 1])
             ->addColumn('tournament_id', 'integer', ['null' => true])
+            ->addIndex('group')
+            ->addIndex(['group', 'tournament_id'])
             ->create();
     }
 

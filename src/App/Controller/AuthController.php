@@ -76,7 +76,18 @@ class AuthController extends BaseController
     public function registerUserAction(Request $request)
     {
         // if stripe token - charge stripe on ready user
-        $requiredFields = ['email', 'password', 'first_name', 'last_name']; // todo: fill from custom attributes
+        $requiredFields = ['email', 'password', 'first_name', 'last_name'];
+
+        // adding custom required attributes to check
+        $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+        foreach($attributes as $attribute)
+        {
+            if ($attribute['required'])
+            {
+                $requiredFields[] = 'attr_' . $attribute['id'];
+            }
+        }
+
         foreach($requiredFields as $field)
         {
             if ($request->get($field) === null || empty($request->get($field)))
@@ -85,6 +96,20 @@ class AuthController extends BaseController
                 return new RedirectResponse('/auth/register');
             }
         }
+
+        // email validation
+        if (!filter_var($request->get('email'), FILTER_VALIDATE_EMAIL))
+        {
+            FlashMessage::set(false, 'Wrong email address format. Check the typing of email correct and try again');
+            return new RedirectResponse('/auth/register');
+        }
+
+        if (!empty($request->get('parent_email')) && !filter_var($request->get('parent_email'), FILTER_VALIDATE_EMAIL))
+        {
+            FlashMessage::set(false, 'Wrong parent email address format. Check the typing of email correct and try again');
+            return new RedirectResponse('/auth/register');
+        }
+
 
         // register
         $status = $this->um->create($request->request->all());
@@ -137,6 +162,7 @@ class AuthController extends BaseController
      */
     public function authLogoutAction(Request $request)
     {
+        Security::setAccessLevel(UserType::SUSPENDED);
         Security::getUserSession()->remove('user');
         return new RedirectResponse('/auth/login');
     }

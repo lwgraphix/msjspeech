@@ -4,10 +4,15 @@ namespace App\Model;
 use App\Code\StatusCode;
 use App\Connector\MySQL;
 use App\Provider\Security;
+use App\Type\AttributeGroupType;
+use App\Type\AttributeType;
 use App\Type\UserType;
 
 class AttributeModel extends BaseModel
 {
+
+    // TODO: deleting attributes!!!
+
     public function getAll($group)
     {
         $data = MySQL::get()->fetchAll('SELECT * FROM attributes WHERE `group` = :g', [
@@ -23,6 +28,40 @@ class AttributeModel extends BaseModel
         }
 
         return $data;
+    }
+
+    public function getUserAttributes($userId)
+    {
+        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, ua.value, ua.id, a.placeholder
+                FROM user_attributes ua
+                INNER JOIN attributes a ON a.id = ua.attribute_id
+                WHERE ua.user_id = :uid';
+        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
+        foreach($data as &$row)
+        {
+            if ($row['type'] == AttributeType::DROPDOWN)
+            {
+                $row['data'] = json_decode($row['data'], true);
+                $row['value'] = $row['data'][$row['value']];
+            }
+        }
+
+        return $data;
+    }
+
+    public function delete($id, $group)
+    {
+        switch($group)
+        {
+            case AttributeGroupType::REGISTER:
+                // delete user_attributes
+                MySQL::get()->exec('DELETE FROM user_attributes WHERE attribute_id = :aid', [
+                    'aid' => $id
+                ]);
+            break;
+        }
+
+        MySQL::get()->exec('DELETE FROM attributes WHERE id = :id', ['id' => $id]);
     }
 
     public function create($group, $label, $placeholder, $helpText, $type, $data = null, $required, $editable, $tournamentId = null)

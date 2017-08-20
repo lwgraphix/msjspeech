@@ -19,6 +19,23 @@ function removeField(object)
     $(object).parent().parent().parent().remove();
 }
 
+function removePersistedField(delete_url)
+{
+    $.post(delete_url, {id: window.delete_attribute_id}, function(response)
+    {
+        $("#delete-attribute-confirm").modal('hide');
+        removeField(window.delete_attribute_object);
+    });
+
+}
+
+function removeConfirmField(id, object)
+{
+    window.delete_attribute_id = id;
+    window.delete_attribute_object = object;
+    $("#delete-attribute-confirm").modal('show');
+}
+
 function saveFields()
 {
     var fields = [];

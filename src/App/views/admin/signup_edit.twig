@@ -150,12 +150,32 @@
                                 <option {{ (attribute.editable) ? 'selected' : '' }} value="1">Yes</option>
                             </select>
                         </div>
-                        <button type="button" onclick="removeField(this)" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
+                        <button type="button" onclick="removeConfirmField({{ attribute.id }}, this)" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
                     </div>
                 </div>
             </form>
         {% endfor %}
     </div>
+
+    <div class="modal modal-danger fade" id="delete-attribute-confirm">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Deleting attribute</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Do you really want delete this attribute? <b>This action delete attribute data from ALL users without any restore.</b></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="removePersistedField('/admin/signup/delete')" class="btn btn-outline"><i class="fa fa-check"></i> Yes</button>
+                    <button type="button" data-dismiss="modal" class="btn btn-outline"><i class="fa fa-times"></i> No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         var fields_count = {{ attributes|length }};
     </script>
