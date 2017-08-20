@@ -106,6 +106,15 @@ class UserModel extends BaseModel
         ]);
 
         $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+
+        // get existing user attributes
+        $userAttributesIds = array_map(function($row) {
+            return $row['attribute_id'];
+        }, MySQL::get()->fetchAll('SELECT attribute_id FROM user_attributes WHERE user_id = :uid', [
+            'uid' => $user->getId()
+        ]));
+
+
         foreach($attributes as $attribute)
         {
             if ($attribute['editable'])
@@ -115,9 +124,19 @@ class UserModel extends BaseModel
                     $data['attr_' . $attribute['id']] = null;
                 }
 
-                MySQL::get()->exec('UPDATE user_attributes SET `value` = :v WHERE id = :id AND user_id = :uid', [
+                if (!in_array($attribute['id'], $userAttributesIds))
+                {
+                    $sql = 'INSERT INTO user_attributes (user_id, attribute_id, `value`) VALUES (:uid, :aid, :v)';
+                }
+                else
+                {
+                    $sql = 'UPDATE user_attributes SET `value` = :v WHERE attribute_id = :aid AND user_id = :uid';
+                }
+
+
+                MySQL::get()->exec($sql, [
                     'v' => $data['attr_' . $attribute['id']],
-                    'id' => $attribute['id'],
+                    'aid' => $attribute['id'],
                     'uid' => $user->getId()
                 ]);
             }
