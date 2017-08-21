@@ -57,15 +57,6 @@
                         </div>
                     </div>
 
-                    <div id="attr_$1_checkbox" style="display: none">
-                        <div class="form-group">
-                            <p><b>Items:</b> <button type="button" onclick="_addDropdownItem($1)" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i> Add item</button></p>
-                            <div id="attr_$1_dropdown_items">
-
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="form-group">
                         <label for="attr">Help text</label>
                         <input name="help_text" type="text" class="form-control" />
@@ -123,15 +114,15 @@
                             </div>
                         </div>
 
-                        <div id="attr_{{ loop.index0 }}_dropdown" style="display: {{ (attribute.type == 1) ? 'block' : 'none' }}">
+                        <div id="attr_{{ loop.index0 }}_dropdown" style="display: {{ (attribute.type == 1 or attribute.type == 2) ? 'block' : 'none' }}">
                             <div class="form-group">
                                 <p><b>Items:</b> <button type="button" onclick="_addDropdownItem({{ loop.index0 }})" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i> Add item</button></p>
                                 <div id="attr_{{ loop.index0 }}_dropdown_items">
-                                    {% if attribute.type == 1 %}
+                                    {% if attribute.type == 1 or attribute.type == 2 %}
                                         {% for item in attribute.data %}
                                             <div class="form-group form-inline">
-                                                <input value="{{ item }}" type="text" name="dropdown_item" class="form-control" style="width:300px; margin-right: 10px">
-                                                <button onclick="_removeDropdownItem(this)" class="btn btn-danger"><i class="fa fa-remove"></i></button>
+                                                <input readonly value="{{ item }}" type="text" name="dropdown_item" class="form-control" style="width:300px; margin-right: 10px">
+                                                <!--<button onclick="_removeDropdownItem(this)" class="btn btn-danger"><i class="fa fa-remove"></i></button>-->
                                             </div>
                                         {% endfor %}
                                     {% endif %}

@@ -34,7 +34,14 @@
                 <li><b>Parent last name:</b> {{ (user.parentLastName) ? user.parentLastName : 'Not specified' }}</li>
                 <li><b>Parent email:</b> {{ (user.parentEmail) ? user.parentEmail : 'Not specified' }}</li>
                 {% for attribute in attributes %}
-                    <li><b>{{ attribute.label }}</b>: {{ (attribute.value) ? attribute.value : 'Not specified' }}</li>
+                    <li><b>{{ attribute.label }}</b>:
+                        {% if attribute.type == 2 %}
+                            {{ (attribute.value) ? attribute.value|join(', ') : 'Not specified' }}
+                        {% else %}
+                            {{ (attribute.value) ? attribute.value : 'Not specified' }}
+                        {% endif %}
+
+                    </li>
                 {% endfor %}
             </ul>
         </div>
@@ -100,6 +107,14 @@
                                         {% endfor %}
                                     </select>
                                 {% elseif attribute.type == 2 %}
+                                    {% for item in attribute.data %}
+                                        {% set checked = item in attribute.value ? 'checked' : '' %}
+                                        <div>
+                                            <input {{ checked }} onclick="{{ (not attribute.editable) ? 'return false;' : '' }}" class="{{ (attribute.required) ? 'required_checkbox' : '' }}" type="checkbox" id="attr_{{ attribute.id }}_{{ loop.index0 }}" name="attr_{{ attribute.id }}[]" value="{{ loop.index0 }}">
+                                            <label style="font-weight: normal;" for="attr_{{ attribute.id }}_{{ loop.index0 }}">{{ item }}</label>
+                                        </div>
+                                    {% endfor %}
+                                {% elseif attribute.type == 3 %}
                                     <p>Not implemented</p>
                                 {% endif %}
 
@@ -125,6 +140,34 @@
     <script>
         $(document).on('submit','#edit-profile-form',function (e) {
             e.preventDefault();
+
+            function checkboxes_validate()
+            {
+                var status = true;
+                // validate checkboxes
+                var required_checkboxes = [];
+                $(".required_checkbox").each(function() {
+                    if (required_checkboxes.indexOf($(this)[0].name) == -1)
+                    {
+                        required_checkboxes.push($(this)[0].name);
+                    }
+                });
+
+                required_checkboxes.forEach(function(item) {
+                    var item_accessor = $("input[name='"+ item +"']");
+                    item_accessor.parent().parent().removeClass('has-error');
+                    if ($("input[name='"+ item +"']:checked").length == 0)
+                    {
+                        item_accessor.parent().parent().addClass('has-error');
+                        status = false;
+                        return;
+                    }
+                });
+
+                return status;
+            }
+
+            if (!checkboxes_validate()) return false;
 
             $("#error-message").hide();
             $.post('/user/profile/save', $("#edit-profile-form").serialize(), function(response)

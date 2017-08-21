@@ -6,8 +6,9 @@ class UserAttributes extends AbstractMigration
 {
     public function up()
     {
-        $table = $this->table('user_attributes');
+        $table = $this->table('user_attributes', ['id' => false, 'primary_key' => 'id']);
         $table
+            ->addColumn('id', 'integer', ['signed' => false, 'identity' => true])
             ->addColumn('user_id', 'integer', ['null' => false])
             ->addColumn('attribute_id', 'integer', ['null' => false])
             ->addColumn('value', 'string', ['null' => true])

@@ -93,12 +93,12 @@ function _showFields(attr_id, value)
         $("#attr_"+ attr_id +"_dropdown").hide();
         $("#attr_"+ attr_id +"_text").show();
     }
-    else if (value == 1)
+    else if (value == 1 || value == 2)
     {
         $("#attr_"+ attr_id +"_text").hide();
         $("#attr_"+ attr_id +"_dropdown").show();
     }
-    else if (value == 2)
+    else if (value == 3)
     {
         $("#attr_"+ attr_id +"_dropdown").hide();
         $("#attr_"+ attr_id +"_text").hide();

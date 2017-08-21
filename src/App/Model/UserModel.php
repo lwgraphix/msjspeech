@@ -41,7 +41,6 @@ class UserModel extends BaseModel
             'r' => UserType::PENDING
         ], true);
 
-        // ex: DmitBezm#0001
         $username = $data['first_name'] . $data['last_name'] . '#' . str_pad($userId, 4, '0', STR_PAD_LEFT);
 
         MySQL::get()->exec('UPDATE users SET username = :u WHERE id = :i', [
@@ -58,11 +57,26 @@ class UserModel extends BaseModel
                 $data['attr_' . $attribute['id']] = null;
             }
 
-            MySQL::get()->exec($attrSQL, [
-                'uid' => $userId,
-                'aid' => $attribute['id'],
-                'v' => $data['attr_' . $attribute['id']]
-            ]);
+            // multiple values insert
+            if (is_array($data['attr_' . $attribute['id']]))
+            {
+                foreach($data['attr_' . $attribute['id']] as $dataItem)
+                {
+                    MySQL::get()->exec($attrSQL, [
+                        'uid' => $userId,
+                        'aid' => $attribute['id'],
+                        'v' => $dataItem
+                    ]);
+                }
+            }
+            else
+            {
+                MySQL::get()->exec($attrSQL, [
+                    'uid' => $userId,
+                    'aid' => $attribute['id'],
+                    'v' => $data['attr_' . $attribute['id']]
+                ]);
+            }
         }
 
         // TODO: if stripe_token available -> charge user and create transaction
@@ -106,15 +120,16 @@ class UserModel extends BaseModel
         $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
 
         // get existing user attributes
-        $userAttributesIds = array_map(function($row) {
+        $userAttributesIds = array_unique(array_map(function($row) {
             return $row['attribute_id'];
         }, MySQL::get()->fetchAll('SELECT attribute_id FROM user_attributes WHERE user_id = :uid', [
             'uid' => $user->getId()
-        ]));
+        ])));
 
 
         foreach($attributes as $attribute)
         {
+            // if attribute is editable OR attribute never filled before (admin can create new fields)
             if ($attribute['editable'] || !in_array($attribute['id'], $userAttributesIds))
             {
                 if (!isset($data['attr_' . $attribute['id']]))
@@ -122,21 +137,61 @@ class UserModel extends BaseModel
                     $data['attr_' . $attribute['id']] = null;
                 }
 
-                if (!in_array($attribute['id'], $userAttributesIds))
+                if (!in_array($attribute['id'], $userAttributesIds)) // if not exists - create new
                 {
                     $sql = 'INSERT INTO user_attributes (user_id, attribute_id, `value`) VALUES (:uid, :aid, :v)';
+
+                    if (is_array($data['attr_' . $attribute['id']])) // if multiple attribute field
+                    {
+                        // multiple values insert
+                        foreach($data['attr_' . $attribute['id']] as $item)
+                        {
+                            MySQL::get()->exec($sql, [
+                                'v' => $item,
+                                'aid' => $attribute['id'],
+                                'uid' => $user->getId()
+                            ]);
+                        }
+                    }
+                    else
+                    {
+                        MySQL::get()->exec($sql, [
+                            'v' => $data['attr_' . $attribute['id']],
+                            'aid' => $attribute['id'],
+                            'uid' => $user->getId()
+                        ]);
+                    }
                 }
                 else
                 {
-                    $sql = 'UPDATE user_attributes SET `value` = :v WHERE attribute_id = :aid AND user_id = :uid';
+                    if (is_array($data['attr_' . $attribute['id']]))
+                    {
+                        // multiple values insert, delete old attributes
+                        MySQL::get()->exec('DELETE FROM user_attributes WHERE attribute_id = :aid AND user_id = :uid', [
+                            'aid' => $attribute['id'],
+                            'uid' => $user->getId()
+                        ]);
+
+                        foreach($data['attr_' . $attribute['id']] as $item)
+                        {
+                            $sql = 'INSERT INTO user_attributes (user_id, attribute_id, `value`) VALUES (:uid, :aid, :v)';
+                            MySQL::get()->exec($sql, [
+                                'v' => $item,
+                                'aid' => $attribute['id'],
+                                'uid' => $user->getId()
+                            ]);
+                        }
+                    }
+                    else
+                    {
+                        $sql = 'UPDATE user_attributes SET `value` = :v WHERE attribute_id = :aid AND user_id = :uid';
+                        MySQL::get()->exec($sql, [
+                            'v' => $data['attr_' . $attribute['id']],
+                            'aid' => $attribute['id'],
+                            'uid' => $user->getId()
+                        ]);
+                    }
                 }
-
-
-                MySQL::get()->exec($sql, [
-                    'v' => $data['attr_' . $attribute['id']],
-                    'aid' => $attribute['id'],
-                    'uid' => $user->getId()
-                ]);
             }
         }
 
@@ -145,9 +200,10 @@ class UserModel extends BaseModel
 
     public function getBalance($userId)
     {
-        return MySQL::get()->fetchColumn('SELECT balance FROM users WHERE id = :id', [
-            'id' => $userId
-        ]);
+        return 1337;
+//        return MySQL::get()->fetchColumn('SELECT balance FROM users WHERE id = :id', [
+//            'id' => $userId
+//        ]);
     }
 
     public function getAll()

@@ -93,6 +93,13 @@
                             {% endfor %}
                         </select>
                     {% elseif attribute.type == 2 %}
+                        {% for item in attribute.data %}
+                            <div>
+                                <input class="{{ (attribute.required) ? 'required_checkbox' : '' }}" type="checkbox" id="attr_{{ attribute.id }}_{{ loop.index0 }}" name="attr_{{ attribute.id }}[]" value="{{ loop.index0 }}">
+                                <label style="font-weight: normal;" for="attr_{{ attribute.id }}_{{ loop.index0 }}">{{ item }}</label>
+                            </div>
+                        {% endfor %}
+                    {% elseif attribute.type == 3 %}
                         <p>Not implemented</p>
                     {% endif %}
 
@@ -153,6 +160,36 @@
             return pe;
         }
 
+
+        function checkboxes_validate()
+        {
+            var status = true;
+            // validate checkboxes
+            var required_checkboxes = [];
+            $(".required_checkbox").each(function() {
+                if (required_checkboxes.indexOf($(this)[0].name) == -1)
+                {
+                    required_checkboxes.push($(this)[0].name);
+                }
+            });
+
+            required_checkboxes.forEach(function(item) {
+                var item_accessor = $("input[name='"+ item +"']");
+                item_accessor.parent().parent().removeClass('has-error');
+                if ($("input[name='"+ item +"']:checked").length == 0)
+                {
+                    item_accessor.parent().parent().addClass('has-error');
+                    status = false;
+                    $('html, body').animate({
+                        scrollTop: item_accessor.offset().top - 25
+                    }, 100);
+                    return;
+                }
+            });
+
+            return status;
+        }
+
         function register(form, token)
         {
             if (token !== null)
@@ -167,6 +204,8 @@
                 }, 100);
                 return false;
             }
+
+            if (!checkboxes_validate()) return false;
 
             form.submit();
         }

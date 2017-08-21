@@ -30,25 +30,37 @@ class AttributeModel extends BaseModel
 
     public function getUserAttributes($userId)
     {
-        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, ua.value, a.id, ua.id as user_has_attribute, a.placeholder, a.help_text
+        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, GROUP_CONCAT(ua.value) as value, a.id, ua.id as user_has_attribute, a.placeholder, a.help_text
                 FROM attributes a
-                LEFT JOIN user_attributes ua ON ua.attribute_id = a.id AND ua.user_id = :uid';
+                LEFT JOIN user_attributes ua ON ua.attribute_id = a.id AND ua.user_id = :uid
+                GROUP BY a.id';
         $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
         foreach($data as &$row)
         {
-
             if ($row['value'] === null && $row['user_has_attribute'] === null)
             {
                 // user dont have needed attribute - unlock it for first time
                 $row['editable'] = 1;
             }
 
-            if ($row['type'] == AttributeType::DROPDOWN)
+            if ($row['type'] == AttributeType::DROPDOWN || $row['type'] == AttributeType::CHECKBOX)
             {
                 $row['data'] = json_decode($row['data'], true);
                 if ($row['value'] !== null)
                 {
-                    $row['value'] = $row['data'][$row['value']];
+                    if ($row['type'] == AttributeType::DROPDOWN)
+                    {
+                        $row['value'] = $row['data'][$row['value']];
+                    }
+                    else
+                    {
+                        $values = explode(',', $row['value']);
+                        $row['value'] = [];
+                        foreach($values as $value)
+                        {
+                            $row['value'][] = $row['data'][$value];
+                        }
+                    }
                 }
             }
         }
