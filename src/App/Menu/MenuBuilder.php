@@ -15,6 +15,7 @@ class MenuBuilder
     public static function userMenu()
     {
         self::addMenuItem('Profile', '/user/profile', 'user');
+        self::addMenuItem('Balance', '/user/balance', 'money');
 
         return self::generateHTML('', 'Manage');
     }

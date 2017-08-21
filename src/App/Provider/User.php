@@ -103,7 +103,7 @@ class User
     // get balance from db, not store in session
     public function getBalance()
     {
-        return Model::get('user')->getBalance($this->getId());
+        return Model::get('transaction_history')->getBalance($this->getId());
     }
 
     // BELOW STARTS GENERATED GET/SET

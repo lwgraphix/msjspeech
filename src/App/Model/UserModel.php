@@ -198,14 +198,6 @@ class UserModel extends BaseModel
         return true;
     }
 
-    public function getBalance($userId)
-    {
-        return 1337;
-//        return MySQL::get()->fetchColumn('SELECT balance FROM users WHERE id = :id', [
-//            'id' => $userId
-//        ]);
-    }
-
     public function getAll()
     {
         $sql = 'SELECT * FROM users';

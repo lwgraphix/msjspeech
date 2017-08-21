@@ -1,0 +1,44 @@
+{% extends 'layout.twig' %}
+
+{% block content_header %}
+    <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title" style="width: 100%">Balance</h3>
+        </div>
+        <div class="box-body">
+            <h4>Your current balance: {{ user.balance|number_format(2, '.', ',') }}$</h4>
+        </div>
+    </div>
+{% endblock %}
+
+{% block title %}
+    Transaction history
+{% endblock %}
+
+{% block content %}
+    {% if history|length > 0 %}
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                {% for transaction in history %}
+                    <td>{{ transaction.id }}</td>
+                    <td><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
+                    <td>{{ transaction.timestamp }}</td>
+                    <td>{{ transaction.description }}</td>
+                {% endfor %}
+            </tr>
+            </tbody>
+        </table>
+    {% else %}
+        <p>You don't have any transactions.</p>
+    {% endif %}
+
+{% endblock %}

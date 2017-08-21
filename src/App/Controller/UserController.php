@@ -49,6 +49,17 @@ class UserController extends BaseController
 
     /**
      * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/user/balance")
+     * )
+     */
+    public function balanceAction(Request $request)
+    {
+        $history = Model::get('transaction_history')->getHistory(Security::getUser()->getId());
+        return $this->out($this->twig->render('user/balance.twig', ['history' => $history]));
+    }
+
+    /**
+     * @SLX\Route(
      *     @SLX\Request(method="POST", uri="/user/profile/save")
      * )
      */
