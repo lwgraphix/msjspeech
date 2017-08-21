@@ -11,8 +11,6 @@ use App\Type\UserType;
 class AttributeModel extends BaseModel
 {
 
-    // TODO: deleting attributes!!!
-
     public function getAll($group)
     {
         $data = MySQL::get()->fetchAll('SELECT * FROM attributes WHERE `group` = :g', [

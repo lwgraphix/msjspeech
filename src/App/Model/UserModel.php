@@ -42,11 +42,7 @@ class UserModel extends BaseModel
         ], true);
 
         // ex: DmitBezm#0001
-        $username = substr($data['first_name'], 0,4) .
-                    substr($data['last_name'], 0,4) .
-                    '#' .
-                    str_pad($userId, 4, '0', STR_PAD_LEFT)
-        ;
+        $username = $data['first_name'] . $data['last_name'] . '#' . str_pad($userId, 4, '0', STR_PAD_LEFT);
 
         MySQL::get()->exec('UPDATE users SET username = :u WHERE id = :i', [
             'u' => $username,
