@@ -79,4 +79,26 @@ class AdminUsersController extends BaseController {
         return new RedirectResponse($request->headers->get('referer'));
     }
 
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/users/role/set")
+     * )
+     */
+    public function setUserRoleAction(Request $request)
+    {
+        $newRole = $request->get('new_role');
+        $adminRole = Security::getUser()->getRole();
+
+        if ($adminRole == UserType::OFFICER && ($newRole == UserType::OFFICER || $newRole == UserType::ADMINISTRATOR))
+        {
+            FlashMessage::set(false, 'Access denied. Your action reported.');
+        }
+        else
+        {
+            $this->um->setRole($request->get('user_id'), $newRole);
+            FlashMessage::set(true, 'Role changed');
+        }
+
+        return new RedirectResponse($request->headers->get('referer'));
+    }
 }

@@ -249,7 +249,11 @@ class User
      */
     public function getRole()
     {
-        return $this->role;
+        $role = MySQL::get()->fetchColumn('SELECT role FROM users WHERE id = :uid', [
+            'uid' => $this->getId()
+        ]);
+
+        return $role;
     }
 
     /**

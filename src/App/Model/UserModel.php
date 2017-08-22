@@ -198,6 +198,15 @@ class UserModel extends BaseModel
         return true;
     }
 
+    public function setRole($userId, $role)
+    {
+        $sql = 'UPDATE users SET role = :r WHERE id = :id';
+        MySQL::get()->exec($sql, [
+            'r' => $role,
+            'id' => $userId
+        ]);
+    }
+
     public function getAll()
     {
         $sql = 'SELECT * FROM users';

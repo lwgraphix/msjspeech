@@ -57,7 +57,8 @@ class UserController extends BaseController
             return $this->out($this->twig->render('user/profile.twig', [
                 'admin_mode' => true,
                 'attributes' => $attributes,
-                'view_user' => $user
+                'view_user' => $user,
+                'roles' => UserType::NAMES
             ]));
         }
 

@@ -22,11 +22,15 @@
             padding: 10px 15px;
         }
     </style>
+    {% set admin_user = user %}
     {% set user = (admin_mode is defined ? view_user : user) %}
     <div class="box box-widget widget-user-2">
         <!-- Add the bg color to the header using any of the bg-* classes -->
         <div class="widget-user-header bg-blue-gradient">
             <p style="float:right">
+                {% if admin_mode is defined %}
+                    <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#edit-role-modal"><i class="fa fa-user"></i> Change user role</button>
+                {% endif %}
                 <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#edit-profile-modal"><i class="fa fa-pencil"></i> Change information</button>
             </p>
             <div class="widget-user-image">
@@ -57,6 +61,38 @@
             </ul>
         </div>
     </div>
+
+    {% if admin_mode is defined %}
+        <div class="modal fade" id="edit-role-modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Change role of user {{ view_user.fullName }}</h4>
+                    </div>
+                    <form method="post" action="/admin/users/role/set">
+                        <div class="modal-body">
+                            <input type="hidden" name="user_id" value="{{ user.id }}" />
+                            <p>Current user role is: <b>{{ roles[user.role] }}</b></p>
+                            <div class="form-group">
+                                <label for="new_role">New role <span style="color: red">*</span></label>
+                                <select id="new_role" class="form-control" name="new_role">
+                                    {% for id, role in roles %}
+                                        <option {{ (admin_user.role == 4 and (id == 4 or id == 5)) ? 'disabled' : '' }} value="{{ id }}">{{ role }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Set new role</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     <!-- Edit profile modal -->
         <div class="modal fade" id="edit-profile-modal">
