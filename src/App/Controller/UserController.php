@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Code\StatusCode;
 use App\Model\UserModel;
+use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
@@ -42,6 +43,23 @@ class UserController extends BaseController
      */
     public function profileAction(Request $request)
     {
+        // admin mode
+        if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
+        {
+            $user = User::loadById($request->get('user_id'));
+            if (!$user)
+            {
+                FlashMessage::set(false, 'User not found');
+                return new RedirectResponse('/user/profile');
+            }
+
+            $attributes = Model::get('attribute')->getUserAttributes($user->getId());
+            return $this->out($this->twig->render('user/profile.twig', [
+                'admin_mode' => true,
+                'attributes' => $attributes,
+                'view_user' => $user
+            ]));
+        }
 
         $attributes = Model::get('attribute')->getUserAttributes(Security::getUser()->getId());
         return $this->out($this->twig->render('user/profile.twig', ['attributes' => $attributes]));
@@ -54,6 +72,24 @@ class UserController extends BaseController
      */
     public function balanceAction(Request $request)
     {
+        // admin mode
+        if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
+        {
+            $user = User::loadById($request->get('user_id'));
+            if (!$user)
+            {
+                FlashMessage::set(false, 'User not found');
+                return new RedirectResponse('/user/profile');
+            }
+
+            $history = Model::get('transaction_history')->getHistory($user->getId());
+            return $this->out($this->twig->render('user/balance.twig', [
+                'admin_mode' => true,
+                'history' => $history,
+                'view_user' => $user
+            ]));
+        }
+
         $history = Model::get('transaction_history')->getHistory(Security::getUser()->getId());
         return $this->out($this->twig->render('user/balance.twig', ['history' => $history]));
     }
@@ -97,7 +133,17 @@ class UserController extends BaseController
             return $this->out(json_encode(['status' => false, 'message' => 'Wrong parent email address format. Check the typing of email correct and try again.']), true);
         }
 
-        $status = $this->um->update(Security::getUser(), $request->request->all());
+        if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
+        {
+            $adminMode = true;
+            $status = $this->um->update(User::loadById($request->get('user_id')), $request->request->all(), true);
+        }
+        else
+        {
+            $adminMode = false;
+            $status = $this->um->update(Security::getUser(), $request->request->all());
+        }
+
         if ($status !== true)
         {
             if ($status == StatusCode::USER_EMAIL_EXISTS)
@@ -111,7 +157,10 @@ class UserController extends BaseController
         }
         else
         {
-            Security::reloadUser($request->get('email'));
+            if (!$adminMode)
+            {
+                Security::reloadUser($request->get('email'));
+            }
             return $this->out(json_encode(['status' => true]));
         }
     }

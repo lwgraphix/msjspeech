@@ -23,6 +23,7 @@ class MenuBuilder
     public static function adminMenu($role)
     {
         self::addMenuItem('Edit registration form', '/admin/signup/edit', 'user-plus');
+        self::addMenuItem('Users list', '/admin/users/list', 'list-ol');
 
         return self::generateHTML('', 'Administration');
     }

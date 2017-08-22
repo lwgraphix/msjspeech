@@ -10,4 +10,6 @@ class UserType
     const MEMBER = 3;
     const OFFICER = 4;
     const ADMINISTRATOR = 5;
+
+    const NAMES = ['Pending', 'Frozen', 'Suspended', 'Member', 'Officer', 'Administrator'];
 }

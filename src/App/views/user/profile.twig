@@ -3,6 +3,16 @@
     My profile
 {% endblock %}
 
+{% block content_header %}
+    {% if admin_mode is defined %}
+        <div class="alert bg-blue-gradient alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <h4><i class="icon fa fa-user"></i> Admin mode</h4>
+            You are viewing <b>{{ view_user.fullname ~ ' ('~ view_user.email ~')' }}</b> user profile
+        </div>
+    {% endif %}
+{% endblock %}
+
 {% block content %}
     <style>
         .user-profile li
@@ -12,6 +22,7 @@
             padding: 10px 15px;
         }
     </style>
+    {% set user = (admin_mode is defined ? view_user : user) %}
     <div class="box box-widget widget-user-2">
         <!-- Add the bg color to the header using any of the bg-* classes -->
         <div class="widget-user-header bg-blue-gradient">
@@ -57,6 +68,9 @@
                     <h4 class="modal-title">Edit profile</h4>
                 </div>
                 <form method="post" id="edit-profile-form" action="/user/profile/save">
+                {% if admin_mode is defined %}
+                    <input type="hidden" name="user_id" value="{{ user.id }}" />
+                {% endif %}
                 <div class="modal-body">
 
                     <div class="alert alert-danger alert-dismissible" id="error-message" style="display: none">
@@ -96,6 +110,7 @@
                         </div>
 
                         {% for attribute in attributes %}
+                            {% set attribute = (admin_mode is defined) ? attribute|merge({'editable': true}) : attribute %}
                             <div class="form-group">
                                 <label for="attr_{{ attribute.id }}">{{ attribute.label }} {{ (attribute.required) ? '<span style="color: red">*</span>' : '' }}</label>
                                 {% if attribute.type == 0 %}

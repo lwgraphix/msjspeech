@@ -60,6 +60,25 @@ class User
         );
     }
 
+    public static function loadById($id)
+    {
+        $sql = 'SELECT * FROM users WHERE id = :id';
+        $user = MySQL::get()->fetchOne($sql, ['id' => $id]);
+        if (!$user) return false;
+
+        return User::create(
+            $user['id'],
+            $user['email'],
+            $user['username'],
+            $user['first_name'],
+            $user['last_name'],
+            $user['parent_first_name'],
+            $user['parent_last_name'],
+            $user['parent_email'],
+            $user['role']
+        );
+    }
+
     public function serialize()
     {
         $result = $this->convertToArray();

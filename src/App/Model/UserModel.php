@@ -83,7 +83,7 @@ class UserModel extends BaseModel
         return true;
     }
 
-    public function update(User $user, $data)
+    public function update(User $user, $data, $adminMode = false)
     {
         if ($user->getEmail() != $data['email'])
         {
@@ -129,8 +129,8 @@ class UserModel extends BaseModel
 
         foreach($attributes as $attribute)
         {
-            // if attribute is editable OR attribute never filled before (admin can create new fields)
-            if ($attribute['editable'] || !in_array($attribute['id'], $userAttributesIds))
+            // if attribute is editable OR attribute never filled before (admin can create new fields) OR it's admin
+            if ($attribute['editable'] || !in_array($attribute['id'], $userAttributesIds) || $adminMode)
             {
                 if (!isset($data['attr_' . $attribute['id']]))
                 {

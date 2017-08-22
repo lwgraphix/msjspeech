@@ -1,0 +1,34 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Users list
+{% endblock %}
+
+{% block content %}
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.last_name }}</td>
+                <td>{{ roles[user.role] }}</td>
+                <td>
+                    <a target="_blank" href="/user/profile?user_id={{ user.id }}" class="btn btn-primary btn-xs">Profile</a>
+                    <a target="_blank" href="/user/balance?user_id={{ user.id }}" class="btn btn-primary btn-xs">Transactions</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

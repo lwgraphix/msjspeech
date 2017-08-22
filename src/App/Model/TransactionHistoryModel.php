@@ -12,19 +12,19 @@ use App\Type\UserType;
 class TransactionHistoryModel extends BaseModel
 {
 
-    private $balanceCache = null;
+    private $balanceCache = [];
 
     public function getBalance($userId)
     {
-        if ($this->balanceCache === null)
+        if (!isset($this->balanceCache[$userId]))
         {
             $sql = 'SELECT SUM(amount) FROM transaction_history WHERE user_id = :uid';
             $balance = MySQL::get()->fetchColumn($sql, ['uid' => $userId]);
             if (!$balance) $balance = 0;
-            $this->balanceCache = floatval($balance);
+            $this->balanceCache[$userId] = floatval($balance);
         }
 
-        return $this->balanceCache;
+        return $this->balanceCache[$userId];
     }
 
     public function getHistory($userId)
@@ -38,9 +38,9 @@ class TransactionHistoryModel extends BaseModel
     {
         $sql = 'INSERT INTO transaction_history (user_id, amount, description) VALUES (:uid, :a, :d)';
         MySQL::get()->exec($sql, [
-            'user_id' => $userId,
-            'amount' => $amount,
-            'description' => $description
+            'uid' => $userId,
+            'a' => $amount,
+            'd' => $description
         ]);
     }
 }
