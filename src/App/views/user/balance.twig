@@ -6,7 +6,7 @@
         <div class="alert bg-blue-gradient alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
             <h4><i class="icon fa fa-user"></i> Admin mode</h4>
-            You are viewing <b>{{ view_user.fullname ~ ' ('~ view_user.email ~')' }}</b> balance
+            You are viewing <b>{{ view_user.fullname }} (<a target="_blank" href="/user/profile?user_id={{ view_user.id }}">{{ view_user.email }}</a>)</b> balance
         </div>
     {% endif %}
 
@@ -73,7 +73,7 @@
                     <tr>
                         <td>{{ transaction.id }}</td>
                         <td><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
-                        <td>{{ transaction.timestamp }}</td>
+                        <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
                         <td>{{ transaction.description }}</td>
                     </tr>
                 {% endfor %}

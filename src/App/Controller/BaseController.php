@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Menu\MenuBuilder;
 use App\Provider\FlashMessage;
 use App\Provider\Security;
+use App\Provider\SystemSettings;
 use App\Provider\User;
 use App\Type\UserType;
 use Silex\Application;
@@ -34,6 +35,7 @@ class BaseController {
 
         $this->twig->addGlobal('menu', MenuBuilder::build($userRole));
         $this->twig->addGlobal('user', $user);
+        $this->twig->addGlobal('system_settings', SystemSettings::getInstance());
 
         $flash = FlashMessage::get();
         if ($flash['status'] !== null)

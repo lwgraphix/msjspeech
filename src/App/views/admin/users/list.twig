@@ -11,6 +11,10 @@
             <th>Email</th>
             <th>First name</th>
             <th>Last name</th>
+            <th>Username</th>
+            <th>Created at</th>
+            <th>Last login</th>
+            <th>Payed membership fee</th>
             <th>Role</th>
             <th>Actions</th>
         </tr>
@@ -19,12 +23,15 @@
         {% for user in users %}
             <tr>
                 <td>{{ user.id }}</td>
-                <td>{{ user.email }}</td>
+                <td><a target="_blank" href="/user/profile?user_id={{ user.id }}">{{ user.email }}</a></td>
                 <td>{{ user.first_name }}</td>
                 <td>{{ user.last_name }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.created_at|replace({'-': '/'}) }}</td>
+                <td>{{ (user.last_login) ? user.last_login|replace({'-': '/'}) : '-' }}</td>
+                <td><span class="text-{{ user.payed_fee ? 'success' : 'danger' }}">{{ user.payed_fee ? user.payed_fee|number_format(2, '.', ',') ~ '$' : 'No' }}</span></td>
                 <td>{{ roles[user.role] }}</td>
                 <td>
-                    <a target="_blank" href="/user/profile?user_id={{ user.id }}" class="btn btn-primary btn-xs">Profile</a>
                     <a target="_blank" href="/user/balance?user_id={{ user.id }}" class="btn btn-primary btn-xs">Transactions</a>
                 </td>
             </tr>

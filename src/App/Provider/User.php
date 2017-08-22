@@ -126,6 +126,14 @@ class User
         return Model::get('transaction_history')->getBalance($this->getId());
     }
 
+    public function updateLastLogin()
+    {
+        // last_login update
+        MySQL::get()->exec('UPDATE users SET last_login = NOW() WHERE id = :id', [
+            'id' => $this->getId()
+        ]);
+    }
+
     // BELOW STARTS GENERATED GET/SET
 
     /**

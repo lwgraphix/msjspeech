@@ -24,6 +24,7 @@ class MenuBuilder
     {
         self::addMenuItem('Edit registration form', '/admin/signup/edit', 'user-plus');
         self::addMenuItem('Users list', '/admin/users/list', 'list-ol');
+        self::addMenuItem('System settings', '/admin/settings', 'cog');
 
         return self::generateHTML('', 'Administration');
     }

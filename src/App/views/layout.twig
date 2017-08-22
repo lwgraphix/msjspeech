@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Speech & Debate</title>
+    <title>{{ system_settings.get('site_name') }}</title>
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
@@ -22,8 +22,8 @@
 <div class="wrapper">
     <header class="main-header">
         <a href="{{ global.request.getSchemeAndHttpHost() }}" class="logo">
-            <span class="logo-mini"><b>S</b>D</span>
-            <span class="logo-lg"><b>Speech</b> & <b>Debate</b></span>
+            <span class="logo-mini"></span>
+            <span class="logo-lg"><b>{{ system_settings.get('site_name') }}</b></span>
         </a>
 
         <nav class="navbar navbar-static-top">
@@ -44,9 +44,11 @@
                         <li>
                             <a href="/auth/login"><i class="fa fa-sign-in"></i> Sign in</a>
                         </li>
-                        <li>
-                            <a href="/auth/register"><i class="fa fa-user-plus"></i> Sign up</a>
-                        </li>
+                        {% if system_settings.get('register_allowed') == 1 %}
+                            <li>
+                                <a href="/auth/register"><i class="fa fa-user-plus"></i> Sign up</a>
+                            </li>
+                        {% endif %}
                     {% endif %}
 
                 </ul>

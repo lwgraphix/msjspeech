@@ -7,6 +7,7 @@ use App\Model\UserModel;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
+use App\Provider\SystemSettings;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\UserType;
@@ -60,6 +61,7 @@ class AuthController extends BaseController
             }
             else
             {
+                $user->updateLastLogin();
                 $this->session->set('user', $user->serialize());
                 return new RedirectResponse('/');
             }
@@ -75,6 +77,12 @@ class AuthController extends BaseController
      */
     public function registerUserAction(Request $request)
     {
+        if (SystemSettings::getInstance()->get('register_allowed') == 0)
+        {
+            FlashMessage::set(false, 'Club registration is closed.');
+            return new RedirectResponse('/');
+        }
+
         // if stripe token - charge stripe on ready user
         $requiredFields = ['email', 'password', 'first_name', 'last_name'];
 
@@ -151,6 +159,12 @@ class AuthController extends BaseController
      */
     public function registerUserPageAction(Request $request)
     {
+        if (SystemSettings::getInstance()->get('register_allowed') == 0)
+        {
+            FlashMessage::set(false, 'Club registration is closed.');
+            return new RedirectResponse('/');
+        }
+
         $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
         return $this->out($this->twig->render('auth/register.twig', ['attributes' => $attributes]));
     }
