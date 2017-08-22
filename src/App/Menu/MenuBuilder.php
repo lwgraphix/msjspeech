@@ -39,7 +39,15 @@ class MenuBuilder
 
         $pagesGroup = new MenuGroup('Pages');
         $pagesGroup
-            ->add(new MenuItem('Test page item', '/404', 'user'))
+            ->add(new MenuItem('Test page item', '/404', 'user', [
+                new MenuItem('Test page item', '/404', 'user'),
+                new MenuItem('Test page item', '/404', 'user'),
+                new MenuItem('Test page item', '/404', 'user', [
+                    new MenuItem('Test page item', '/404', 'user'),
+                    new MenuItem('Test page item', '/404', 'user'),
+                    new MenuItem('Test page item', '/404', 'user')
+                ])
+            ]))
         ;
         $menu->add($pagesGroup);
 

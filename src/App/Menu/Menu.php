@@ -119,7 +119,6 @@ class Menu
         {
             if (count($children->getChildrens()) > 0)
             {
-                $parents[] = $item;
                 return $this->_findMultilevelActiveItem($children, $parents);
             }
             else
