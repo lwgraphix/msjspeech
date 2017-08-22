@@ -5,6 +5,7 @@ use App\Menu\MenuBuilder;
 use App\Provider\FlashMessage;
 use App\Provider\Security;
 use App\Provider\User;
+use App\Type\UserType;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,9 +22,18 @@ class BaseController {
         $this->twig = $app['twig'];
 
         $userRole = (Security::getUser() === null) ? 0 : Security::getUser()->getRole();
+        $user = Security::getUser();
+
+        if ($user !== null && $userRole == UserType::FROZEN)
+        {
+            $this->session->remove('user');
+            FlashMessage::set(false, 'You are frozen by administrator');
+            header('Location: /auth/login');
+            die;
+        }
 
         $this->twig->addGlobal('menu', MenuBuilder::build($userRole));
-        $this->twig->addGlobal('user', Security::getUser());
+        $this->twig->addGlobal('user', $user);
 
         $flash = FlashMessage::get();
         if ($flash['status'] !== null)

@@ -5,6 +5,7 @@ namespace App\Provider;
 use App\Code\StatusCode;
 use App\Connector\MySQL;
 use App\Type\UserType;
+use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Session\Session;
 
 class User

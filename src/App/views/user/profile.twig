@@ -79,7 +79,9 @@
                                 <label for="new_role">New role <span style="color: red">*</span></label>
                                 <select id="new_role" class="form-control" name="new_role">
                                     {% for id, role in roles %}
-                                        <option {{ (admin_user.role == 4 and (id == 4 or id == 5)) ? 'disabled' : '' }} value="{{ id }}">{{ role }}</option>
+                                        {% if id != 0 %}
+                                            <option {{ (admin_user.role == 4 and (id == 4 or id == 5)) ? 'disabled' : '' }} value="{{ id }}">{{ role }}</option>
+                                        {% endif %}
                                     {% endfor %}
                                 </select>
                             </div>
