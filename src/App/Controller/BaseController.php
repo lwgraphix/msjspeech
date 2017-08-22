@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 use App\Menu\MenuBuilder;
+use App\Menu\MenuBuilderNew;
 use App\Provider\FlashMessage;
 use App\Provider\Security;
 use App\Provider\SystemSettings;
@@ -33,7 +34,7 @@ class BaseController {
             die;
         }
 
-        $this->twig->addGlobal('menu', MenuBuilder::build($userRole));
+        $this->twig->addGlobal('menu', MenuBuilder::generate($userRole));
         $this->twig->addGlobal('user', $user);
         $this->twig->addGlobal('system_settings', SystemSettings::getInstance());
 

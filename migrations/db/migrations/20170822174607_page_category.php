@@ -8,6 +8,7 @@ class PageCategory extends AbstractMigration
     {
         $table = $this->table('pages_category');
         $table
+            ->addColumn('parent_id', 'integer', ['null' => false])
             ->addColumn('name', 'string', ['null' => false])
             ->create();
     }
