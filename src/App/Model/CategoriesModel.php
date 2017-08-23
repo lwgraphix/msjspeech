@@ -33,19 +33,10 @@ class CategoriesModel extends BaseModel
     {
         $sql = 'SELECT * FROM pages_category';
         $data = MySQL::get()->fetchAll($sql);
-        $categories = [
-
-        ];
-
-        foreach($data as $row)
-        {
-            $categories[] = $row;
-        }
-
-        return ['list' => $categories, 'tree' => $this->_buildTree($categories)];
+        return $data;
     }
 
-    private function _buildTree($categories, $parentId = 0)
+    public function buildTree($categories, $parentId = 0, $withPages = false)
     {
         $tree = [];
 
@@ -53,8 +44,14 @@ class CategoriesModel extends BaseModel
         {
             if ($row['parent_id'] == $parentId)
             {
-                $child = $this->_buildTree($categories, $row['id']);
-                $tree[] = ['name' => $row['name'], 'childs' => $child, 'id' => $row['id']];
+                $child = $this->buildTree($categories, $row['id'], $withPages);
+                $data = ['name' => $row['name'], 'childs' => $child, 'id' => $row['id']];
+                if ($withPages)
+                {
+                    $data['pages'] = Model::get('pages')->getAllByCategoryId($row['id']);
+                }
+
+                $tree[] = $data;
             }
         }
 

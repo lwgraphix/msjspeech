@@ -42,7 +42,9 @@ class Security
         }
         elseif (self::$user->getRole() < $role)
         {
-            self::createError(StatusCode::USER_NO_PERMISSION, 'No permission to allow that action.', 403);
+            FlashMessage::set(false, 'No permission to allow that action');
+            header('Location: /');
+            exit;
         }
     }
 

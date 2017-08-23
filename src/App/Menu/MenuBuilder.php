@@ -2,10 +2,13 @@
 
 namespace App\Menu;
 
+use App\Provider\Model;
 use App\Type\UserType;
 
 class MenuBuilder
 {
+
+    private static $isGuest = false;
 
     public static function generate($userRole)
     {
@@ -36,21 +39,73 @@ class MenuBuilder
             ;
             $menu->add($userGroup);
         }
+        else
+        {
+            self::$isGuest = true;
+        }
 
         $pagesGroup = new MenuGroup('Pages');
-        $pagesGroup
-            ->add(new MenuItem('Test page item', '/404', 'user', [
-                new MenuItem('Test page item', '/404', 'user'),
-                new MenuItem('Test page item', '/404', 'user'),
-                new MenuItem('Test page item', '/404', 'user', [
-                    new MenuItem('Test page item', '/404', 'user'),
-                    new MenuItem('Test page item', '/404', 'user'),
-                    new MenuItem('Test page item', '/404', 'user')
-                ])
-            ]))
-        ;
+
+        $rootPages = Model::get('pages')->getAllByCategoryId(0);
+        $pagesTree = Model::get('categories')->buildTree(Model::get('categories')->getAll(), 0, true);
+
+        foreach($rootPages as $page)
+        {
+            if ($page['public'] || !self::$isGuest)
+            {
+                $pagesGroup->add(new MenuItem($page['name'], '/pages/' . $page['slug'], 'circle-o'));
+            }
+        }
+
+        foreach($pagesTree as $page)
+        {
+            $pagesInCategory = [];
+            foreach($page['pages'] as $p)
+            {
+                if ($p['public'] || !self::$isGuest)
+                {
+                    $pagesInCategory[] = new MenuItem($p['name'], '/pages/' . $p['slug'], 'circle-o');
+                }
+            }
+
+            $pagesInCategory = self::_generateCategoryTree($page['childs'], $pagesInCategory);
+
+            if (count($pagesInCategory) == 0) continue;
+            $pagesGroup->add(new MenuItem($page['name'], '', 'circle-o', $pagesInCategory));
+        }
+
+
         $menu->add($pagesGroup);
 
         return $menu->generate();
+    }
+
+    private static function _generateCategoryTree($childs, $pagesInCategory)
+    {
+        foreach ($childs as $row)
+        {
+            if (count($row['childs']) > 0)
+            {
+                $child = self::_generateCategoryTree($row['childs'], $pagesInCategory);
+            }
+            else
+            {
+                if (count($row['pages']) == 0) continue;
+                $child = [];
+            }
+
+            foreach($row['pages'] as $page)
+            {
+                if ($page['public'] || !self::$isGuest)
+                {
+                    $child[] = new MenuItem($page['name'], '/pages/' . $page['slug'], 'circle-o');
+                }
+            }
+
+            $data = new MenuItem($row['name'], '', 'circle-o', $child);
+            $pagesInCategory[] = $data;
+        }
+
+        return $pagesInCategory;
     }
 }

@@ -1,40 +1,118 @@
 {% extends 'layout.twig' %}
 {% block title %}
-    Create new page
+    {% if edit_mode is defined %}
+        Edit page
+    {% else %}
+        Create new page
+    {% endif %}
+{% endblock %}
+
+{% set edit = (edit_mode is defined) %}
+{% set bad_submit = (bad_submit is defined) %}
+
+{% block content_header %}
+    {% if edit %}
+        <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title" style="width: 100%">Page history</h3>
+            </div>
+            <div class="box-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Edit author</th>
+                            <th>Edit date</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.first_name ~ ' ' ~ item.last_name }} (<a href="/user/profile?user_id={{ item.author_id }}">{{ item.email }}</a>)</td>
+                                <td>{{ item.timestamp|replace({'-': '/'}) }}</td>
+                                <td>{{ item.reason ? item.reason : '-' }}</td>
+                                <td>
+                                    <button onclick="viewContent('{{ item.content|replace({'\'': '\\\''}) }}')" class="btn btn-info btn-xs"><i class="fa fa-eye"></i> View content</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-    <form method="post">
+    <form method="post" action="{{ edit ? '/admin/pages/update' : '' }}">
+        {% if edit %}
+            <input type="hidden" name="id" value="{{ page.id }}" />
+        {% endif %}
         <div class="form-group">
             <label for="title">Page title <span style="color: red">*</span></label>
-            <input name="title" value="{{ global.request.get('title') }}" type="text" required class="form-control" id="title">
+            <input name="title" value="{{ edit and not bad_submit ? page.name : global.request.get('title') }}" type="text" required class="form-control" id="title">
         </div>
         <div class="form-group">
             <label for="slug">Page slug <span style="color: red">*</span></label>
-            <input name="slug" value="{{ global.request.get('slug') }}" type="text" required class="form-control" id="slug">
+            <input name="slug" value="{{ edit and not bad_submit ? page.slug : global.request.get('slug') }}" type="text" required class="form-control" id="slug">
         </div>
         <div class="form-group">
             <label for="category_id">Category <span style="color: red">*</span></label>
             <select name="category_id" class="form-control" id="category_id">
                 <option value="0" selected>Root</option>
-                {% for category in categories.list %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% for category in categories %}
+                    {% set selected = edit and page.category_id == category.id %}
+                    <option {{ selected ? 'selected' : '' }} value="{{ category.id }}">{{ category.name }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="form-group">
             <label for="is_public">Public <span style="color: red">*</span></label>
             <select id="is_public" name="is_public" class="form-control">
-                <option value="1">Yes</option>
-                <option value="0">No</option>
+                <option {{ (edit and page.public == 1) ? 'selected' : '' }} value="1">Yes</option>
+                <option {{ (edit and page.public == 0) ? 'selected' : '' }} value="0">No</option>
             </select>
         </div>
         <div class="form-group">
             <label for="content">Content <span style="color: red">*</span></label>
-            <textarea id="content" name="content">{{ global.request.get('content') }}</textarea>
+            <textarea id="content" name="content">{{ edit and not bad_submit ? page.content : global.request.get('content') }}</textarea>
         </div>
-        <button class="btn btn-success btn-block">Create new page</button>
+        {% if edit %}
+            <div class="form-group">
+                <label for="reason">Edit reason <span style="color: red">*</span></label>
+                <input name="reason" value="{{ global.request.get('reason') }}" type="text" required class="form-control" id="reason">
+            </div>
+        {% endif %}
+        <button class="btn btn-success btn-block">
+            {% if edit %}
+                Update page
+            {% else %}
+                Create new page
+            {% endif %}
+
+        </button>
     </form>
+
+    {% if edit %}
+        <div class="modal fade" id="view-contents">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Page history content</h4>
+                    </div>
+                    <div class="modal-body content-view"></div>
+                    <div class="modal-footer">
+                        <button type="button" data-dismiss="modal" class="btn btn-default"><i class="fa fa-remove"></i> Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block javascript %}
@@ -53,4 +131,14 @@
             toolbar: 'undo redo | insert | styleselect | bold italic | alignleft aligncenter alignright alignjustify | table bullist numlist outdent indent | codesample link image code',
         });
     </script>
+
+    {% if edit %}
+        <script>
+            function viewContent(item)
+            {
+                $(".content-view").html(item);
+                $("#view-contents").modal('show');
+            }
+        </script>
+    {% endif %}
 {% endblock %}

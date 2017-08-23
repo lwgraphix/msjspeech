@@ -43,7 +43,7 @@
                     <label for="parent_category">Parent category <span style="color: red">*</span></label>
                     <select name="parent_id" class="form-control" id="parent_category">
                         <option value="0" selected>Root</option>
-                        {% for category in categories.list %}
+                        {% for category in categories %}
                             <option value="{{ category.id }}">{{ category.name }}</option>
                         {% endfor %}
                     </select>
@@ -59,7 +59,7 @@
         <li>
             Root
             <ul>
-                {% for item in categories.tree %}
+                {% for item in tree %}
                     {{ recursiveChildrens(item) }}
                 {% endfor %}
             </ul>

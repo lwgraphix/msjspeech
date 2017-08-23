@@ -1,0 +1,74 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Pages list
+{% endblock %}
+
+{% block content %}
+    {% if pages|length %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Is public</th>
+                    <th>Category</th>
+                    <th>Last edited</th>
+                    <th>Edit author</th>
+                    <th>Edit reason</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in pages %}
+                    <tr>
+                        <td>{{ page.id }}</td>
+                        <td><a href="/pages/{{ page.slug }}" target="_blank">{{ page.name }}</a></td>
+                        <td>{{ page.slug }}</td>
+                        <td>{{ page.public ? 'Yes' : 'No' }}</td>
+                        <td>{{ not page.category_name ? 'Root' : page.category_name }}</td>
+                        <td>{{ page.timestamp|replace({'-': '/'}) }}</td>
+                        <td>{{ page.first_name ~ ' ' ~ page.last_name }} (<a href="/user/profile?user_id={{ page.author_id }}">{{ page.email }}</a>)</td>
+                        <td>{{ not page.reason ? '-' : page.reason }}</td>
+                        <td>
+                            <a href="/pages/{{ page.slug }}/edit" class="btn btn-warning btn-xs"><i class="fa fa-pencil"></i> Edit</a>
+                            <button onclick="deletePageConfirm({{ page.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="modal modal-danger fade" id="delete-page-confirm">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Deleting page</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Do you really want delete this page? <b>This action delete page and it's data without any restore.</b></p>
+                    </div>
+                    <div class="modal-footer">
+                        <form method="POST" action="/admin/pages/delete">
+                            <input type="hidden" id="delete_page_id" name="id" value="" />
+                            <button type="submit" class="btn btn-outline"><i class="fa fa-check"></i> Yes</button>
+                            <button type="button" data-dismiss="modal" class="btn btn-outline"><i class="fa fa-times"></i> No</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function deletePageConfirm(id)
+            {
+                $("#delete_page_id").val(id);
+                $("#delete-page-confirm").modal('show');
+            }
+        </script>
+    {% else %}
+        <p>No pages created.</p>
+    {% endif %}
+{% endblock %}

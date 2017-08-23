@@ -62,6 +62,31 @@ class AdminPagesController extends BaseController {
 
     /**
      * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/pages/list")
+     * )
+     */
+    public function pagesListAction(Request $request)
+    {
+        $pages = $this->pm->getAll();
+        return $this->out($this->twig->render('admin/pages/list.twig', [
+            'pages' => $pages
+        ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/pages/delete")
+     * )
+     */
+    public function deletePageAction(Request $request)
+    {
+        $this->pm->delete($request->get('id'));
+        FlashMessage::set(true, 'Page deleted');
+        return new RedirectResponse('/admin/pages/list');
+    }
+
+    /**
+     * @SLX\Route(
      *     @SLX\Request(method="POST", uri="/pages/create")
      * )
      */
@@ -69,8 +94,8 @@ class AdminPagesController extends BaseController {
     {
         $categories = $this->cm->getAll();
         $status = $this->pm->create(
-            $request->get('title'),
-            $request->get('slug'),
+            trim($request->get('title')),
+            trim($request->get('slug')),
             $request->get('category_id'),
             $request->get('is_public'),
             $request->get('content'),
@@ -81,7 +106,47 @@ class AdminPagesController extends BaseController {
         {
             FlashMessage::set(false, 'Page with this slug exists! Choose another slug for page and try again.');
             return $this->out($this->twig->render('admin/pages/create.twig', [
+                'flash_message' => FlashMessage::get(),
                 'categories' => $categories
+            ]));
+        }
+        else
+        {
+            return new RedirectResponse('/pages/' . $request->get('slug'));
+        }
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/pages/update")
+     * )
+     */
+    public function pagesUpdateAction(Request $request)
+    {
+        $page = $this->pm->getById($request->get('id'));
+        $categories = $this->cm->getAll();
+        $status = $this->pm->update(
+            $request->get('id'),
+            trim($request->get('title')),
+            trim($request->get('slug')),
+            $request->get('category_id'),
+            $request->get('is_public'),
+            $request->get('content'),
+            $request->get('reason'),
+            Security::getUser()->getId(),
+            $page
+        );
+
+        if ($status !== true && $status == StatusCode::PAGE_SLUG_EXISTS)
+        {
+            FlashMessage::set(false, 'Page with this slug exists! Choose another slug for page and try again.');
+            return $this->out($this->twig->render('admin/pages/create.twig', [
+                'flash_message' => FlashMessage::get(),
+                'bad_submit' => true,
+                'edit_mode' => true,
+                'page' => $page,
+                'categories' => $categories,
+                'history' => $this->pm->getHistory($request->get('id'))
             ]));
         }
         else
@@ -98,7 +163,11 @@ class AdminPagesController extends BaseController {
     public function categoriesAction(Request $request)
     {
         $categories = $this->cm->getAll();
-        return $this->out($this->twig->render('admin/pages/categories.twig', ['categories' => $categories]));
+        $tree = $this->cm->buildTree($categories);
+        return $this->out($this->twig->render('admin/pages/categories.twig', [
+            'categories' => $categories,
+            'tree' => $tree
+        ]));
     }
 
     /**

@@ -6,7 +6,7 @@ use App\Model\PagesModel;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
-use App\Code\UserType;
+use App\Type\UserType;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,6 +57,30 @@ class IndexController extends BaseController
         else
         {
             return $this->out($this->twig->render('page.twig', ['page' => $page]));
+        }
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/pages/{slug}/edit")
+     * )
+     */
+    public function pageEditAction(Request $request, $slug)
+    {
+        Security::setAccessLevel(UserType::OFFICER);
+        $page = $this->pm->getBySlug($slug);
+        if (!$page)
+        {
+            return new RedirectResponse('/');
+        }
+        else
+        {
+            return $this->out($this->twig->render('admin/pages/create.twig', [
+                'page' => $page,
+                'edit_mode' => true,
+                'categories' => Model::get('categories')->getAll(),
+                'history' => Model::get('pages')->getHistory($page['id'])
+            ]));
         }
     }
 }

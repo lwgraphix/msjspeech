@@ -93,6 +93,7 @@ class Menu
                 else
                 {
                     $activeParents = $this->_findMultilevelActiveItem($item);
+
                     foreach($activeParents as $parent)
                     {
                         $parent->setActive();
@@ -100,6 +101,7 @@ class Menu
 
                     if (count($activeParents) > 0)
                     {
+                        $item->setActive();
                         return;
                     }
 
@@ -127,7 +129,6 @@ class Menu
                 {
                     $children->setActive();
                     $parents[] = $item;
-                    return $parents;
                 }
             }
         }
