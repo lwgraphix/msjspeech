@@ -45,6 +45,7 @@ class MenuBuilder
         }
 
         $pagesGroup = new MenuGroup('Pages');
+        $pagesGroup->add(new MenuItem('Home', '/', 'home'));
 
         $rootPages = Model::get('pages')->getAllByCategoryId(0);
         $pagesTree = Model::get('categories')->buildTree(Model::get('categories')->getAll(), 0, true);
