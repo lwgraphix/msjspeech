@@ -18,7 +18,7 @@ class CategoriesModel extends BaseModel
             'pId' => $categoryId
         ]);
 
-        if ($parentId != -1)
+        if ($parentId != 0)
         {
             $depth++;
             return $this->_getDepth($parentId, $depth);
@@ -33,29 +33,40 @@ class CategoriesModel extends BaseModel
     {
         $sql = 'SELECT * FROM pages_category';
         $data = MySQL::get()->fetchAll($sql);
-        $categories = [];
+        $categories = [
+
+        ];
+
         foreach($data as $row)
         {
-            $categories[$row['id']] = $row;
+            $categories[] = $row;
         }
 
-        foreach($categories as $category)
-        {
-            $category['parent'] = [
-                'id' => $category['parent_id'],
-                'name' => $categories[$category['parent_id']]
-            ];
-        }
-
-        return $categories;
+        return ['list' => $categories, 'tree' => $this->_buildTree($categories)];
     }
 
-    public function create($name, $parentId = -1)
+    private function _buildTree($categories, $parentId = 0)
+    {
+        $tree = [];
+
+        foreach ($categories as $row)
+        {
+            if ($row['parent_id'] == $parentId)
+            {
+                $child = $this->_buildTree($categories, $row['id']);
+                $tree[] = ['name' => $row['name'], 'childs' => $child, 'id' => $row['id']];
+            }
+        }
+
+        return $tree;
+    }
+
+    public function create($name, $parentId = 0)
     {
         // check depth
-        if ($parentId != -1)
+        if ($parentId != 0)
         {
-            if ($this->_getDepth($parentId) > 2)
+            if ($this->_getDepth($parentId) > 1)
             {
                 return StatusCode::CATEGORY_MAX_DEPTH;
             }
@@ -66,6 +77,8 @@ class CategoriesModel extends BaseModel
             'n' => $name,
             'pId' => $parentId
         ]);
+
+        return true;
     }
 
     public function delete($id)

@@ -1,33 +1,98 @@
 {% extends 'layout.twig' %}
+
 {% block title %}
     Category tree
 {% endblock %}
 
+{% macro recursiveChildrens(parent) %}
+    {% import _self as self %}
+    <li>
+        {{ parent.name }}
+        <button class="btn btn-xs btn-danger" onclick="deleteCategoryConfirm({{ parent.id }})"><i class="fa fa-remove"></i></button>
+        {% if parent.childs|length %}
+            <ul>
+                {% for child in parent.childs %}
+                    {{ self.recursiveChildrens(child) }}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </li>
+{% endmacro %}
+
+{% from _self import recursiveChildrens %}
+
 {% block content_header %}
+    <style>
+        .tree ul {
+            list-style-type: disc !important;
+            margin-bottom: 5px;
+            margin-top: 5px;
+        }
+    </style>
     <div class="box">
         <div class="box-header with-border">
             <h3 class="box-title" style="width: 100%">Create new category</h3>
         </div>
         <div class="box-body">
-            <form method="post">
+            <form method="post" action="/admin/pages/categories/create">
                 <div class="form-group">
                     <label for="category_name">Category name <span style="color: red">*</span></label>
-                    <input name="category_name" type="text" required class="form-control" id="category_name">
+                    <input name="name" type="text" required class="form-control" id="category_name">
                 </div>
                 <div class="form-group">
                     <label for="parent_category">Parent category <span style="color: red">*</span></label>
-                    <select class="form-control" id="parent_category">
-                        <option value="-1">Root</option>
-                        {% for category in categories %}
+                    <select name="parent_id" class="form-control" id="parent_category">
+                        <option value="0" selected>Root</option>
+                        {% for category in categories.list %}
                             <option value="{{ category.id }}">{{ category.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
+                <button type="submit" class="btn btn-success">Create category</button>
             </form>
         </div>
     </div>
 {% endblock %}
 
 {% block content %}
+    <ul class="tree">
+        <li>
+            Root
+            <ul>
+                {% for item in categories.tree %}
+                    {{ recursiveChildrens(item) }}
+                {% endfor %}
+            </ul>
+        </li>
+    </ul>
 
+    <div class="modal modal-danger fade" id="delete-category-confirm">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Deleting category</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Do you really want delete this category? <b>This action delete ALL PAGES from this category without any restore.</b></p>
+                </div>
+                <div class="modal-footer">
+                    <form method="POST" action="/admin/pages/categories/delete">
+                        <input type="hidden" id="delete_category_id" name="id" value="" />
+                        <button type="submit" class="btn btn-outline"><i class="fa fa-check"></i> Yes</button>
+                        <button type="button" data-dismiss="modal" class="btn btn-outline"><i class="fa fa-times"></i> No</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function deleteCategoryConfirm(id)
+        {
+            $("#delete_category_id").val(id);
+            $("#delete-category-confirm").modal('show');
+        }
+    </script>
 {% endblock %}

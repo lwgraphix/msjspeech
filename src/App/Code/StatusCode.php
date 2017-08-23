@@ -11,4 +11,6 @@ class StatusCode
 
     const CATEGORY_IS_PARENT = 4;
     const CATEGORY_MAX_DEPTH = 5;
+
+    const PAGE_SLUG_EXISTS = 6;
 }
