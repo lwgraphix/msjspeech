@@ -8,6 +8,7 @@
     {% import _self as self %}
     <li>
         {{ parent.name }}
+        <button class="btn btn-xs btn-info" onclick="changeCategoryConfirm({{ parent.id }})"><i class="fa fa-pencil"></i></button>
         <button class="btn btn-xs btn-danger" onclick="deleteCategoryConfirm({{ parent.id }})"><i class="fa fa-remove"></i></button>
         {% if parent.childs|length %}
             <ul>
@@ -88,11 +89,42 @@
         </div>
     </div>
 
+    <div class="modal fade" id="change-category-confirm">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Change name of category</h4>
+                </div>
+                <form method="POST" action="/admin/pages/categories/change">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="new_category_name">New category name <span style="color: red">*</span></label>
+                            <input type="text" required class="form-control" name="name" id="new_category_name" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                            <input type="hidden" id="change_category_id" name="id" value="" />
+                            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function deleteCategoryConfirm(id)
         {
             $("#delete_category_id").val(id);
             $("#delete-category-confirm").modal('show');
+        }
+
+        function changeCategoryConfirm(id)
+        {
+            $("#change_category_id").val(id);
+            $("#change-category-confirm").modal('show');
         }
     </script>
 {% endblock %}

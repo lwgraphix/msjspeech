@@ -198,13 +198,16 @@ class UserModel extends BaseModel
         return true;
     }
 
-    public function setRole($userId, $role)
+    public function setRole($userId, $role, $adminRole)
     {
+        $user = $this->getById($userId);
+        if ($adminRole == UserType::OFFICER && ($user['role'] == UserType::OFFICER || $user['role'] == UserType::ADMINISTRATOR)) return false;
         $sql = 'UPDATE users SET role = :r WHERE id = :id';
         MySQL::get()->exec($sql, [
             'r' => $role,
             'id' => $userId
         ]);
+        return true;
     }
 
     public function getAll()

@@ -78,6 +78,15 @@ class CategoriesModel extends BaseModel
         return true;
     }
 
+    public function update($id, $name)
+    {
+        $sql = 'UPDATE pages_category SET `name` = :n WHERE id = :id';
+        MySQL::get()->exec($sql, [
+            'n' => $name,
+            'id' => $id
+        ]);
+    }
+
     public function delete($id)
     {
         // check if he is parent

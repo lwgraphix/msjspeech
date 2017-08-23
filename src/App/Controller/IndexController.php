@@ -56,7 +56,14 @@ class IndexController extends BaseController
         }
         else
         {
-            return $this->out($this->twig->render('page.twig', ['page' => $page]));
+            if ($page['public'] || Security::getUser() !== null)
+            {
+                return $this->out($this->twig->render('page.twig', ['page' => $page]));
+            }
+            else
+            {
+                return new RedirectResponse('/');
+            }
         }
     }
 

@@ -95,8 +95,16 @@ class AdminUsersController extends BaseController {
         }
         else
         {
-            $this->um->setRole($request->get('user_id'), $newRole);
-            FlashMessage::set(true, 'Role changed');
+            $status = $this->um->setRole($request->get('user_id'), $newRole, $adminRole);
+            if ($status)
+            {
+                FlashMessage::set(true, 'Role changed');
+            }
+            else
+            {
+                FlashMessage::set(false, 'Access denied. Your action reported.');
+            }
+
         }
 
         return new RedirectResponse($request->headers->get('referer'));

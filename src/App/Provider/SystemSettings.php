@@ -47,6 +47,20 @@ class SystemSettings
             'name' => 'membership_fee',
             'value' => 0,
             'boolean' => 0
+        ],
+
+        [
+            'label' => 'Allow users negative balance',
+            'name' => 'negative_balance',
+            'value' => 0,
+            'boolean' => 1,
+        ],
+
+        [
+            'label' => 'Google Analytics code',
+            'name' => 'google_code',
+            'value' => null,
+            'boolean' => 0
         ]
     ];
 

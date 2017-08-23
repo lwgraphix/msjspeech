@@ -212,4 +212,16 @@ class AdminPagesController extends BaseController {
 
         return new RedirectResponse('/admin/pages/categories');
     }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/pages/categories/change")
+     * )
+     */
+    public function categoriesChangeAction(Request $request)
+    {
+        $this->cm->update($request->get('id'), $request->get('name'));
+        FlashMessage::set(true, 'Category name changed');
+        return new RedirectResponse('/admin/pages/categories');
+    }
 }
