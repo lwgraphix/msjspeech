@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Model\PagesModel;
+use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 use DDesrosiers\SilexAnnotations\Annotations as SLX;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class CallsController
@@ -64,6 +66,47 @@ class IndexController extends BaseController
             {
                 return new RedirectResponse('/');
             }
+        }
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/attachment/{attrId}")
+     * )
+     */
+    public function attachmentShowAction(Request $request, $attrId)
+    {
+        if ($request->get('user_id') && Security::getUser()->getRole() >= UserType::OFFICER)
+        {
+            $userId = $request->get('user_id');
+        }
+        else
+        {
+            $userId = Security::getUser()->getId();
+        }
+
+        $attachmentPath = Model::get('attachment')->getUserAttachment($userId, $attrId);
+        if (!$attachmentPath)
+        {
+            FlashMessage::set(false, 'Attachment not found');
+            return new RedirectResponse('/');
+        }
+        else
+        {
+            $response = new Response();
+            $response->headers->add([
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename=attachment.pdf',
+                'Accept-Ranges' => 'bytes',
+                'Content-Transfer-Encoding' => 'binary',
+                'Expires' => 0,
+                'Cache-Control' => 'must-revalidate',
+                'Pragma' => 'public',
+                'Content-Length' => filesize($attachmentPath)
+
+            ]);
+            $response->setContent(file_get_contents($attachmentPath));
+            return $response;
         }
     }
 

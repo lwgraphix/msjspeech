@@ -7,6 +7,8 @@ use App\Provider\Security;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
 use App\Type\UserType;
+use Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class AttributeModel extends BaseModel
 {

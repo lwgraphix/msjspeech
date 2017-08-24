@@ -84,7 +84,7 @@ class Menu
             {
                 if (count($item->getChildrens()) == 0)
                 {
-                    if (strtok($_SERVER['REQUEST_URI'], '?') == $item->getUrl())
+                    if ($this->_getRequestUri() == $item->getUrl())
                     {
                         $item->setActive();
                         return;
@@ -125,7 +125,7 @@ class Menu
             }
             else
             {
-                if (strtok($_SERVER['REQUEST_URI'], '?') == $children->getUrl())
+                if ($this->_getRequestUri() == $children->getUrl())
                 {
                     $children->setActive();
                     $parents[] = $item;
@@ -134,5 +134,11 @@ class Menu
         }
 
         return $parents;
+    }
+
+    private function _getRequestUri()
+    {
+        $requestUri = explode('?', $_SERVER['REQUEST_URI'])[0];
+        return urldecode($requestUri);
     }
 }

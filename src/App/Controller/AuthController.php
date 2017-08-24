@@ -10,8 +10,10 @@ use App\Provider\Security;
 use App\Provider\SystemSettings;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
+use App\Type\AttributeType;
 use App\Type\UserType;
 use Silex\Application;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -84,7 +86,12 @@ class AuthController extends BaseController
         }
 
         // if stripe token - charge stripe on ready user
-        $requiredFields = ['email', 'password', 'first_name', 'last_name'];
+        $requiredFields = [
+            'email' => AttributeType::TEXT,
+            'password' => AttributeType::TEXT,
+            'first_name' => AttributeType::TEXT,
+            'last_name' => AttributeType::TEXT
+        ];
 
         // adding custom required attributes to check
         $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
@@ -92,13 +99,30 @@ class AuthController extends BaseController
         {
             if ($attribute['required'])
             {
-                $requiredFields[] = 'attr_' . $attribute['id'];
+                $requiredFields['attr_' . $attribute['id']] = $attribute['type'];
             }
         }
 
-        foreach($requiredFields as $field)
+        foreach($requiredFields as $field => $attributeType)
         {
-            if ($request->get($field) === null || empty($request->get($field)))
+            if ($attributeType == AttributeType::ATTACHMENT)
+            {
+                /**
+                 * @var $fld UploadedFile
+                 */
+                $fld = $request->files->get($field);
+                if ($fld->getClientMimeType() != 'application/pdf')
+                {
+                    FlashMessage::set(false, 'You can upload only PDF file!');
+                    return new RedirectResponse('/auth/register');
+                }
+            }
+            else
+            {
+                $fld = $request->get($field);
+            }
+
+            if ($fld === null || empty($fld))
             {
                 FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
                 return new RedirectResponse('/auth/register');
@@ -120,7 +144,7 @@ class AuthController extends BaseController
 
 
         // register
-        $status = $this->um->create($request->request->all());
+        $status = $this->um->create(array_merge($request->request->all(), $request->files->all()));
         if ($status !== true)
         {
             if ($status == StatusCode::USER_EMAIL_EXISTS)

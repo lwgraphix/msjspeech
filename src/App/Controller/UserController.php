@@ -9,8 +9,10 @@ use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
+use App\Type\AttributeType;
 use App\Type\UserType;
 use Silex\Application;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -104,56 +106,84 @@ class UserController extends BaseController
     {
         Security::setAccessLevel(UserType::SUSPENDED);
 
-        $requiredFields = ['email', 'first_name', 'last_name'];
+        // if stripe token - charge stripe on ready user
+        $requiredFields = [
+            'email' => AttributeType::TEXT,
+            'first_name' => AttributeType::TEXT,
+            'last_name' => AttributeType::TEXT
+        ];
+
         // adding custom required attributes to check
         $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
         foreach($attributes as $attribute)
         {
             if ($attribute['required'])
             {
-                $requiredFields[] = 'attr_' . $attribute['id'];
+                $requiredFields['attr_' . $attribute['id']] = $attribute['type'];
             }
         }
 
-        foreach($requiredFields as $field)
+        foreach($requiredFields as $field => $attributeType)
         {
-            if ($request->get($field) === null || empty($request->get($field)))
+            if ($attributeType == AttributeType::ATTACHMENT)
             {
-                return $this->out(json_encode(['status' => false, 'message' => 'One of field is empty. Please fill all required fields and try again.']), true);
+                /**
+                 * @var $fld UploadedFile
+                 */
+                $fld = $request->files->get($field);
+                if ($fld->getClientMimeType() != 'application/pdf')
+                {
+                    FlashMessage::set(false, 'You can upload only PDF file!');
+                    return new RedirectResponse($request->headers->get('referer'));
+                }
+            }
+            else
+            {
+                $fld = $request->get($field);
+            }
+
+            if ($fld === null || empty($fld))
+            {
+                FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
+                return new RedirectResponse($request->headers->get('referer'));
             }
         }
 
         // email validation
         if (!filter_var($request->get('email'), FILTER_VALIDATE_EMAIL))
         {
-            return $this->out(json_encode(['status' => false, 'message' => 'Wrong email address format. Check the typing of email correct and try again.']), true);
+            FlashMessage::set(false, 'Wrong email address format. Check the typing of email correct and try again.');
+            return new RedirectResponse($request->headers->get('referer'));
         }
 
         if (!empty($request->get('parent_email')) && !filter_var($request->get('parent_email'), FILTER_VALIDATE_EMAIL))
         {
-            return $this->out(json_encode(['status' => false, 'message' => 'Wrong parent email address format. Check the typing of email correct and try again.']), true);
+            FlashMessage::set(false, 'Wrong parent email address format. Check the typing of email correct and try again.');
+            return new RedirectResponse($request->headers->get('referer'));
         }
 
         if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
         {
             $adminMode = true;
-            $status = $this->um->update(User::loadById($request->get('user_id')), $request->request->all(), true);
+            $status = $this->um->update(User::loadById($request->get('user_id')), array_merge($request->request->all(), $request->files->all()), true);
         }
         else
         {
             $adminMode = false;
-            $status = $this->um->update(Security::getUser(), $request->request->all());
+            $status = $this->um->update(Security::getUser(), array_merge($request->request->all(), $request->files->all()));
         }
 
         if ($status !== true)
         {
             if ($status == StatusCode::USER_EMAIL_EXISTS)
             {
-                return $this->out(json_encode(['status' => false, 'message' => 'User with this email exists! Try another email.']), true);
+                FlashMessage::set(false, 'User with this email exists! Try another email.');
+                return new RedirectResponse($request->headers->get('referer'));
             }
             else
             {
-                return $this->out(json_encode(['status' => false, 'message' => 'Internal error. Please contact with administrator.']), true);
+                FlashMessage::set(false, 'Internal error. Please contact with administrator.');
+                return new RedirectResponse($request->headers->get('referer'));
             }
         }
         else
@@ -162,7 +192,8 @@ class UserController extends BaseController
             {
                 Security::reloadUser($request->get('email'));
             }
-            return $this->out(json_encode(['status' => true]));
+            FlashMessage::set(true, 'Member information changed');
+            return new RedirectResponse($request->headers->get('referer'));
         }
     }
 }

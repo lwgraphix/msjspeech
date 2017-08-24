@@ -7,6 +7,7 @@ use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
+use App\Type\AttributeType;
 use App\Type\UserType;
 
 class UserModel extends BaseModel
@@ -41,6 +42,13 @@ class UserModel extends BaseModel
             'r' => UserType::PENDING
         ], true);
 
+        // need for attachment create
+        $userData = [
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'id' => $userId
+        ];
+
         $username = $data['first_name'] . $data['last_name'] . '#' . str_pad($userId, 4, '0', STR_PAD_LEFT);
 
         MySQL::get()->exec('UPDATE users SET username = :u WHERE id = :i', [
@@ -71,11 +79,23 @@ class UserModel extends BaseModel
             }
             else
             {
-                MySQL::get()->exec($attrSQL, [
-                    'uid' => $userId,
-                    'aid' => $attribute['id'],
-                    'v' => $data['attr_' . $attribute['id']]
-                ]);
+                if ($attribute['type'] == AttributeType::ATTACHMENT)
+                {
+                    $attachPath = Model::get('attachment')->createAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                    MySQL::get()->exec($attrSQL, [
+                        'uid' => $userId,
+                        'aid' => $attribute['id'],
+                        'v' => $attachPath
+                    ]);
+                }
+                else
+                {
+                    MySQL::get()->exec($attrSQL, [
+                        'uid' => $userId,
+                        'aid' => $attribute['id'],
+                        'v' => $data['attr_' . $attribute['id']]
+                    ]);
+                }
             }
         }
 
@@ -97,6 +117,12 @@ class UserModel extends BaseModel
                 return StatusCode::USER_EMAIL_EXISTS;
             }
         }
+
+        $userData = [
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'id' => $user->getId()
+        ];
 
         $sql = 'UPDATE users SET
                 email = :e,
@@ -155,11 +181,23 @@ class UserModel extends BaseModel
                     }
                     else
                     {
-                        MySQL::get()->exec($sql, [
-                            'v' => $data['attr_' . $attribute['id']],
-                            'aid' => $attribute['id'],
-                            'uid' => $user->getId()
-                        ]);
+                        if ($attribute['type'] == AttributeType::ATTACHMENT)
+                        {
+                            $attachPath = Model::get('attachment')->createAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                            MySQL::get()->exec($sql, [
+                                'v' => $attachPath,
+                                'aid' => $attribute['id'],
+                                'uid' => $user->getId()
+                            ]);
+                        }
+                        else
+                        {
+                            MySQL::get()->exec($sql, [
+                                'v' => $data['attr_' . $attribute['id']],
+                                'aid' => $attribute['id'],
+                                'uid' => $user->getId()
+                            ]);
+                        }
                     }
                 }
                 else
@@ -184,12 +222,25 @@ class UserModel extends BaseModel
                     }
                     else
                     {
+
                         $sql = 'UPDATE user_attributes SET `value` = :v WHERE attribute_id = :aid AND user_id = :uid';
-                        MySQL::get()->exec($sql, [
-                            'v' => $data['attr_' . $attribute['id']],
-                            'aid' => $attribute['id'],
-                            'uid' => $user->getId()
-                        ]);
+                        if ($attribute['type'] == AttributeType::ATTACHMENT)
+                        {
+                            $attachPath = Model::get('attachment')->updateAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                            MySQL::get()->exec($sql, [
+                                'v' => $attachPath,
+                                'aid' => $attribute['id'],
+                                'uid' => $user->getId()
+                            ]);
+                        }
+                        else
+                        {
+                            MySQL::get()->exec($sql, [
+                                'v' => $data['attr_' . $attribute['id']],
+                                'aid' => $attribute['id'],
+                                'uid' => $user->getId()
+                            ]);
+                        }
                     }
                 }
             }

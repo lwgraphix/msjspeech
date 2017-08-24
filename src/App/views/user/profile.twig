@@ -58,6 +58,12 @@
                     <li><b>{{ attribute.label }}</b>:
                         {% if attribute.type == 2 %}
                             {{ (attribute.value) ? attribute.value|join(', ') : 'Not specified' }}
+                        {% elseif attribute.type == 3 %}
+                            {% if attribute.value %}
+                                <button onclick="showAttach({{ attribute.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
+                            {% else %}
+                                Not specified
+                            {% endif %}
                         {% else %}
                             {{ (attribute.value) ? attribute.value : 'Not specified' }}
                         {% endif %}
@@ -110,7 +116,7 @@
                         <span aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title">Edit profile</h4>
                 </div>
-                <form method="post" id="edit-profile-form" action="/user/profile/save">
+                <form enctype="multipart/form-data" method="post" id="edit-profile-form" action="/user/profile/save">
                 {% if admin_mode is defined %}
                     <input type="hidden" name="user_id" value="{{ user.id }}" />
                 {% endif %}
@@ -173,7 +179,14 @@
                                         </div>
                                     {% endfor %}
                                 {% elseif attribute.type == 3 %}
-                                    <p>Not implemented</p>
+                                    {% if attribute.value %}
+                                        <p><button onclick="showAttach({{ attribute.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button></p>
+                                    {% else %}
+                                        <p>Not specified</p>
+                                    {% endif %}
+                                    {% if attribute.editable %}
+                                        <input {{ (attribute.required) ? 'required' : '' }} name="attr_{{ attribute.id }}" type="file" accept="application/pdf" id="attr_{{ attribute.id }}" />
+                                    {% endif %}
                                 {% endif %}
 
                                 {% if attribute.help_text %}
@@ -196,9 +209,19 @@
     <!-- /.modal -->
 
     <script>
-        $(document).on('submit','#edit-profile-form',function (e) {
-            e.preventDefault();
 
+        function showAttach(id)
+        {
+            {% if admin_mode is defined %}
+            window.open('/attachment/' + id + '?user_id={{ user.id }}', '_blank');
+            {% else %}
+            window.open('/attachment/' + id, '_blank');
+            {% endif %}
+        }
+
+        var form = document.getElementById('edit-profile-form');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
             function checkboxes_validate()
             {
                 var status = true;
@@ -226,21 +249,8 @@
             }
 
             if (!checkboxes_validate()) return false;
-
-            $("#error-message").hide();
-            $.post('/user/profile/save', $("#edit-profile-form").serialize(), function(response)
-            {
-                if (!response.status)
-                {
-                    $("#error-message-text").html(response.message);
-                    $("#error-message").show();
-                }
-                else
-                {
-                    window.location = window.location;
-                }
-            }, 'json');
-            return false;
+            form.submit();
         });
+
     </script>
 {% endblock %}

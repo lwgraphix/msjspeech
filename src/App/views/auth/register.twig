@@ -26,7 +26,7 @@
 {% endblock %}
 
 {% block content %}
-    <form id="signup_form" method="POST">
+    <form enctype="multipart/form-data" id="signup_form" method="POST">
 
         <blockquote>
             <p>General information</p>
@@ -100,7 +100,7 @@
                             </div>
                         {% endfor %}
                     {% elseif attribute.type == 3 %}
-                        <p>Not implemented</p>
+                        <input accept="application/pdf" {{ (attribute.required) ? 'required' : '' }} name="attr_{{ attribute.id }}" type="file" id="attr_{{ attribute.id }}">
                     {% endif %}
 
                     {% if attribute.help_text %}
@@ -113,20 +113,14 @@
 
         {% if system_settings.get('membership_fee') > 0 and system_settings.get('payment_allowed') == 1 %}
             <blockquote>
-                <p>Membership fee</p>
+                <p>Membership contribution</p>
             </blockquote>
-            <h4>Recommended membership fee: {{ system_settings.get('membership_fee') }}$</h4>
-            <p>It's not required, but if you want pay membership fee, enter your credit card data to form below. Remember, <b>we don't store</b> your credit card data on our servers.</p>
+            <h4>Recommended membership contribution: {{ system_settings.get('membership_fee') }}$</h4>
+            <p>It's not required, but if you want pay membership contribution, enter your credit card data to form below. Remember, <b>we don't store</b> your credit card data on our servers.</p>
 
             <div style="width: 500px">
                 <div id="card-element"></div>
                 <div id="card-errors" class="text-danger" role="alert"></div>
-            </div>
-
-            <div class="input-group" style="width: 180px; margin-bottom: 15px; margin-top: 10px">
-                <span class="input-group-addon">Amount:</span>
-                <input name="fee_amount" class="form-control" style="text-align:right" value="{{ system_settings.get('membership_fee') }}" type="number">
-                <span class="input-group-addon"><i class="fa fa-usd"></i></span>
             </div>
         {% endif %}
 
