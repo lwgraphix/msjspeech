@@ -13,11 +13,18 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class AttributeModel extends BaseModel
 {
 
-    public function getAll($group)
+    public function getAll($group, $tournamentId = null)
     {
-        $data = MySQL::get()->fetchAll('SELECT * FROM attributes WHERE `group` = :g', [
+        if ($tournamentId !== null)
+        {
+
+        }
+
+        $sql = 'SELECT * FROM attributes WHERE `group` = :g';
+        $data = MySQL::get()->fetchAll($sql, [
             'g' => $group
         ]);
+
 
         foreach($data as &$row)
         {

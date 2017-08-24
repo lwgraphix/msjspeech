@@ -1,0 +1,124 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Tournament debates
+{% endblock %}
+
+{% block content_header %}
+    <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title" style="width: 100%">Tournament information</h3>
+        </div>
+        <div class="box-body">
+            <div class="form-group">
+                <label for="email">Name <span style="color: red">*</span></label>
+                <input name="name" type="text" required class="form-control" id="name" placeholder="Name of tournament">
+            </div>
+
+            <div class="form-group">
+                <label for="reg_start">Registration start date <span style="color: red">*</span></label>
+                <div class="input-group">
+                    <div class="input-group-addon">
+                        <i class="fa fa-calendar"></i>
+                    </div>
+                    <input name="reg_start" class="form-control" id="reg_start" type="text">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="reg_deadline">Registration deadline <span style="color: red">*</span></label>
+                <div class="input-group">
+                    <div class="input-group-addon">
+                        <i class="fa fa-calendar"></i>
+                    </div>
+                    <input name="reg_deadline" class="form-control" id="reg_deadline" type="text">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="drop_deadline">Drop deadline <span style="color: red">*</span></label>
+                <div class="input-group">
+                    <div class="input-group-addon">
+                        <i class="fa fa-calendar"></i>
+                    </div>
+                    <input name="drop_deadline" class="form-control" id="drop_deadline" type="text">
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <button onclick="addNewDebate()" class="btn btn-primary"><i class="fa fa-plus"></i> Add new debate</button>
+
+    <div id="fields" style="margin-top: 20px"></div>
+
+    <button class="btn btn-success btn-block"><i class="fa fa-plus"></i> Create tournament</button>
+
+    <script type="text/html" id="debate-template">
+        <form id="dt_$1">
+            <div class="panel panel-default">
+                <div class="panel-body" style="padding-bottom: 0">
+
+                    <div class="form-group">
+                        <label for="dt_name">Name</label>
+                        <input name="dt_name" id="dt_name" class="form-control" type="text" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dt_type">Type</label>
+                        <select name="dt_type" id="dt_type" class="form-control">
+                            <option value="0">Single</option>
+                            <option value="1">With partner</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dt_cost">Cost</label>
+                        <input name="dt_cost" id="dt_cost" type="number" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dt_drop_cost">Drop fee after deadline</label>
+                        <input name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
+                    </div>
+
+                    <button type="button" onclick="removeField(this)" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
+                </div>
+            </div>
+        </form>
+    </script>
+{% endblock %}
+
+{% block javascript %}
+    <script src="/assets/js/jquery.inputmask.bundle.min.js"></script>
+    <script>
+        $('#reg_start').inputmask('dd/mm/yyyy');
+        $('#reg_deadline').inputmask('dd/mm/yyyy');
+        $('#drop_deadline').inputmask('dd/mm/yyyy');
+    </script>
+
+    <script>
+        var fields_count = 0;
+
+        String.prototype.replaceAll = function(search, replacement) {
+            var target = this;
+            return target.replace(new RegExp(search, 'g'), replacement);
+        };
+
+        function addNewDebate()
+        {
+            var field_template = $("#debate-template").html().replaceAll(/\$1/, fields_count);
+            $("#fields").append(field_template);
+            $('html, body').animate({
+                scrollTop: $("#dt_" + fields_count).offset().top - 25
+            }, 1000);
+            fields_count++;
+        }
+
+        function removeField(object)
+        {
+            // check if persisted field
+            $(object).parent().parent().parent().remove();
+        }
+    </script>
+{% endblock %}

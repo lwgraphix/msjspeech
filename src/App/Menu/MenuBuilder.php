@@ -26,6 +26,10 @@ class MenuBuilder
                     new MenuItem('Categories', '/admin/pages/categories', 'tag'),
                     new MenuItem('Pages list', '/admin/pages/list', 'list'),
                 ]))
+                ->add(new MenuItem('Tournaments', null, 'calendar', [
+                    new MenuItem('Create new tournament', '/admin/tournament/create', 'plus'),
+                    new MenuItem('Tournament list', '/admin/tournament/list', 'list'),
+                ]))
             ;
             $menu->add($adminGroup);
         }
