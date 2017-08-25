@@ -6,6 +6,7 @@ use App\Model\AlertModel;
 use App\Model\AttributeModel;
 use App\Model\CategoriesModel;
 use App\Model\PagesModel;
+use App\Model\TournamentsModel;
 use App\Model\TransactionHistoryModel;
 use App\Model\UserModel;
 use App\Provider\FlashMessage;
@@ -30,15 +31,15 @@ use Symfony\Component\HttpFoundation\Request;
 class AdminTournamentController extends BaseController {
 
     /**
-     * @var AttributeModel
+     * @var TournamentsModel
      */
-    private $am;
+    private $tm;
 
     public function __construct(Application $app)
     {
         parent::__construct($app);
         Security::setAccessLevel(UserType::OFFICER);
-        $this->am = Model::get('attribute');
+        $this->tm = Model::get('tournaments');
     }
 
     /**
@@ -48,11 +49,44 @@ class AdminTournamentController extends BaseController {
      */
     public function tournamentCreateAction(Request $request)
     {
-        $attributes = $this->am->getAll(AttributeGroupType::TOURNAMENT);
+        return $this->out($this->twig->render('admin/tournament/create.twig'));
+    }
 
-        return $this->out($this->twig->render('admin/tournament/create.twig', [
-            'attribute_types' => AttributeType::NAMES,
-            'attributes' => $attributes
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/tournament/create")
+     * )
+     */
+    public function tournamentCreatePersistAction(Request $request)
+    {
+        $tId = $this->tm->create(
+            $request->get('name'),
+            $request->get('reg_start'),
+            $request->get('reg_deadline'),
+            $request->get('drop_deadline'),
+            $request->get('events')
+        );
+
+        return $this->out(json_encode(['id' => $tId]), true);
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/tournament/edit/{tournamentId}")
+     * )
+     */
+    public function tournamentEditAction(Request $request, $tournamentId)
+    {
+        $tournament = $this->tm->getById($tournamentId);
+        if (!$tournament)
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        return $this->out($this->twig->render('admin/tournament/edit.twig', [
+            'data' => $tournament,
+            'attributes' => [],
         ]));
     }
 }

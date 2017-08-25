@@ -4,14 +4,21 @@
 {% endblock %}
 
 {% block content_header %}
+
+    <div class="alert alert-danger alert-dismissible" id="error-message" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <h4><i class="icon fa fa-check"></i> Error</h4>
+        <span id="error-text"></span>
+    </div>
+
     <div class="box">
         <div class="box-header with-border">
             <h3 class="box-title" style="width: 100%">Tournament information</h3>
         </div>
         <div class="box-body">
             <div class="form-group">
-                <label for="email">Name <span style="color: red">*</span></label>
-                <input name="name" type="text" required class="form-control" id="name" placeholder="Name of tournament">
+                <label for="tournament_name">Name <span style="color: red">*</span></label>
+                <input name="name" type="text" required class="form-control" id="tournament_name" placeholder="Name of tournament">
             </div>
 
             <div class="form-group">
@@ -52,7 +59,7 @@
 
     <div id="fields" style="margin-top: 20px"></div>
 
-    <button class="btn btn-success btn-block"><i class="fa fa-plus"></i> Create tournament</button>
+    <button onclick="saveFields()" class="btn btn-success btn-block"><i class="fa fa-plus"></i> Create tournament</button>
 
     <script type="text/html" id="debate-template">
         <form id="dt_$1">
@@ -60,8 +67,8 @@
                 <div class="panel-body" style="padding-bottom: 0">
 
                     <div class="form-group">
-                        <label for="dt_name">Name</label>
-                        <input name="dt_name" id="dt_name" class="form-control" type="text" />
+                        <label for="dt_name">Name <span style="color: red">*</span></label>
+                        <input required name="dt_name" id="dt_name" class="form-control" type="text" />
                     </div>
 
                     <div class="form-group">
@@ -73,13 +80,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="dt_cost">Cost</label>
-                        <input name="dt_cost" id="dt_cost" type="number" class="form-control" />
+                        <label for="dt_cost">Cost <span style="color: red">*</span></label>
+                        <input required name="dt_cost" id="dt_cost" type="number" class="form-control" />
                     </div>
 
                     <div class="form-group">
-                        <label for="dt_drop_cost">Drop fee after deadline</label>
-                        <input name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
+                        <label for="dt_drop_cost">Drop fee after deadline <span style="color: red">*</span></label>
+                        <input required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
                     </div>
 
                     <button type="button" onclick="removeField(this)" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
@@ -119,6 +126,50 @@
         {
             // check if persisted field
             $(object).parent().parent().parent().remove();
+        }
+
+        function saveFields()
+        {
+            var fields = [];
+            $("#fields").children().each(function() {
+                var id = $(this).data('id');
+                var data = _serializeToObject($(this).serializeArray());
+                data["id"] = id;
+                fields.push(data);
+            });
+
+            if (fields.length == 0)
+            {
+                showError('You must create at least one debate type!');
+            }
+
+            var tournament_name = $("#tournament_name").val();
+            var reg_start = $("#reg_start").val();
+            var reg_deadline = $("#reg_deadline").val();
+            var drop_deadline = $("#drop_deadline").val();
+            $.post(window.location, {name: tournament_name, reg_start: reg_start, reg_deadline: reg_deadline, drop_deadline: drop_deadline, events: fields}, function(response) {
+                window.location = '/admin/tournament/edit/' + response.id; // refresh page scroll
+            }, 'json');
+        }
+
+        function showError(message)
+        {
+            var em = $("#error-message");
+            em.hide();
+            $("#error-text").html(message);
+            em.show();
+            $('html, body').animate({
+                scrollTop: em.offset().top - 25
+            }, 1000);
+        }
+
+        function _serializeToObject(data)
+        {
+            var object = {};
+            data.forEach(function(item) {
+                object[item.name] = item.value;
+            });
+            return object;
         }
     </script>
 {% endblock %}
