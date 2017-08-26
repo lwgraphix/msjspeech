@@ -1,0 +1,62 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Join tournament "{{ tournament.name }}"
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <div class="form-group">
+            <label for="debate_type">Debate <span style="color: red">*</span></label>
+            <select onchange="loadEvent(this.value)" required name="debate_type" class="form-control" id="debate_type">
+                {% for event in events %}
+                    <option value="" selected>Choose debate</option>
+                    <option value="{{ event.id }}">{{ event.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="event-details" style="display: none">
+            <div class="panel panel-default">
+                <div class="panel-body" style="padding-bottom: 0">
+                    <p><b>Cost:</b> <span id="event-details-cost"></span>$</p>
+                    <p><b>Drop after drop deadline fee:</b> <span id="event-details-drop_cost"></span>$</p>
+                    <p><b>Type:</b> <span id="event-details-debate_type"></span></p>
+                    <div class="form-group" id="event-details-partner" style="display: none">
+                        <label for="partner_id">Choose partner <span style="color: red">*</span></label>
+                        <select disabled required name="partner_id" class="form-control" id="partner_id">
+                            <option value="" selected>Choose partner</option>
+                            {% for site_user in users %}
+                                {% if site_user.id != user.id %}
+                                    <option value="{{ site_user.id }}">{{ site_user.username }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        var available_events = JSON.parse('{{ events|json_encode|raw }}');
+        function loadEvent(event_id)
+        {
+            $("#event-details").hide();
+            available_events.forEach(function(item) {
+                if (item.id == event_id)
+                {
+                    $("#event-details-cost").text(item.cost);
+                    $("#event-details-drop_cost").text(item.drop_fee_cost);
+                    var is_single = item.type == 0;
+                    $("#event-details-debate_type").text(is_single ? 'Single' : 'With partner');
+
+                    if (!is_single)
+                    {
+                        $("#event-details-partner select").removeAttr('disabled');
+                        $("#event-details-partner").css('display', 'block');
+                    }
+                    $("#event-details").show();
+                }
+            })
+        }
+    </script>
+{% endblock %}

@@ -27,7 +27,7 @@
                         <td>{{ tournament.entry_deadline|replace({'-': '/'}) }}</td>
                         <td>{{ tournament.drop_deadline|replace({'-': '/'}) }}</td>
                         <td>
-                            {% if not tournament.is_passed %}
+                            {% if not tournament.reg_started %}
                                 <a href="/admin/tournament/edit/{{ tournament.id }}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i> Edit</a>
                                 <button class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Delete</button>
                             {% endif %}

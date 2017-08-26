@@ -18,7 +18,7 @@
             </thead>
             <tbody>
                 {% for tournament in tournaments %}
-                    {% if tournament.is_passed %}
+                    {% if tournament.reg_started and not tournament.reg_ended %}
                         <tr>
                             <td>{{ tournament.id }}</td>
                             <td>{{ tournament.name }}</td>
@@ -26,7 +26,7 @@
                             <td>{{ tournament.entry_deadline|replace({'-': '/'}) }}</td>
                             <td>{{ tournament.drop_deadline|replace({'-': '/'}) }}</td>
                             <td>
-                                <button class="btn btn-xs btn-primary">Join</button>
+                                <a href="/tournament/join/{{ tournament.id }}" class="btn btn-xs btn-primary">Join</a>
                             </td>
                         </tr>
                     {% endif %}

@@ -19,7 +19,9 @@ class TournamentsModel extends BaseModel
         $data = MySQL::get()->fetchAll($sql);
         foreach($data as &$row)
         {
-            $row['is_passed'] = DateUtil::isPassed($row['event_start']);
+            $row['reg_started'] = DateUtil::isPassed($row['event_start']);
+            $row['reg_ended'] = DateUtil::isPassed($row['entry_deadline']);
+            $row['drop_ended'] = DateUtil::isPassed($row['drop_deadline']);
         }
         return $data;
     }
