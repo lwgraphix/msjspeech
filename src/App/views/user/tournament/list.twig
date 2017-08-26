@@ -1,0 +1,39 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Tournament list
+{% endblock %}
+
+{% block content %}
+    {% if tournaments|length %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Registration start</th>
+                    <th>Registration end</th>
+                    <th>Drop deadline</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tournament in tournaments %}
+                    {% if tournament.is_passed %}
+                        <tr>
+                            <td>{{ tournament.id }}</td>
+                            <td>{{ tournament.name }}</td>
+                            <td>{{ tournament.event_start|replace({'-': '/'}) }}</td>
+                            <td>{{ tournament.entry_deadline|replace({'-': '/'}) }}</td>
+                            <td>{{ tournament.drop_deadline|replace({'-': '/'}) }}</td>
+                            <td>
+                                <button class="btn btn-xs btn-primary">Join</button>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tournaments found.</p>
+    {% endif %}
+{% endblock %}

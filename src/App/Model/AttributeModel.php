@@ -17,14 +17,18 @@ class AttributeModel extends BaseModel
     {
         if ($tournamentId !== null)
         {
-
+            $sql = 'SELECT * FROM attributes WHERE tournament_id = :tid';
+            $data = MySQL::get()->fetchAll($sql, [
+                'tid' => $tournamentId
+            ]);
         }
-
-        $sql = 'SELECT * FROM attributes WHERE `group` = :g';
-        $data = MySQL::get()->fetchAll($sql, [
-            'g' => $group
-        ]);
-
+        else
+        {
+            $sql = 'SELECT * FROM attributes WHERE `group` = :g';
+            $data = MySQL::get()->fetchAll($sql, [
+                'g' => $group
+            ]);
+        }
 
         foreach($data as &$row)
         {

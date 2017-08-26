@@ -1,0 +1,42 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Tournament list
+{% endblock %}
+
+{% block content %}
+    {% if tournaments|length %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Approve method</th>
+                    <th>Registration start</th>
+                    <th>Registration end</th>
+                    <th>Drop deadline</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tournament in tournaments %}
+                    <tr>
+                        <td>{{ tournament.id }}</td>
+                        <td>{{ tournament.name }}</td>
+                        <td>{{ tournament.approve_method == 0 ? 'Auto' : 'Manually' }}</td>
+                        <td>{{ tournament.event_start|replace({'-': '/'}) }}</td>
+                        <td>{{ tournament.entry_deadline|replace({'-': '/'}) }}</td>
+                        <td>{{ tournament.drop_deadline|replace({'-': '/'}) }}</td>
+                        <td>
+                            {% if not tournament.is_passed %}
+                                <a href="/admin/tournament/edit/{{ tournament.id }}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i> Edit</a>
+                                <button class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Delete</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tournaments data found.</p>
+    {% endif %}
+{% endblock %}

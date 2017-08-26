@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Code\StatusCode;
+use App\Model\TournamentsModel;
 use App\Model\UserModel;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
@@ -26,4 +27,27 @@ use DDesrosiers\SilexAnnotations\Annotations as SLX;
 class TournamentController extends BaseController
 {
 
+    /**
+     * @var TournamentsModel
+     */
+    private $tm;
+
+    public function __construct(Application $app)
+    {
+        parent::__construct($app);
+        $this->tm = Model::get('tournaments');
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/tournament/list")
+     * )
+     */
+    public function tournamentListAction(Request $request)
+    {
+        $tournaments = $this->tm->getAll();
+        return $this->out($this->twig->render('admin/tournament/list.twig', [
+            'tournaments' => $tournaments
+        ]));
+    }
 }

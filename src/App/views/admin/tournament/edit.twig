@@ -43,6 +43,15 @@
                     <input value="{{ data.tournament.drop_deadline }}" name="drop_deadline" class="form-control" id="drop_deadline" type="text">
                 </div>
             </div>
+
+            <div class="form-group">
+                <label for="approve_method">Approve members method <span style="color: red">*</span></label>
+                <select name="approve_method" id="approve_method" class="form-control">
+                    <option {{ data.tournament.approve_method == 0 ? 'selected' : '' }} value="0">Auto</option>
+                    <option {{ data.tournament.approve_method == 1 ? 'selected' : '' }} value="1">Manually</option>
+                </select>
+            </div>
+            <button onclick="persistData()" class="btn btn-success btn-block"><i class="fa fa-check"></i> Save all changes</button>
         </div>
     </div>
 
@@ -52,40 +61,41 @@
         </div>
         <div class="box-body">
             <button style="margin-bottom: 15px" onclick="addNewObject('debates')" class="btn btn-primary"><i class="fa fa-plus"></i> Add new debate</button>
-            {% for event in data.events %}
-                <form id="dt_{{ loop.index0 }}" data-id="{{ event.id }}">
-                    <div class="panel panel-default">
-                        <div class="panel-body" style="padding-bottom: 0">
+            <div id="debates">
+                {% for event in data.events %}
+                    <form id="dt_{{ loop.index0 }}" data-id="{{ event.id }}">
+                        <div class="panel panel-default">
+                            <div class="panel-body" style="padding-bottom: 0">
 
-                            <div class="form-group">
-                                <label for="dt_name">Name <span style="color: red">*</span></label>
-                                <input required value="{{ event.name }}" name="dt_name" id="dt_name" class="form-control" type="text" />
+                                <div class="form-group">
+                                    <label for="dt_name">Name <span style="color: red">*</span></label>
+                                    <input required value="{{ event.name }}" name="dt_name" id="dt_name" class="form-control" type="text" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="dt_type">Type</label>
+                                    <select name="dt_type" id="dt_type" class="form-control">
+                                        <option {{ event.type == 0 ? 'selected' : '' }} value="0">Single</option>
+                                        <option {{ event.type == 1 ? 'selected' : '' }} value="1">With partner</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="dt_cost">Cost <span style="color: red">*</span></label>
+                                    <input value="{{ event.cost }}" required name="dt_cost" id="dt_cost" type="number" class="form-control" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="dt_drop_cost">Drop fee after deadline <span style="color: red">*</span></label>
+                                    <input value="{{ event.drop_fee_cost }}" required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
+                                </div>
+
+                                <button type="button" onclick="removeField(this, 'event', {{ event.id }})" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove debate</button>
                             </div>
-
-                            <div class="form-group">
-                                <label for="dt_type">Type</label>
-                                <select name="dt_type" id="dt_type" class="form-control">
-                                    <option {{ event.type == 0 ? 'selected' : '' }} value="0">Single</option>
-                                    <option {{ event.type == 1 ? 'selected' : '' }} value="1">With partner</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="dt_cost">Cost <span style="color: red">*</span></label>
-                                <input value="{{ event.cost }}" required name="dt_cost" id="dt_cost" type="number" class="form-control" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="dt_drop_cost">Drop fee after deadline <span style="color: red">*</span></label>
-                                <input value="{{ event.drop_fee_cost }}" required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
-                            </div>
-
-                            <button type="button" onclick="removeField(this)" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove debate</button>
                         </div>
-                    </div>
-                </form>
-            {% endfor %}
-            <div id="debates" style="margin-top: 20px"></div>
+                    </form>
+                {% endfor %}
+            </div>
         </div>
     </div>
 {% endblock %}
@@ -156,7 +166,7 @@
                                 <option {{ (attribute.editable) ? 'selected' : '' }} value="1">Yes</option>
                             </select>
                         </div>
-                        <button type="button" onclick="removeConfirmField({{ attribute.id }}, this)" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
+                        <button type="button" onclick="removeField(this, 'field', {{ attribute.id }})" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
                     </div>
                 </div>
             </form>
@@ -197,7 +207,7 @@
     </script>
 
     <script type="text/html" id="fields-template">
-        <form id="attr_$1">
+        <form id="fields_$1">
             <div class="panel panel-default">
                 <div class="panel-body" style="padding-bottom: 0">
                     <div class="form-group">
@@ -214,17 +224,17 @@
                         </select>
                     </div>
 
-                    <div id="attr_$1_text">
+                    <div id="fields_$1_text">
                         <div class="form-group">
                             <label for="attr">Placeholder</label>
                             <input name="placeholder" type="text" class="form-control" />
                         </div>
                     </div>
 
-                    <div id="attr_$1_dropdown" style="display: none">
+                    <div id="fields_$1_dropdown" style="display: none">
                         <div class="form-group">
                             <p><b>Items:</b> <button type="button" onclick="_addDropdownItem($1)" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i> Add item</button></p>
-                            <div id="attr_$1_dropdown_items">
+                            <div id="fields_$1_dropdown_items">
 
                             </div>
                         </div>
@@ -260,13 +270,13 @@
 {% block javascript %}
     <script src="/assets/js/jquery.inputmask.bundle.min.js"></script>
     <script>
-        $('#reg_start').inputmask('dd/mm/yyyy');
-        $('#reg_deadline').inputmask('dd/mm/yyyy');
-        $('#drop_deadline').inputmask('dd/mm/yyyy');
+        $('#reg_start').inputmask('yyyy/mm/dd');
+        $('#reg_deadline').inputmask('yyyy/mm/dd');
+        $('#drop_deadline').inputmask('yyyy/mm/dd');
     </script>
 
     <script>
-        var fields_count = {debates: 0, fields: 0};
+        var fields_count = {debates: {{ data.events|length }}, fields: {{ attributes|length }}};
 
         String.prototype.replaceAll = function(search, replacement) {
             var target = this;
@@ -283,27 +293,39 @@
             fields_count[id]++;
         }
 
-        function removeField(object)
+        function removeField(object, type, id)
         {
+            if (type !== undefined && id !== undefined)
+            {
+                $.post('/admin/tournament/edit/{{ data.tournament.id }}/delete', {type: type, id: id});
+            }
             // check if persisted field
             $(object).parent().parent().parent().remove();
         }
 
-        function saveFields()
+        function _getDataFromFormConstructor(name)
         {
-            var fields = [];
-            $("#fields").children().each(function() {
+            var data = [];
+            $("#" + name).children().each(function() {
                 var id = $(this).data('id');
-                var data = _serializeToObject($(this).serializeArray());
-                data["id"] = id;
-                fields.push(data);
+                var ser = _serializeToObject($(this).serializeArray());
+                ser["id"] = id;
+                data.push(ser);
             });
+            return data;
+        }
 
+        function persistData()
+        {
+            var fields = _getDataFromFormConstructor('fields');
+            var debates = _getDataFromFormConstructor('debates');
             var tournament_name = $("#tournament_name").val();
             var reg_start = $("#reg_start").val();
             var reg_deadline = $("#reg_deadline").val();
+            var approve_method = $("#approve_method").val();
             var drop_deadline = $("#drop_deadline").val();
-            $.post(window.location, {name: tournament_name, reg_start: reg_start, reg_deadline: reg_deadline, drop_deadline: drop_deadline, events: fields}, function(response) {
+
+            $.post(window.location, {name: tournament_name, reg_start: reg_start, reg_deadline: reg_deadline, drop_deadline: drop_deadline, approve_method: approve_method, events: debates, fields: fields}, function(response) {
                 window.location = window.location; // refresh page scroll
             });
         }
@@ -335,7 +357,7 @@
         function _addDropdownItem(attr_id)
         {
             var template = '<div class="form-group form-inline"><input type="text" name="dropdown_item" class="form-control" style="width:300px; margin-right: 10px"><button onclick="_removeDropdownItem(this)" class="btn btn-danger"><i class="fa fa-remove"></i></button></div>';
-            $("#attr_"+ attr_id +"_dropdown_items").append(template);
+            $("#fields_"+ attr_id +"_dropdown_items").append(template);
         }
 
         function _removeDropdownItem(object)
@@ -347,18 +369,18 @@
         {
             if (value == 0)
             {
-                $("#attr_"+ attr_id +"_dropdown").hide();
-                $("#attr_"+ attr_id +"_text").show();
+                $("#fields_"+ attr_id +"_dropdown").hide();
+                $("#fields_"+ attr_id +"_text").show();
             }
             else if (value == 1 || value == 2)
             {
-                $("#attr_"+ attr_id +"_text").hide();
-                $("#attr_"+ attr_id +"_dropdown").show();
+                $("#fields_"+ attr_id +"_text").hide();
+                $("#fields_"+ attr_id +"_dropdown").show();
             }
             else if (value == 3)
             {
-                $("#attr_"+ attr_id +"_dropdown").hide();
-                $("#attr_"+ attr_id +"_text").hide();
+                $("#fields_"+ attr_id +"_dropdown").hide();
+                $("#fields_"+ attr_id +"_text").hide();
             }
         }
     </script>
