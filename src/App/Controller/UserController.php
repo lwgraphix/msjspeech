@@ -106,6 +106,16 @@ class UserController extends BaseController
     {
         Security::setAccessLevel(UserType::SUSPENDED);
 
+        if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
+        {
+            $adminMode = true;
+            $loadedUser = User::loadById($request->get('user_id'));
+        }
+        else
+        {
+            $adminMode = false;
+        }
+
         // if stripe token - charge stripe on ready user
         $requiredFields = [
             'email' => AttributeType::TEXT,
@@ -115,8 +125,25 @@ class UserController extends BaseController
 
         // adding custom required attributes to check
         $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+        if ($adminMode)
+        {
+            $uAttributes = Model::get('attribute')->getUserAttributes($loadedUser->getId());
+        }
+        else
+        {
+            $uAttributes = Model::get('attribute')->getUserAttributes(Security::getUser()->getId());
+        }
+
         foreach($attributes as $attribute)
         {
+            if ($attribute['type'] == AttributeType::ATTACHMENT)
+            {
+                if ($uAttributes[$attribute['id']]['required'] == 0)
+                {
+                    continue;
+                }
+            }
+
             if ($attribute['required'])
             {
                 $requiredFields['attr_' . $attribute['id']] = $attribute['type'];
@@ -131,6 +158,7 @@ class UserController extends BaseController
                  * @var $fld UploadedFile
                  */
                 $fld = $request->files->get($field);
+
                 if ($fld->getClientMimeType() != 'application/pdf')
                 {
                     FlashMessage::set(false, 'You can upload only PDF file!');
@@ -142,7 +170,7 @@ class UserController extends BaseController
                 $fld = $request->get($field);
             }
 
-            if ($fld === null || empty($fld))
+            if ($fld === null)
             {
                 FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
                 return new RedirectResponse($request->headers->get('referer'));
@@ -162,14 +190,12 @@ class UserController extends BaseController
             return new RedirectResponse($request->headers->get('referer'));
         }
 
-        if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
+        if ($adminMode)
         {
-            $adminMode = true;
-            $status = $this->um->update(User::loadById($request->get('user_id')), array_merge($request->request->all(), $request->files->all()), true);
+            $status = $this->um->update($loadedUser, array_merge($request->request->all(), $request->files->all()), true);
         }
         else
         {
-            $adminMode = false;
             $status = $this->um->update(Security::getUser(), array_merge($request->request->all(), $request->files->all()));
         }
 

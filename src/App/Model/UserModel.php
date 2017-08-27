@@ -118,6 +118,9 @@ class UserModel extends BaseModel
             }
         }
 
+        // get current attributes
+        $uAttributes = Model::get('attribute')->getUserAttributes($user->getId());
+
         $userData = [
             'first_name' => $user->getFirstName(),
             'last_name' => $user->getLastName(),
@@ -226,12 +229,16 @@ class UserModel extends BaseModel
                         $sql = 'UPDATE user_attributes SET `value` = :v WHERE attribute_id = :aid AND user_id = :uid';
                         if ($attribute['type'] == AttributeType::ATTACHMENT)
                         {
-                            $attachPath = Model::get('attachment')->updateAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
-                            MySQL::get()->exec($sql, [
-                                'v' => $attachPath,
-                                'aid' => $attribute['id'],
-                                'uid' => $user->getId()
-                            ]);
+                            if ($uAttributes[$attribute['id']]['required'] != 0 || $data['attr_' . $attribute['id']] !== null)
+                            {
+                                // prevent "needed" reupload attachment
+                                $attachPath = Model::get('attachment')->updateAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                                MySQL::get()->exec($sql, [
+                                    'v' => $attachPath,
+                                    'aid' => $attribute['id'],
+                                    'uid' => $user->getId()
+                                ]);
+                            }
                         }
                         else
                         {

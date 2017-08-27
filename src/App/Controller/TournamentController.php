@@ -44,6 +44,7 @@ class TournamentController extends BaseController
         parent::__construct($app);
         $this->tm = Model::get('tournaments');
         $this->am = Model::get('attribute');
+        Security::setAccessLevel(UserType::SUSPENDED);
     }
 
     /**
@@ -94,5 +95,79 @@ class TournamentController extends BaseController
             'attributes' => $this->am->getAll(AttributeGroupType::TOURNAMENT, $tournamentId),
             'users' => Model::get('user')->getAll()
         ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/tournament/join/{tournamentId}")
+     * )
+     */
+    public function tournamentJoinPersistAction(Request $request, $tournamentId)
+    {
+        $tournament = $this->tm->getById($tournamentId);
+
+        // todo: check rejoin
+
+        if (!$tournament['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/tournament/list');
+        }
+
+        if (!DateUtil::isPassed($tournament['tournament']['event_start']))
+        {
+            FlashMessage::set(false, 'Tournament registration is not started! You can\'t join this tournament.');
+            return new RedirectResponse('/tournament/list');
+        }
+
+        if (DateUtil::isPassed($tournament['tournament']['entry_deadline']))
+        {
+            FlashMessage::set(false, 'Tournament registration is ended! You can\'t join this tournament.');
+            return new RedirectResponse('/tournament/list');
+        }
+
+        // if stripe token - charge stripe on ready user
+        $requiredFields = [
+            'debate_type' => AttributeType::TEXT
+        ];
+
+        // adding custom required attributes to check
+        $attributes = Model::get('attribute')->getAll(AttributeGroupType::TOURNAMENT, $tournamentId);
+        foreach($attributes as $attribute)
+        {
+            if ($attribute['required'])
+            {
+                $requiredFields['attr_' . $attribute['id']] = $attribute['type'];
+            }
+        }
+
+        foreach($requiredFields as $field => $attributeType)
+        {
+            if ($attributeType == AttributeType::ATTACHMENT)
+            {
+                /**
+                 * @var $fld UploadedFile
+                 */
+                $fld = $request->files->get($field);
+                if ($fld->getClientMimeType() != 'application/pdf')
+                {
+                    FlashMessage::set(false, 'You can upload only PDF file!');
+                    return new RedirectResponse($request->headers->get('referer'));
+                }
+            }
+            else
+            {
+                $fld = $request->get($field);
+            }
+
+            if ($fld === null)
+            {
+                FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
+                return new RedirectResponse($request->headers->get('referer'));
+            }
+        }
+
+        FlashMessage::set(true, 'Done');
+        return new RedirectResponse($request->headers->get('referer'));
     }
 }

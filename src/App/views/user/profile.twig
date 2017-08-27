@@ -57,7 +57,7 @@
                 {% for attribute in attributes %}
                     <li><b>{{ attribute.label }}</b>:
                         {% if attribute.type == 2 %}
-                            {{ (attribute.value) ? attribute.value|join(', ') : 'Not specified' }}
+                            {{ (not attribute.value is null) ? attribute.value|join(', ') : 'Not specified' }}
                         {% elseif attribute.type == 3 %}
                             {% if attribute.value %}
                                 <button onclick="showAttach({{ attribute.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
@@ -65,7 +65,7 @@
                                 Not specified
                             {% endif %}
                         {% else %}
-                            {{ (attribute.value) ? attribute.value : 'Not specified' }}
+                            {{ (not attribute.value is null) ? attribute.value : 'Not specified' }}
                         {% endif %}
                     </li>
                 {% endfor %}
@@ -163,9 +163,9 @@
                             <div class="form-group">
                                 <label for="attr_{{ attribute.id }}">{{ attribute.label }} {{ (attribute.required) ? '<span style="color: red">*</span>' : '' }}</label>
                                 {% if attribute.type == 0 %}
-                                    <input {{ not attribute.editable ? 'disabled' : ''  }} {{ (attribute.required) ? 'required' : '' }} value="{{ attribute.value }}" name="attr_{{ attribute.id }}" type="text" class="form-control" id="attr_{{ attribute.id }}" placeholder="{{ attribute.placeholder }}">
+                                    <input {{ not attribute.editable ? 'readonly' : ''  }} {{ (attribute.required) ? 'required' : '' }} value="{{ attribute.value }}" name="attr_{{ attribute.id }}" type="text" class="form-control" id="attr_{{ attribute.id }}" placeholder="{{ attribute.placeholder }}">
                                 {% elseif attribute.type == 1 %}
-                                    <select {{ not attribute.editable ? 'disabled' : ''  }} {{ (attribute.required) ? 'required' : '' }} class="form-control" name="attr_{{ attribute.id }}">
+                                    <select {{ not attribute.editable ? 'readonly' : ''  }} {{ (attribute.required) ? 'required' : '' }} class="form-control" name="attr_{{ attribute.id }}">
                                         {% for item in attribute.data %}
                                             <option {{ (item == attribute.value) ? 'selected' : '' }} value="{{ loop.index0 }}">{{ item }}</option>
                                         {% endfor %}

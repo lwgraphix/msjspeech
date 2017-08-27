@@ -122,7 +122,7 @@ class AuthController extends BaseController
                 $fld = $request->get($field);
             }
 
-            if ($fld === null || empty($fld))
+            if ($fld === null)
             {
                 FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
                 return new RedirectResponse('/auth/register');

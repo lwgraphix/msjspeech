@@ -46,14 +46,21 @@ class AttributeModel extends BaseModel
         $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, GROUP_CONCAT(ua.value) as value, a.id, ua.id as user_has_attribute, a.placeholder, a.help_text
                 FROM attributes a
                 LEFT JOIN user_attributes ua ON ua.attribute_id = a.id AND ua.user_id = :uid
+                WHERE a.group = :g
                 GROUP BY a.id';
-        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
+        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId, 'g' => AttributeGroupType::REGISTER]);
+        $ua = [];
         foreach($data as &$row)
         {
             if ($row['value'] === null && $row['user_has_attribute'] === null)
             {
                 // user dont have needed attribute - unlock it for first time
                 $row['editable'] = 1;
+            }
+
+            if ($row['type'] == AttributeType::ATTACHMENT && $row['value'] !== null)
+            {
+                $row['required'] = 0; // dont need reupload the attachment
             }
 
             if ($row['type'] == AttributeType::DROPDOWN || $row['type'] == AttributeType::CHECKBOX)
@@ -76,9 +83,11 @@ class AttributeModel extends BaseModel
                     }
                 }
             }
+
+            $ua[$row['id']] = $row;
         }
 
-        return $data;
+        return $ua;
     }
 
     public function delete($id, $group)
