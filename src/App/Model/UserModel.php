@@ -52,7 +52,7 @@ class UserModel extends BaseModel
         $username = $data['first_name'] . $data['last_name'] . '#' . str_pad($userId, 4, '0', STR_PAD_LEFT);
 
         MySQL::get()->exec('UPDATE users SET username = :u WHERE id = :i', [
-            'u' => $username,
+            'u' => preg_replace('/\s+/', '', $username),
             'i' => $userId
         ]);
 
@@ -81,11 +81,16 @@ class UserModel extends BaseModel
             {
                 if ($attribute['type'] == AttributeType::ATTACHMENT)
                 {
-                    $attachPath = Model::get('attachment')->createAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
-                    MySQL::get()->exec($attrSQL, [
+                    $uaId = MySQL::get()->exec($attrSQL, [
                         'uid' => $userId,
                         'aid' => $attribute['id'],
-                        'v' => $attachPath
+                        'v' => null
+                    ], true);
+
+                    $attachPath = Model::get('attachment')->createAttachment($uaId, $attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                    MySQL::get()->exec('UPDATE user_attributes SET `value` = :v WHERE id = :id', [
+                        'v' => $attachPath,
+                        'id' => $uaId
                     ]);
                 }
                 else
@@ -186,11 +191,16 @@ class UserModel extends BaseModel
                     {
                         if ($attribute['type'] == AttributeType::ATTACHMENT)
                         {
-                            $attachPath = Model::get('attachment')->createAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
-                            MySQL::get()->exec($sql, [
-                                'v' => $attachPath,
+                            $uaId = MySQL::get()->exec($sql, [
+                                'uid' => $user->getId(),
                                 'aid' => $attribute['id'],
-                                'uid' => $user->getId()
+                                'v' => null
+                            ], true);
+
+                            $attachPath = Model::get('attachment')->createAttachment($uaId, $attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                            MySQL::get()->exec('UPDATE user_attributes SET `value` = :v WHERE id = :id', [
+                                'v' => $attachPath,
+                                'id' => $uaId
                             ]);
                         }
                         else
@@ -232,7 +242,7 @@ class UserModel extends BaseModel
                             if ($uAttributes[$attribute['id']]['required'] != 0 || $data['attr_' . $attribute['id']] !== null)
                             {
                                 // prevent "needed" reupload attachment
-                                $attachPath = Model::get('attachment')->updateAttachment($attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                                $attachPath = Model::get('attachment')->updateAttachment($uAttributes[$attribute['id']]['user_attr_id'], $attribute['id'], $userData, $data['attr_' . $attribute['id']]);
                                 MySQL::get()->exec($sql, [
                                     'v' => $attachPath,
                                     'aid' => $attribute['id'],

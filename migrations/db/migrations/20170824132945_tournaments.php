@@ -18,6 +18,6 @@ class Tournaments extends AbstractMigration
 
     public function down()
     {
-        $this->table('pages_category')->drop();
+        $this->table('tournaments')->drop();
     }
 }

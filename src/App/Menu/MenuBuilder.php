@@ -40,9 +40,7 @@ class MenuBuilder
             $userGroup
                 ->add(new MenuItem('Profile', '/user/profile', 'user'))
                 ->add(new MenuItem('Balance', '/user/balance', 'money'))
-                ->add(new MenuItem('Tournaments', null, 'calendar', [
-                    new MenuItem('List', '/tournament/list', 'list'),
-                ]))
+                ->add(new MenuItem('Tournaments', '/tournament/list', 'calendar'))
             ;
             $menu->add($userGroup);
         }

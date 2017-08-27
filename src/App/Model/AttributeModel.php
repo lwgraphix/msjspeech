@@ -41,14 +41,23 @@ class AttributeModel extends BaseModel
         return $data;
     }
 
-    public function getUserAttributes($userId)
+    public function getUserAttributes($userId, $group = AttributeGroupType::REGISTER, $eventId = null)
     {
-        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, GROUP_CONCAT(ua.value) as value, a.id, ua.id as user_has_attribute, a.placeholder, a.help_text
+        if ($eventId !== null && $group == AttributeGroupType::TOURNAMENT)
+        {
+            $eventWhere = 'AND event_id = ' . $eventId;
+        }
+        else
+        {
+            $eventWhere = null;
+        }
+
+        $sql = 'SELECT a.label, a.data, a.type, a.required, a.editable, GROUP_CONCAT(ua.value) as value, a.id, ua.id as user_attr_id, ua.id as user_has_attribute, a.placeholder, a.help_text
                 FROM attributes a
                 LEFT JOIN user_attributes ua ON ua.attribute_id = a.id AND ua.user_id = :uid
-                WHERE a.group = :g
+                WHERE a.group = :g '. $eventWhere .'
                 GROUP BY a.id';
-        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId, 'g' => AttributeGroupType::REGISTER]);
+        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId, 'g' => $group]);
         $ua = [];
         foreach($data as &$row)
         {

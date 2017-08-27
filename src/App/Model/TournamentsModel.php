@@ -7,6 +7,8 @@ use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
+use App\Type\AttributeType;
+use App\Type\EventStatusType;
 use App\Type\UserType;
 use App\Util\DateUtil;
 
@@ -60,6 +62,138 @@ class TournamentsModel extends BaseModel
         ]);
     }
 
+    public function getUserTournaments($userId)
+    {
+        $sql = 'SELECT
+                  ut.id,
+                  t.name as tournament_name,
+                  e.name as event_name,
+                  own_user.id as owner_id,
+                  own_user.username as owner_name,
+                  partner_user.id as partner_id,
+                  partner_user.username as partner_name,
+                  t.entry_deadline,
+                  t.drop_deadline,
+                  ut.status
+                FROM user_tournaments ut
+                INNER JOIN events e ON e.id = ut.event_id
+                INNER JOIN tournaments t ON t.id = e.tournament_id
+                INNER JOIN users own_user ON own_user.id = ut.user_id
+                LEFT JOIN users partner_user ON partner_user.id = ut.partner_id
+                WHERE ut.user_id = :uid OR ut.partner_id = :uid';
+        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
+        return $data;
+    }
+
+    public function getEvent($eventId)
+    {
+        $sql = 'SELECT * FROM events WHERE id = :id';
+        $data = MySQL::get()->fetchOne($sql, ['id' => $eventId]);
+        return $data;
+    }
+
+    public function getUserEventInfo($userEventId)
+    {
+        $sql = 'SELECT e.id as event_id, e.cost, t.event_start, e.drop_fee_cost, t.entry_deadline, t.drop_deadline, e.name as event_name, t.name as tournament_name, ut.user_id, ut.partner_id, own_u.username as owner_name, par_u.username as partner_name, e.tournament_id FROM user_tournaments ut
+                INNER JOIN events e ON ut.event_id = e.id
+                INNER JOIN tournaments t ON t.id = e.tournament_id
+                INNER JOIN users own_u ON own_u.id = ut.user_id
+                LEFT JOIN users par_u ON par_u.id = ut.partner_id
+                WHERE ut.id = :id';
+        $data = MySQL::get()->fetchOne($sql, ['id' => $userEventId]);
+        return $data;
+    }
+
+    public function join($data, $tournament, $event, User $user, $partnerUser = null)
+    {
+        // need for attachment create
+        $userData = [
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'id' => $user->getId()
+        ];
+
+        $attributes = Model::get('attribute')->getAll(AttributeGroupType::TOURNAMENT, $tournament['id']);
+        $attrSQL = 'INSERT INTO user_attributes (user_id, attribute_id, `value`, event_id) VALUES (:uid, :aid, :v, :eid)';
+        foreach($attributes as $attribute)
+        {
+            if (!isset($data['attr_' . $attribute['id']]))
+            {
+                $data['attr_' . $attribute['id']] = null;
+            }
+
+            // multiple values insert
+            if (is_array($data['attr_' . $attribute['id']]))
+            {
+                foreach($data['attr_' . $attribute['id']] as $dataItem)
+                {
+                    MySQL::get()->exec($attrSQL, [
+                        'uid' => $user->getId(),
+                        'aid' => $attribute['id'],
+                        'v' => $dataItem,
+                        'eid' => $event['id']
+                    ]);
+                }
+            }
+            else
+            {
+                if ($attribute['type'] == AttributeType::ATTACHMENT)
+                {
+                    $uaId = MySQL::get()->exec($attrSQL, [
+                        'uid' => $user->getId(),
+                        'aid' => $attribute['id'],
+                        'v' => null,
+                        'eid' => $event['id']
+                    ], true);
+
+                    $attachPath = Model::get('attachment')->createAttachment($uaId, $attribute['id'], $userData, $data['attr_' . $attribute['id']]);
+                    MySQL::get()->exec('UPDATE user_attributes SET `value` = :v WHERE id = :id', [
+                        'v' => $attachPath,
+                        'id' => $uaId
+                    ]);
+                }
+                else
+                {
+                    MySQL::get()->exec($attrSQL, [
+                        'uid' => $user->getId(),
+                        'aid' => $attribute['id'],
+                        'v' => $data['attr_' . $attribute['id']],
+                        'eid' => $event['id']
+                    ]);
+                }
+            }
+        }
+
+        // attributes is done, go create user-tournament row
+        $sql = 'INSERT INTO user_tournaments (user_id, event_id, partner_id, status)
+                VALUES (:uid, :eid, :pid, :s)';
+        $partnerId = ($partnerUser === null) ? null : $partnerUser['id'];
+
+        if ($partnerId !== null)
+        {
+            $status = EventStatusType::WAITING_PARTNER_RESPONSE;
+            // CREATE INVITE REQUEST HERE (EMAIL)
+        }
+        else
+        {
+            $status = ($tournament['approve_method'] == 0) ? EventStatusType::APPROVED : EventStatusType::WAITING_FOR_APPROVE;
+        }
+
+        MySQL::get()->exec($sql, [
+            'uid' => $user->getId(),
+            'eid' => $event['id'],
+            'pid' => $partnerId,
+            's' => $status
+        ]);
+
+        // get cash
+        Model::get('transaction_history')->createTransaction(
+            $user->getId(),
+            -($event['cost']),
+            'Joined the tournament "'. $tournament['name'] .'"'
+        );
+    }
+
     public function createEvent($tournamentId, $name, $type, $cost, $dropFeeCost)
     {
         $sql = 'INSERT INTO events (tournament_id, `name`, `type`, `cost`, `drop_fee_cost`)
@@ -89,6 +223,13 @@ class TournamentsModel extends BaseModel
     {
         $sql = 'DELETE FROM events WHERE id = :id';
         MySQL::get()->exec($sql, ['id' => $id]);
+    }
+
+    public function isJoined($userId, $eventId)
+    {
+        $sql = 'SELECT * FROM user_tournaments WHERE event_id = :eid AND (user_id = :uid OR partner_id = :uid)';
+        $data = MySQL::get()->fetchOne($sql, ['eid' => $eventId, 'uid' => $userId]);
+        return $data !== false;
     }
 
     public function getById($id)

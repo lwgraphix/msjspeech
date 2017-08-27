@@ -12,6 +12,8 @@ use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EventStatusType;
+use App\Type\EventType;
 use App\Type\UserType;
 use App\Util\DateUtil;
 use Silex\Application;
@@ -55,9 +57,45 @@ class TournamentController extends BaseController
     public function tournamentListAction(Request $request)
     {
         $tournaments = $this->tm->getAll();
+        $history = $this->tm->getUserTournaments(Security::getUser()->getId());
         return $this->out($this->twig->render('user/tournament/list.twig', [
-            'tournaments' => $tournaments
+            'tournaments' => $tournaments,
+            'history' => $history,
+            'event_status' => EventStatusType::NAMES
         ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/tournament/view/{eventId}")
+     * )
+     */
+    public function tournamentViewAction(Request $request, $eventId)
+    {
+        $eventInfo = $this->tm->getUserEventInfo($eventId);
+        if (!$eventInfo)
+        {
+            FlashMessage::set(false, 'Record not found');
+            return new RedirectResponse('/tournament/list');
+        }
+        else
+        {
+            // check access to tournament data by partner and owner
+            if (Security::getUser()->getId() != $eventInfo['user_id'])
+            {
+                if (Security::getUser()->getId() != $eventInfo['partner_id'])
+                {
+                    FlashMessage::set(false, 'Record not found');
+                    return new RedirectResponse('/tournament/list');
+                }
+            }
+            
+            $attributes = $this->am->getUserAttributes($eventInfo['user_id'], AttributeGroupType::TOURNAMENT, $eventInfo['event_id']);
+            return $this->out($this->twig->render('user/tournament/view.twig', [
+                'event' => $eventInfo,
+                'attributes' => $attributes
+            ]));
+        }
     }
 
     /**
@@ -68,8 +106,6 @@ class TournamentController extends BaseController
     public function tournamentJoinAction(Request $request, $tournamentId)
     {
         $tournament = $this->tm->getById($tournamentId);
-
-        // todo: check rejoin
 
         if (!$tournament['tournament'])
         {
@@ -105,8 +141,6 @@ class TournamentController extends BaseController
     public function tournamentJoinPersistAction(Request $request, $tournamentId)
     {
         $tournament = $this->tm->getById($tournamentId);
-
-        // todo: check rejoin
 
         if (!$tournament['tournament'])
         {
@@ -167,7 +201,75 @@ class TournamentController extends BaseController
             }
         }
 
-        FlashMessage::set(true, 'Done');
-        return new RedirectResponse($request->headers->get('referer'));
+        // event info
+        $eventInfo = null;
+        foreach($tournament['events'] as $e)
+        {
+            if ($e['id'] == $request->get('debate_type'))
+            {
+                $eventInfo = $e;
+            }
+        }
+
+        if ($eventInfo === null)
+        {
+            FlashMessage::set(false, 'Selected debate type not found.');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
+        if ($this->tm->isJoined(Security::getUser()->getId(), $request->get('debate_type')))
+        {
+            FlashMessage::set(false, 'You are already joined to this debate on this tournament!');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
+        // check if not selected partner
+        $partnerUser = null;
+        if ($eventInfo['type'] == EventType::WITH_PARTNER)
+        {
+            if ($request->get('partner_id') === null)
+            {
+                FlashMessage::set(false, 'You need to select your partner for join this debate');
+                return new RedirectResponse($request->headers->get('referer'));
+            }
+            else
+            {
+                if ($request->get('partner_id') == Security::getUser()->getId())
+                {
+                    FlashMessage::set(false, 'You can\'t join tournament with yourself as partner');
+                    return new RedirectResponse($request->headers->get('referer'));
+                }
+                else
+                {
+                    $partnerUser = Model::get('user')->getById($request->get('partner_id'));
+                    if (!$partnerUser)
+                    {
+                        FlashMessage::set(false, 'Partner not found');
+                        return new RedirectResponse($request->headers->get('referer'));
+                    }
+                }
+            }
+        }
+
+        //check balance
+        if ($eventInfo['cost'] > Security::getUser()->getBalance())
+        {
+            // TODO: if ENABLED NEGATIVE BALANCES -> PASS THIS CHECK
+            FlashMessage::set(false, 'Not enough money for join this debate. Please <a target="_blank" href="/user/balance">deposit</a> money and try join again');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+        else
+        {
+            $this->tm->join(
+                array_merge($request->request->all(), $request->files->all()),
+                $tournament['tournament'],
+                $eventInfo,
+                Security::getUser(),
+                $partnerUser
+            );
+
+            FlashMessage::set(true, 'You successfully joined the tournament');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
     }
 }

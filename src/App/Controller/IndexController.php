@@ -71,10 +71,10 @@ class IndexController extends BaseController
 
     /**
      * @SLX\Route(
-     *     @SLX\Request(method="GET", uri="/attachment/{attrId}")
+     *     @SLX\Request(method="GET", uri="/attachment/{userAttrId}")
      * )
      */
-    public function attachmentShowAction(Request $request, $attrId)
+    public function attachmentShowAction(Request $request, $userAttrId)
     {
         if ($request->get('user_id') && Security::getUser()->getRole() >= UserType::OFFICER)
         {
@@ -85,7 +85,7 @@ class IndexController extends BaseController
             $userId = Security::getUser()->getId();
         }
 
-        $attachmentPath = Model::get('attachment')->getUserAttachment($userId, $attrId);
+        $attachmentPath = Model::get('attachment')->getUserAttachment($userId, $userAttrId);
         if (!$attachmentPath)
         {
             FlashMessage::set(false, 'Attachment not found');

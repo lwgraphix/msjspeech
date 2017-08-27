@@ -1,0 +1,55 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Tournament view
+{% endblock %}
+
+{% block content %}
+    <ul class="list-group" style="margin-bottom: 0">
+        <li class="list-group-item"><b>Tournament: </b>{{ event.tournament_name }}</li>
+        <li class="list-group-item"><b>Debate: </b>{{ event.event_name }}</li>
+        <li class="list-group-item"><b>Cost: </b>{{ event.cost|number_format(2, '.', ',') }}$</li>
+
+        <li class="list-group-item"><b>Drop after deadline cost: </b>{{ event.drop_fee_cost|number_format(2, '.', ',') }}$</li>
+        <li class="list-group-item"><b>Registration start: </b>{{ event.event_start|replace({'-': '/'}) }}</li>
+        <li class="list-group-item"><b>Registration end: </b>{{ event.entry_deadline|replace({'-': '/'}) }}</li>
+        <li class="list-group-item"><b>Drop deadline: </b>{{ event.drop_deadline|replace({'-': '/'}) }}</li>
+
+        <li class="list-group-item"><b>Partner: </b>
+            {% if event.partner_id is null %}
+                No
+            {% else %}
+                {% if user.id == event.partner_id %}
+                    {{ event.owner_name }}
+                {% else %}
+                    {{ event.partner_name }}
+                {% endif %}
+            {% endif %}
+        </li>
+        {% for attribute in attributes %}
+            <li class="list-group-item"><b>{{ attribute.label }}</b>:
+                {% if attribute.type == 2 %}
+                    {{ (not attribute.value is null) ? attribute.value|join(', ') : 'Not specified' }}
+                {% elseif attribute.type == 3 %}
+                    {% if attribute.value %}
+                        <button onclick="showAttach({{ attribute.user_attr_id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
+                    {% else %}
+                        Not specified
+                    {% endif %}
+                {% else %}
+                    {{ (not attribute.value is null) ? attribute.value : 'Not specified' }}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        function showAttach(id)
+        {
+            {% if admin_mode is defined %}
+            window.open('/attachment/' + id + '?user_id={{ user.id }}', '_blank');
+            {% else %}
+            window.open('/attachment/' + id, '_blank');
+            {% endif %}
+        }
+    </script>
+{% endblock %}

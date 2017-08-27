@@ -1,39 +1,97 @@
 {% extends 'layout.twig' %}
 {% block title %}
-    Tournament list
+    Tournament history
+{% endblock %}
+
+{% block content_header %}
+    <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title" style="width: 100%">Tournament list</h3>
+        </div>
+        <div class="box-body">
+            {% if tournaments|length %}
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Registration start</th>
+                        <th>Registration end</th>
+                        <th>Drop deadline</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tournament in tournaments %}
+                        {% if tournament.reg_started and not tournament.reg_ended %}
+                            <tr>
+                                <td>{{ tournament.id }}</td>
+                                <td>{{ tournament.name }}</td>
+                                <td>{{ tournament.event_start|replace({'-': '/'}) }}</td>
+                                <td>{{ tournament.entry_deadline|replace({'-': '/'}) }}</td>
+                                <td>{{ tournament.drop_deadline|replace({'-': '/'}) }}</td>
+                                <td>
+                                    <a href="/tournament/join/{{ tournament.id }}" class="btn btn-xs btn-primary">Join</a>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No tournaments found.</p>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}
 
 {% block content %}
-    {% if tournaments|length %}
+    {% if history|length %}
         <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Registration start</th>
-                    <th>Registration end</th>
+                    <th>Tournament</th>
+                    <th>Debate</th>
+                    <th>Partner</th>
+                    <th>Status</th>
+                    <th>Join deadline</th>
                     <th>Drop deadline</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for tournament in tournaments %}
-                    {% if tournament.reg_started and not tournament.reg_ended %}
-                        <tr>
-                            <td>{{ tournament.id }}</td>
-                            <td>{{ tournament.name }}</td>
-                            <td>{{ tournament.event_start|replace({'-': '/'}) }}</td>
-                            <td>{{ tournament.entry_deadline|replace({'-': '/'}) }}</td>
-                            <td>{{ tournament.drop_deadline|replace({'-': '/'}) }}</td>
-                            <td>
-                                <a href="/tournament/join/{{ tournament.id }}" class="btn btn-xs btn-primary">Join</a>
-                            </td>
-                        </tr>
-                    {% endif %}
+                {% for item in history %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.tournament_name }}</td>
+                        <td>{{ item.event_name }}</td>
+                        <td>
+                            {% if item.partner_id is null %}
+                                No
+                            {% else %}
+                                {% if user.id == item.partner_id %}
+                                    {{ item.owner_name }}
+                                {% else %}
+                                    {{ item.partner_name }}
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.status == 3 and user.id == item.partner_id %}
+                                {{ event_status[item.status]|replace({'partner': 'your'}) }}
+                            {% else %}
+                                {{ event_status[item.status] }}
+                            {% endif %}
+                        </td>
+                        <td>{{ item.entry_deadline|replace({'-': '/'}) }}</td>
+                        <td>{{ item.drop_deadline|replace({'-': '/'}) }}</td>
+                        <td>
+                            <a href="/tournament/view/{{ item.id }}" class="btn btn-xs btn-info">View</a>
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>No tournaments found.</p>
     {% endif %}
 {% endblock %}

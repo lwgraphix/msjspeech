@@ -60,7 +60,7 @@
                             {{ (not attribute.value is null) ? attribute.value|join(', ') : 'Not specified' }}
                         {% elseif attribute.type == 3 %}
                             {% if attribute.value %}
-                                <button onclick="showAttach({{ attribute.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
+                                <button onclick="showAttach({{ attribute.user_attr_id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
                             {% else %}
                                 Not specified
                             {% endif %}
@@ -180,7 +180,7 @@
                                     {% endfor %}
                                 {% elseif attribute.type == 3 %}
                                     {% if attribute.value %}
-                                        <p><button onclick="showAttach({{ attribute.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button></p>
+                                        <p><button onclick="showAttach({{ attribute.user_attr_id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button></p>
                                     {% else %}
                                         <p>Not specified</p>
                                     {% endif %}
