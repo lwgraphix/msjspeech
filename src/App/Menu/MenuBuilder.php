@@ -30,6 +30,7 @@ class MenuBuilder
                     new MenuItem('Create new tournament', '/admin/tournament/create', 'plus'),
                     new MenuItem('Tournament list', '/admin/tournament/list', 'list'),
                 ]))
+                ->add(new MenuItem('User groups', '/admin/groups/list', 'users'))
             ;
             $menu->add($adminGroup);
         }

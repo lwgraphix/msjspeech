@@ -16,7 +16,7 @@
 {% block content %}
     <ul class="list-group" style="margin-bottom: 0">
         <li class="list-group-item"><b>Tournament: </b>{{ event.tournament_name }}</li>
-        <li class="list-group-item"><b>Debate: </b>{{ event.event_name }}</li>
+        <li class="list-group-item"><b>Event: </b>{{ event.event_name }}</li>
         <li class="list-group-item"><b>Cost: </b>{{ event.cost|number_format(2, '.', ',') }}$</li>
 
         <li class="list-group-item"><b>Drop after deadline cost: </b>{{ event.drop_fee_cost|number_format(2, '.', ',') }}$</li>
@@ -59,7 +59,29 @@
         {% endif %}
     {% endif %}
 
+    {% if not (user.id == event.partner_id and event.event_status == 3) and event.event_status in [0,1,3] %}
+        <button style="margin-top: 15px" onclick="dropTournament()" class="btn btn-block btn-danger"><i class="fa fa-remove"></i> Drop tournament</button>
+    {% endif %}
+
+
     <script>
+
+        {% if event.event_status in [0, 1, 3] %}
+            function dropTournament()
+            {
+                $.post('/tournament/drop/{{ global.request.get('eventId') }}', {}, function(response) {
+                    if (response == 'ok')
+                    {
+                        window.location = '/tournament/list';
+                    }
+                    else
+                    {
+                        window.location = window.location;
+                    }
+                });
+            }
+        {% endif %}
+
         function showAttach(id)
         {
             {% if admin_mode %}
@@ -72,7 +94,14 @@
         function setDecision(state)
         {
             $.post(window.location, {decision: state}, function(response) {
-                window.location = '/tournament/list';
+                if (response == 'no')
+                {
+                    window.location = window.location;
+                }
+                else
+                {
+                    window.location = '/tournament/list';
+                }
             });
         }
     </script>

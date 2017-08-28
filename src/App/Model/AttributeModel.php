@@ -41,11 +41,11 @@ class AttributeModel extends BaseModel
         return $data;
     }
 
-    public function getUserAttributes($userId, $group = AttributeGroupType::REGISTER, $eventId = null)
+    public function getUserAttributes($userId, $group = AttributeGroupType::REGISTER, $userTournamentId = null)
     {
-        if ($eventId !== null && $group == AttributeGroupType::TOURNAMENT)
+        if ($userTournamentId !== null && $group == AttributeGroupType::TOURNAMENT)
         {
-            $eventWhere = 'AND event_id = ' . $eventId;
+            $eventWhere = 'AND user_tournament_id = ' . $userTournamentId;
         }
         else
         {

@@ -45,8 +45,7 @@ class AttachmentModel extends BaseModel
     public function getTournamentAttributeUsers($attributeId)
     {
         $sql = 'SELECT ut.user_id, ut.partner_id FROM user_tournaments ut
-                INNER JOIN events e ON e.id = ut.event_id
-                LEFT JOIN user_attributes ua ON ua.event_id = e.id
+                LEFT JOIN user_attributes ua ON ua.user_tournament_id = ut.id
                 WHERE ua.id = :aid';
         $data = MySQL::get()->fetchOne($sql, ['aid' => $attributeId]);
         return $data;

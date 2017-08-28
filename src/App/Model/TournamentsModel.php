@@ -65,6 +65,15 @@ class TournamentsModel extends BaseModel
     {
         if ($status == 1)
         {
+            // check for partner not joined with other
+            $sql = 'SELECT count(*) FROM user_tournaments WHERE event_id = :eid AND partner_id = :pid AND status IN (0, 1)';
+            $eventPartnerCount = MySQL::get()->fetchColumn($sql, [
+                'eid' => $eventInfo['event_id'],
+                'pid' => $eventInfo['partner_id']
+            ]);
+
+            if ($eventPartnerCount == 1) return false;
+
             // accepted
             $sql = 'UPDATE user_tournaments SET status = :s WHERE id = :id';
             $newStatus = ($eventInfo['approve_method'] == 0) ? EventStatusType::APPROVED : EventStatusType::WAITING_FOR_APPROVE;
@@ -94,6 +103,7 @@ class TournamentsModel extends BaseModel
                 'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because partner declined your request'
             );
         }
+        return true;
     }
 
     public function setDecision($userTournamentId, $status)
@@ -154,6 +164,55 @@ class TournamentsModel extends BaseModel
         ]);
     }
 
+    public function drop(User $user, $eventInfo)
+    {
+        $fee = DateUtil::isPassed($eventInfo['drop_deadline']);
+        // wait approve, approve, partner response
+
+        // drop tournament set status
+        $sql = 'UPDATE user_tournaments SET status = :s WHERE id = :id';
+        MySQL::get()->exec($sql, ['s' => EventStatusType::DROPPED, 'id' => $eventInfo['user_event_id']]);
+
+        if (!$fee)
+        {
+            Model::get('transaction_history')->createTransaction(
+                $user->getId(),
+                $eventInfo['cost'],
+                'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop event'
+            );
+
+            if ($user->getId() == $eventInfo['user_id'])
+            {
+                if ($eventInfo['partner_id'] !== null && $eventInfo['event_status'] != EventStatusType::WAITING_PARTNER_RESPONSE)
+                {
+                    Model::get('transaction_history')->createTransaction(
+                        $eventInfo['partner_id'],
+                        $eventInfo['cost'],
+                        'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event'
+                    );
+                }
+            }
+            else
+            {
+                // dropped by partner
+                Model::get('transaction_history')->createTransaction(
+                    $eventInfo['user_id'],
+                    $eventInfo['cost'],
+                    'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event'
+                );
+            }
+        }
+        else
+        {
+            // not refund and get fee from user who drop
+            Model::get('transaction_history')->createTransaction(
+                $user->getId(),
+                -($eventInfo['drop_fee_cost']),
+                'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline'
+            );
+        }
+    }
+
     public function getUserTournaments($userId)
     {
         $sql = 'SELECT
@@ -172,7 +231,8 @@ class TournamentsModel extends BaseModel
                 INNER JOIN tournaments t ON t.id = e.tournament_id
                 INNER JOIN users own_user ON own_user.id = ut.user_id
                 LEFT JOIN users partner_user ON partner_user.id = ut.partner_id
-                WHERE ut.user_id = :uid OR ut.partner_id = :uid';
+                WHERE ut.user_id = :uid OR ut.partner_id = :uid
+                ORDER BY ut.id DESC';
         $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
         return $data;
     }
@@ -186,7 +246,7 @@ class TournamentsModel extends BaseModel
 
     public function getUserEventInfo($userEventId)
     {
-        $sql = 'SELECT e.id as event_id, ut.status as event_status, e.cost, t.event_start, e.drop_fee_cost, t.entry_deadline, t.drop_deadline, t.approve_method, e.name as event_name, t.name as tournament_name, ut.user_id, ut.partner_id, own_u.username as owner_name, par_u.username as partner_name, e.tournament_id
+        $sql = 'SELECT e.id as event_id, ut.id as user_event_id, ut.status as event_status, e.cost, t.event_start, e.drop_fee_cost, t.entry_deadline, t.drop_deadline, t.approve_method, e.name as event_name, t.name as tournament_name, ut.user_id, ut.partner_id, own_u.username as owner_name, par_u.username as partner_name, e.tournament_id
                 FROM user_tournaments ut
                 INNER JOIN events e ON ut.event_id = e.id
                 INNER JOIN tournaments t ON t.id = e.tournament_id
@@ -199,6 +259,28 @@ class TournamentsModel extends BaseModel
 
     public function join($data, $tournament, $event, User $user, $partnerUser = null)
     {
+        // create user-tournament row
+        $sql = 'INSERT INTO user_tournaments (user_id, event_id, partner_id, status)
+                VALUES (:uid, :eid, :pid, :s)';
+        $partnerId = ($partnerUser === null) ? null : $partnerUser['id'];
+
+        if ($partnerId !== null)
+        {
+            $status = EventStatusType::WAITING_PARTNER_RESPONSE;
+            // CREATE INVITE REQUEST HERE (EMAIL)
+        }
+        else
+        {
+            $status = ($tournament['approve_method'] == 0) ? EventStatusType::APPROVED : EventStatusType::WAITING_FOR_APPROVE;
+        }
+
+        $utid = MySQL::get()->exec($sql, [
+            'uid' => $user->getId(),
+            'eid' => $event['id'],
+            'pid' => $partnerId,
+            's' => $status
+        ], true);
+
         // need for attachment create
         $userData = [
             'first_name' => $user->getFirstName(),
@@ -206,8 +288,9 @@ class TournamentsModel extends BaseModel
             'id' => $user->getId()
         ];
 
+        // go create user_attributes
         $attributes = Model::get('attribute')->getAll(AttributeGroupType::TOURNAMENT, $tournament['id']);
-        $attrSQL = 'INSERT INTO user_attributes (user_id, attribute_id, `value`, event_id) VALUES (:uid, :aid, :v, :eid)';
+        $attrSQL = 'INSERT INTO user_attributes (user_id, attribute_id, `value`, user_tournament_id) VALUES (:uid, :aid, :v, :utid)';
         foreach($attributes as $attribute)
         {
             if (!isset($data['attr_' . $attribute['id']]))
@@ -224,7 +307,7 @@ class TournamentsModel extends BaseModel
                         'uid' => $user->getId(),
                         'aid' => $attribute['id'],
                         'v' => $dataItem,
-                        'eid' => $event['id']
+                        'utid' => $utid
                     ]);
                 }
             }
@@ -236,7 +319,7 @@ class TournamentsModel extends BaseModel
                         'uid' => $user->getId(),
                         'aid' => $attribute['id'],
                         'v' => null,
-                        'eid' => $event['id']
+                        'utid' => $utid
                     ], true);
 
                     $attachPath = Model::get('attachment')->createAttachment($uaId, $attribute['id'], $userData, $data['attr_' . $attribute['id']]);
@@ -251,33 +334,11 @@ class TournamentsModel extends BaseModel
                         'uid' => $user->getId(),
                         'aid' => $attribute['id'],
                         'v' => $data['attr_' . $attribute['id']],
-                        'eid' => $event['id']
+                        'utid' => $utid
                     ]);
                 }
             }
         }
-
-        // attributes is done, go create user-tournament row
-        $sql = 'INSERT INTO user_tournaments (user_id, event_id, partner_id, status)
-                VALUES (:uid, :eid, :pid, :s)';
-        $partnerId = ($partnerUser === null) ? null : $partnerUser['id'];
-
-        if ($partnerId !== null)
-        {
-            $status = EventStatusType::WAITING_PARTNER_RESPONSE;
-            // CREATE INVITE REQUEST HERE (EMAIL)
-        }
-        else
-        {
-            $status = ($tournament['approve_method'] == 0) ? EventStatusType::APPROVED : EventStatusType::WAITING_FOR_APPROVE;
-        }
-
-        MySQL::get()->exec($sql, [
-            'uid' => $user->getId(),
-            'eid' => $event['id'],
-            'pid' => $partnerId,
-            's' => $status
-        ]);
 
         // get cash
         Model::get('transaction_history')->createTransaction(
@@ -320,7 +381,7 @@ class TournamentsModel extends BaseModel
 
     public function isJoined($userId, $eventId)
     {
-        $sql = 'SELECT * FROM user_tournaments WHERE event_id = :eid AND (user_id = :uid OR partner_id = :uid)';
+        $sql = 'SELECT * FROM user_tournaments WHERE event_id = :eid AND (user_id = :uid OR partner_id = :uid) AND status NOT IN (2, 4, 5)';
         $data = MySQL::get()->fetchOne($sql, ['eid' => $eventId, 'uid' => $userId]);
         return $data !== false;
     }

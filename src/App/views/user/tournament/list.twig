@@ -52,10 +52,10 @@
                 <tr>
                     <th>#</th>
                     <th>Tournament</th>
-                    <th>Debate</th>
+                    <th>Event</th>
                     <th>Partner</th>
                     <th>Status</th>
-                    <th>Join deadline</th>
+                    <th>Registration end</th>
                     <th>Drop deadline</th>
                     <th>Actions</th>
                 </tr>
@@ -80,14 +80,14 @@
                         <td>
                             {% if user.id == item.partner_id %}
                                 {% if item.status == 3 %}
-                                    {{ event_status[item.status]|replace({'partner': 'your'}) }}
+                                    <span class="label {{ event_colors[item.status] }}">{{ event_status[item.status]|replace({'partner': 'your'}) }}</span>
                                 {% elseif item.status == 4 %}
-                                    {{ event_status[item.status]|replace({'partner': 'your decision'}) }}
+                                    <span class="label {{ event_colors[item.status] }}">{{ event_status[item.status]|replace({'partner': 'your decision'}) }}</span>
                                 {% else %}
-                                    {{ event_status[item.status] }}
+                                    <span class="label {{ event_colors[item.status] }}">{{ event_status[item.status] }}</span>
                                 {% endif %}
                             {% else %}
-                                {{ event_status[item.status] }}
+                                <span class="label {{ event_colors[item.status] }}">{{ event_status[item.status] }}</span>
                             {% endif %}
                         </td>
                         <td>{{ item.entry_deadline|replace({'-': '/'}) }}</td>

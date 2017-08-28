@@ -7,8 +7,8 @@ class UserAttributesEvents extends AbstractMigration
     public function change()
     {
         $this->table('user_attributes')
-            ->addColumn('event_id', 'integer', ['null' => true])
-            ->addIndex('event_id')
+            ->addColumn('user_tournament_id', 'integer', ['null' => true])
+            ->addIndex('user_tournament_id')
             ->update();
     }
 }

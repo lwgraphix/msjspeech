@@ -61,7 +61,8 @@ class TournamentController extends BaseController
         return $this->out($this->twig->render('user/tournament/list.twig', [
             'tournaments' => $tournaments,
             'history' => $history,
-            'event_status' => EventStatusType::NAMES
+            'event_status' => EventStatusType::NAMES,
+            'event_colors' => EventStatusType::COLORS
         ]));
     }
 
@@ -98,12 +99,46 @@ class TournamentController extends BaseController
                 }
             }
             
-            $attributes = $this->am->getUserAttributes($eventInfo['user_id'], AttributeGroupType::TOURNAMENT, $eventInfo['event_id']);
+            $attributes = $this->am->getUserAttributes($eventInfo['user_id'], AttributeGroupType::TOURNAMENT, $eventInfo['user_event_id']);
             return $this->out($this->twig->render('user/tournament/view.twig', [
                 'event' => $eventInfo,
                 'attributes' => $attributes,
                 'admin_mode' => $adminMode
             ]));
+        }
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/tournament/drop/{eventId}")
+     * )
+     */
+    public function tournamentDropAction(Request $request, $eventId)
+    {
+        $eventInfo = $this->tm->getUserEventInfo($eventId);
+        if (!$eventInfo)
+        {
+            FlashMessage::set(false, 'Record not found');
+            return $this->out('ok');
+        }
+        else
+        {
+            $allowedStatusesToDrop = [
+                EventStatusType::WAITING_FOR_APPROVE,
+                EventStatusType::APPROVED,
+                EventStatusType::WAITING_PARTNER_RESPONSE
+            ];
+
+            if (!in_array($eventInfo['event_status'], $allowedStatusesToDrop))
+            {
+                FlashMessage::set(false, 'Cant drop this tournament');
+                return $this->out('no');
+            }
+            else
+            {
+                $this->tm->drop(Security::getUser(), $eventInfo);
+                return $this->out('ok');
+            }
         }
     }
 
@@ -134,12 +169,21 @@ class TournamentController extends BaseController
                 if ($balance < $eventInfo['cost'] && intval($request->get('decision')) == 1)
                 {
                     FlashMessage::set(false, 'Not enough money for join this debate. Please <a target="_blank" href="/user/balance">deposit</a> money and try join again');
-                    return $this->out('ok');
+                    return $this->out('no');
                 }
                 else
                 {
-                    $this->tm->setPartnerDecision($eventId, $eventInfo, intval($request->get('decision')));
-                    FlashMessage::set(true, 'Your decision applied');
+                    $status = $this->tm->setPartnerDecision($eventId, $eventInfo, intval($request->get('decision')));
+                    if (!$status)
+                    {
+                        FlashMessage::set(false, 'You already joined this event with other partner');
+                        return $this->out('no');
+                    }
+                    else
+                    {
+                        FlashMessage::set(true, 'Your decision applied');
+                    }
+
                     return $this->out('ok');
                 }
             }
