@@ -1,11 +1,17 @@
 {% extends 'layout.twig' %}
 {% block title %}
-    Approvement list for tournament
+    Tournament "{{ tournament.tournament.name }}" members list
 {% endblock %}
 
 {% block content %}
+    <ul class="nav nav-tabs">
+        {% for event_status in event_statuses %}
+            <li class="{{ global.request.get('event') == loop.index0 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event={{ loop.index0 }}">{{ event_status }}</a></li>
+        {% endfor %}
+    </ul>
+
     {% if list|length %}
-        <table class="table table-bordered">
+        <table style="margin-top: 20px" class="table table-bordered">
             <thead>
                 <tr>
                     <th>#</th>
@@ -13,7 +19,7 @@
                     <th>User</th>
                     <th>Partner</th>
                     <th>Join information</th>
-                    <th>Decision</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,15 +39,19 @@
                             <a href="/tournament/view/{{ item.id }}?user_id={{ item.own_id }}" target="_blank" class="btn btn-xs btn-info"><i class="fa fa-eye"></i> View</a>
                         </td>
                         <td>
-                            <button onclick="setDecision(this, {{ item.id }}, 1)" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Approve</button>
-                            <button onclick="setDecision(this, {{ item.id }}, 0)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Decline</button>
+                            {% if global.request.get('event') == 0 %}
+                                <button onclick="setDecision(this, {{ item.id }}, 1)" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Approve</button>
+                                <button onclick="setDecision(this, {{ item.id }}, 0)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Decline</button>
+                            {% else %}
+                                -
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No applicants found.</p>
+        <p style="margin-top: 20px">No applicants found.</p>
     {% endif %}
 
     <script>

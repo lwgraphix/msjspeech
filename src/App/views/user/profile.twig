@@ -54,13 +54,22 @@
                 <li><b>Parent first name:</b> {{ (user.parentFirstName) ? user.parentFirstName : 'Not specified' }}</li>
                 <li><b>Parent last name:</b> {{ (user.parentLastName) ? user.parentLastName : 'Not specified' }}</li>
                 <li><b>Parent email:</b> {{ (user.parentEmail) ? user.parentEmail : 'Not specified' }}</li>
+                <li><b>Groups: </b>
+                    {% if user_groups|length %}
+                        {% for group in user_groups %}
+                            <span class="label label-primary">{{ group }}</span>
+                        {% endfor %}
+                    {% else %}
+                        No
+                    {% endif %}
+                </li>
                 {% for attribute in attributes %}
                     <li><b>{{ attribute.label }}</b>:
                         {% if attribute.type == 2 %}
                             {{ (not attribute.value is null) ? attribute.value|join(', ') : 'Not specified' }}
                         {% elseif attribute.type == 3 %}
                             {% if attribute.value %}
-                                <button onclick="showAttach({{ attribute.user_attr_id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
+                                <button type="button" onclick="showAttach({{ attribute.user_attr_id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
                             {% else %}
                                 Not specified
                             {% endif %}
@@ -158,6 +167,19 @@
                             <input name="parent_last_name" value="{{ user.parentLastName }}" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
                         </div>
 
+                        {% if groups|length %}
+                            <div class="form-group">
+                                <label for="groups">Groups</label>
+                                {% for id, group in groups %}
+                                    {% set checked = id in user_groups|keys ? 'checked' : '' %}
+                                    <div>
+                                        <input {{ checked }} onclick="changeGroup(this, {{ id }})" id="group_{{ id }}" type="checkbox">
+                                        <label style="font-weight: normal;" for="group_{{ id }}">{{ group }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
                         {% for attribute in attributes %}
                             {% set attribute = (admin_mode is defined) ? attribute|merge({'editable': true}) : attribute %}
                             <div class="form-group">
@@ -209,6 +231,16 @@
     <!-- /.modal -->
 
     <script>
+
+        function changeGroup(obj, id)
+        {
+            var checked = $(obj).prop('checked') === true ? 1 : 0;
+            {% if admin_mode is defined %}
+                $.post('/user/group/save?user_id={{ user.id }}', {id: id, check: checked});
+            {% else %}
+                $.post('/user/group/save', {id: id, check: checked});
+            {% endif %}
+        }
 
         function showAttach(id)
         {

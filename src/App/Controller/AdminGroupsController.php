@@ -5,6 +5,7 @@ use App\Code\StatusCode;
 use App\Model\AlertModel;
 use App\Model\AttributeModel;
 use App\Model\CategoriesModel;
+use App\Model\GroupModel;
 use App\Model\PagesModel;
 use App\Model\TournamentsModel;
 use App\Model\TransactionHistoryModel;
@@ -32,10 +33,16 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AdminGroupsController extends BaseController {
 
+    /**
+     * @var GroupModel
+     */
+    private $gm;
+
     public function __construct(Application $app)
     {
         parent::__construct($app);
         Security::setAccessLevel(UserType::OFFICER);
+        $this->gm = Model::get('group');
     }
 
     /**
@@ -45,6 +52,45 @@ class AdminGroupsController extends BaseController {
      */
     public function groupsListAction(Request $request)
     {
+        $list = $this->gm->getAll();
+        return $this->out($this->twig->render('admin/groups.twig', [
+            'list' => $list
+        ]));
+    }
 
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/groups/create")
+     * )
+     */
+    public function groupsCreateAction(Request $request)
+    {
+        $this->gm->create($request->get('name'));
+        FlashMessage::set(true, 'Group created.');
+        return new RedirectResponse($request->headers->get('referer'));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/groups/edit")
+     * )
+     */
+    public function groupsEditAction(Request $request)
+    {
+        $this->gm->update($request->get('id'), $request->get('name'));
+        FlashMessage::set(true, 'Group updated.');
+        return new RedirectResponse($request->headers->get('referer'));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/groups/delete")
+     * )
+     */
+    public function groupsDeleteAction(Request $request)
+    {
+        $this->gm->delete($request->get('id'));
+        FlashMessage::set(true, 'Group deleted.');
+        return $this->out('ok');
     }
 }

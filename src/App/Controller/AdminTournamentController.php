@@ -15,6 +15,7 @@ use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EventStatusType;
 use App\Type\LinkType;
 use App\Code\ProtocolCode;
 use App\Type\UserType;
@@ -241,13 +242,19 @@ class AdminTournamentController extends BaseController {
 
     /**
      * @SLX\Route(
-     *     @SLX\Request(method="GET", uri="/tournament/approve/{tournamentId}")
+     *     @SLX\Request(method="GET", uri="/tournament/members/{tournamentId}")
      * )
      */
-    public function tournamentApproveList(Request $request, $tournamentId)
+    public function tournamentMembersList(Request $request, $tournamentId)
     {
-        $list = $this->tm->getApproveList($tournamentId);
-        return $this->out($this->twig->render('admin/tournament/approve.twig', ['list' => $list]));
+        $requestedStatus = $request->get('event', 0);
+        $list = $this->tm->getMembersList($tournamentId, $requestedStatus);
+        $tournamentData = $this->tm->getById($tournamentId);
+        return $this->out($this->twig->render('admin/tournament/members.twig', [
+            'list' => $list,
+            'event_statuses' => EventStatusType::NAMES,
+            'tournament' => $tournamentData
+        ]));
     }
 
     /**

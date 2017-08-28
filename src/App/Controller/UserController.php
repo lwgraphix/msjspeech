@@ -55,17 +55,53 @@ class UserController extends BaseController
                 return new RedirectResponse('/user/profile');
             }
 
+            $userGroups = Model::get('group')->getUserGroups($user->getId());
             $attributes = Model::get('attribute')->getUserAttributes($user->getId());
             return $this->out($this->twig->render('user/profile.twig', [
                 'admin_mode' => true,
                 'attributes' => $attributes,
                 'view_user' => $user,
-                'roles' => UserType::NAMES
+                'roles' => UserType::NAMES,
+                'groups' => $userGroups
             ]));
         }
 
+        $userGroups = Model::get('group')->getUserGroups(Security::getUser()->getId());
+        $groups = Model::get('group')->getAll();
         $attributes = Model::get('attribute')->getUserAttributes(Security::getUser()->getId());
-        return $this->out($this->twig->render('user/profile.twig', ['attributes' => $attributes]));
+        return $this->out($this->twig->render('user/profile.twig', [
+            'attributes' => $attributes,
+            'user_groups' => $userGroups,
+            'groups' => $groups
+        ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/user/group/save")
+     * )
+     */
+    public function userGroupSaveAction(Request $request)
+    {
+        if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
+        {
+            $userId = $request->get('user_id');
+        }
+        else
+        {
+            $userId = Security::getUser()->getId();
+        }
+
+        if (intval($request->get('check')) == 0)
+        {
+            Model::get('group')->unlink($request->get('id'), $userId);
+        }
+        else
+        {
+            Model::get('group')->link($request->get('id'), $userId);
+        }
+
+        return $this->out('ok');
     }
 
     /**

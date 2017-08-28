@@ -181,7 +181,7 @@ class TournamentsModel extends BaseModel
         }
     }
 
-    public function getApproveList($tournamentId)
+    public function getMembersList($tournamentId, $eventStatus)
     {
         $sql = 'SELECT
                   ut.id,
@@ -196,8 +196,8 @@ class TournamentsModel extends BaseModel
                 INNER JOIN users own ON own.id = ut.user_id
                 LEFT JOIN users par ON par.id = ut.partner_id
                 INNER JOIN events e ON e.id = ut.event_id
-                WHERE ut.status = 0 AND e.tournament_id = :tid';
-        $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId]);
+                WHERE ut.status = :s AND e.tournament_id = :tid';
+        $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId, 's' => $eventStatus]);
         return $data;
     }
 
