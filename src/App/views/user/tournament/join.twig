@@ -31,8 +31,17 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <p><b>Description:</b> {{ tournament.description ? tournament.description : 'Not specified' }}</p>
                 </div>
             </div>
+        </div>
+        <div class="form-group">
+            <label for="judge_name">Judge name</label>
+            <input type="text" name="judge_name" class="form-control" id="judge_name">
+        </div>
+        <div class="form-group">
+            <label for="judge_email">Judge email</label>
+            <input type="email" name="judge_email" class="form-control" id="judge_email">
         </div>
         {% if attributes|length > 0 %}
             {% for attribute in attributes %}

@@ -28,8 +28,54 @@ class TournamentsModel extends BaseModel
         return $data;
     }
 
-    public function delete($tournamentId)
+    public function delete($tournamentId, $deleteAfterStart = false)
     {
+        if ($deleteAfterStart)
+        {
+            // refund all members who registered on this tournament
+            $sql = 'SELECT ut.*, e.cost, e.name as event_name, t.name as tournament_name
+                    FROM user_tournaments ut
+                    INNER JOIN events e ON e.id = ut.event_id
+                    INNER JOIN tournaments t ON t.id = e.tournament_id
+                    WHERE ut.status IN (0, 1, 3)';
+
+            $applications = MySQL::get()->fetchAll($sql);
+            $utIds = [];
+            foreach($applications as $application)
+            {
+                // only user
+                Model::get('transaction_history')->createTransaction(
+                    $application['user_id'],
+                    ($application['cost']),
+                    'Refund for tournament "'.$application['tournament_name'].'", event: "'. $application['event_name'] .'" because administrator cancelled tournament'
+                );
+
+                if ($application['partner_id'] !== null && $application['status'] != EventStatusType::WAITING_PARTNER_RESPONSE)
+                {
+                    // only user
+                    Model::get('transaction_history')->createTransaction(
+                        $application['partner_id'],
+                        ($application['cost']),
+                        'Refund for tournament "'.$application['tournament_name'].'", event: "'. $application['event_name'] .'" because administrator cancelled tournament'
+                    );
+                }
+
+                $utIds[] = $application['id'];
+            }
+
+            if (count($utIds) > 0)
+            {
+                // refunds done, go to delete user_tournaments
+                $sql = 'DELETE FROM user_tournaments WHERE id IN ('. implode(',', $utIds) .')';
+                MySQL::get()->exec($sql);
+
+                foreach($utIds as $id)
+                {
+                    Model::get('attribute')->deleteAttributesByUserTournamentId($id);
+                }
+            }
+        }
+
         $sql = 'DELETE FROM attributes WHERE tournament_id = :id';
         MySQL::get()->exec($sql, ['id' => $tournamentId]);
 
@@ -40,17 +86,21 @@ class TournamentsModel extends BaseModel
         MySQL::get()->exec($sql, ['id' => $tournamentId]);
     }
 
-    public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events)
+    public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events, $description = null, $pStartDate = null, $pEndDate = null)
     {
-        $sql = 'INSERT INTO tournaments (`name`, `event_start`, `entry_deadline`, `drop_deadline`, `approve_method`)
-                VALUES (:n, :es, :ed, :dd, :am)';
+        $sql = 'INSERT INTO tournaments
+                (`name`, `event_start`, `entry_deadline`, `drop_deadline`, `approve_method`, `description`, `date_start`, `date_end`)
+                VALUES (:n, :es, :ed, :dd, :am, :d, :psd, :ped)';
 
         $tournamentId = MySQL::get()->exec($sql, [
             'n' => trim($name),
             'es' => $this->_convertDateToTimestamp($startDate),
             'ed' => $this->_convertDateToTimestamp($deadlineDate),
             'dd' => $this->_convertDateToTimestamp($dropDeadlineDate),
-            'am' => $approveMethod
+            'am' => $approveMethod,
+            'd' => $description,
+            'psd' => $pStartDate,
+            'ped' => $pEndDate
         ], true);
 
         foreach($events as $event)
@@ -151,15 +201,27 @@ class TournamentsModel extends BaseModel
         return $data;
     }
 
-    public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod)
+    public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $description = null, $pStartDate = null, $pEndDate = null)
     {
-        $sql = 'UPDATE tournaments SET `name` = :n, `event_start` = :es, `entry_deadline` = :ed, `drop_deadline` = :dd, `approve_method` = :am WHERE id = :id';
+        $sql = 'UPDATE tournaments SET
+                `name` = :n,
+                `event_start` = :es,
+                `entry_deadline` = :ed,
+                `drop_deadline` = :dd,
+                `approve_method` = :am,
+                `description` = :d,
+                `date_start` = :psd,
+                `date_end` = :ped
+                WHERE id = :id';
         MySQL::get()->exec($sql, [
             'n' => $name,
             'es' => $this->_convertDateToTimestamp($startDate),
             'ed' => $this->_convertDateToTimestamp($deadlineDate),
             'dd' => $this->_convertDateToTimestamp($dropDeadlineDate),
             'am' => $approveMethod,
+            'd' => $description,
+            'psd' => str_replace('/', '-', $pStartDate),
+            'ped' => str_replace('/', '-', $pEndDate),
             'id' => $id
         ]);
     }
@@ -218,6 +280,8 @@ class TournamentsModel extends BaseModel
         $sql = 'SELECT
                   ut.id,
                   t.name as tournament_name,
+                  t.date_start,
+                  t.date_end,
                   e.name as event_name,
                   own_user.id as owner_id,
                   own_user.username as owner_name,
@@ -246,7 +310,24 @@ class TournamentsModel extends BaseModel
 
     public function getUserEventInfo($userEventId)
     {
-        $sql = 'SELECT e.id as event_id, ut.id as user_event_id, ut.status as event_status, e.cost, t.event_start, e.drop_fee_cost, t.entry_deadline, t.drop_deadline, t.approve_method, e.name as event_name, t.name as tournament_name, ut.user_id, ut.partner_id, own_u.username as owner_name, par_u.username as partner_name, e.tournament_id
+        $sql = 'SELECT
+                  e.id as event_id,
+                  ut.id as user_event_id,
+                  ut.status as event_status,
+                  e.cost,
+                  t.event_start,
+                  e.drop_fee_cost,
+                  t.entry_deadline,
+                  t.drop_deadline,
+                  t.approve_method,
+                  e.name as event_name,
+                  t.name as tournament_name,
+                  t.description as tournament_description,
+                  ut.user_id,
+                  ut.partner_id,
+                  own_u.username as owner_name,
+                  par_u.username as partner_name,
+                  e.tournament_id
                 FROM user_tournaments ut
                 INNER JOIN events e ON ut.event_id = e.id
                 INNER JOIN tournaments t ON t.id = e.tournament_id
@@ -260,8 +341,8 @@ class TournamentsModel extends BaseModel
     public function join($data, $tournament, $event, User $user, $partnerUser = null)
     {
         // create user-tournament row
-        $sql = 'INSERT INTO user_tournaments (user_id, event_id, partner_id, status)
-                VALUES (:uid, :eid, :pid, :s)';
+        $sql = 'INSERT INTO user_tournaments (user_id, event_id, partner_id, status, judge_name, judge_email)
+                VALUES (:uid, :eid, :pid, :s, :jn, :je)';
         $partnerId = ($partnerUser === null) ? null : $partnerUser['id'];
 
         if ($partnerId !== null)
@@ -278,8 +359,18 @@ class TournamentsModel extends BaseModel
             'uid' => $user->getId(),
             'eid' => $event['id'],
             'pid' => $partnerId,
-            's' => $status
+            's' => $status,
+            'jn' => isset($data['judge_name']) ? $data['judge_name'] : null,
+            'je' => isset($data['judge_email']) ? $data['judge_email'] : null
         ], true);
+
+        // update request partner timestamp (need for cron-task decline for 72 hours)
+        if ($partnerId !== null)
+        {
+            MySQL::get()->exec('UPDATE user_tournaments SET partner_request_time = NOW() WHERE id = :id', [
+                'id' => $utid
+            ]);
+        }
 
         // need for attachment create
         $userData = [

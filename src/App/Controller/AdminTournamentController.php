@@ -86,7 +86,10 @@ class AdminTournamentController extends BaseController {
             $request->get('reg_deadline'),
             $request->get('drop_deadline'),
             $request->get('approve_method'),
-            $request->get('events')
+            $request->get('events'),
+            $request->get('description'),
+            $request->get('start_date'),
+            $request->get('end_date')
         );
 
         return $this->out(json_encode(['id' => $tId]), true);
@@ -107,16 +110,13 @@ class AdminTournamentController extends BaseController {
             return new RedirectResponse('/');
         }
 
-        if (DateUtil::isPassed($tournament['tournament']['event_start']))
-        {
-            FlashMessage::set(false, 'Tournament is started! You can\'t edit this tournament.');
-            return new RedirectResponse('/');
-        }
+        $isStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
 
         return $this->out($this->twig->render('admin/tournament/edit.twig', [
             'data' => $tournament,
             'attributes' => $this->am->getAll(AttributeGroupType::TOURNAMENT, $tournamentId),
-            'attribute_types' => AttributeType::NAMES
+            'attribute_types' => AttributeType::NAMES,
+            'is_started' => $isStarted
         ]));
     }
 
@@ -134,67 +134,71 @@ class AdminTournamentController extends BaseController {
             return new RedirectResponse('/');
         }
 
-        if (DateUtil::isPassed($tournament['tournament']['event_start']))
-        {
-            FlashMessage::set(false, 'Tournament is started! You can\'t edit this tournament.');
-            return new RedirectResponse('/');
-        }
+        $tournamentStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
 
         // persist debates
-        foreach($request->get('events') as $field)
+        if (!$tournamentStarted)
         {
-            if (!isset($field['id']))
+            foreach($request->get('events') as $field)
             {
-                // create
-                $this->tm->createEvent($tournamentId, $field['dt_name'], $field['dt_type'], $field['dt_cost'], $field['dt_drop_cost']);
+                if (!isset($field['id']))
+                {
+                    // create
+                    $this->tm->createEvent($tournamentId, $field['dt_name'], $field['dt_type'], $field['dt_cost'], $field['dt_drop_cost']);
+                }
+                else
+                {
+                    // update
+                    $this->tm->updateEvent($field['id'], $field['dt_name'], $field['dt_type'], $field['dt_cost'], $field['dt_drop_cost']);
+                }
             }
-            else
+
+            // persist fields
+            foreach($request->get('fields') as $field)
             {
-                // update
-                $this->tm->updateEvent($field['id'], $field['dt_name'], $field['dt_type'], $field['dt_cost'], $field['dt_drop_cost']);
+                if (!isset($field['id']))
+                {
+                    // create
+                    $this->am->create(
+                        AttributeGroupType::TOURNAMENT,
+                        $field['label'],
+                        $field['placeholder'],
+                        $field['help_text'],
+                        $field['type'],
+                        (isset($field['dropdown_item'])) ? $field['dropdown_item'] : null,
+                        $field['required'],
+                        0,
+                        $tournamentId
+                    );
+                }
+                else
+                {
+                    // update
+                    $this->am->update(
+                        $field['id'],
+                        $field['label'],
+                        $field['placeholder'],
+                        $field['help_text'],
+                        (isset($field['dropdown_item'])) ? $field['dropdown_item'] : null,
+                        $field['required'],
+                        0
+                    );
+                }
             }
         }
 
-        // persist fields
-        foreach($request->get('fields') as $field)
-        {
-            if (!isset($field['id']))
-            {
-                // create
-                $this->am->create(
-                    AttributeGroupType::TOURNAMENT,
-                    $field['label'],
-                    $field['placeholder'],
-                    $field['help_text'],
-                    $field['type'],
-                    (isset($field['dropdown_item'])) ? $field['dropdown_item'] : null,
-                    $field['required'],
-                    $field['editable'],
-                    $tournamentId
-                );
-            }
-            else
-            {
-                // update
-                $this->am->update(
-                    $field['id'],
-                    $field['label'],
-                    $field['placeholder'],
-                    $field['help_text'],
-                    (isset($field['dropdown_item'])) ? $field['dropdown_item'] : null,
-                    $field['required'],
-                    $field['editable']
-                );
-            }
-        }
+        $regStart = ($tournamentStarted) ? $tournament['tournament']['event_start'] : $request->get('reg_start');
 
         $this->tm->update(
             $tournamentId,
             $request->get('name'),
-            $request->get('reg_start'),
+            $regStart,
             $request->get('reg_deadline'),
             $request->get('drop_deadline'),
-            $request->get('approve_method')
+            $request->get('approve_method'),
+            $request->get('description'),
+            $request->get('start_date'),
+            $request->get('end_date')
         );
 
         FlashMessage::set(true, 'Tournament data updated!');
@@ -208,7 +212,30 @@ class AdminTournamentController extends BaseController {
      */
     public function tournamentDeleteAction(Request $request, $tournamentId)
     {
-        $this->tm->delete($tournamentId);
+        $tournament = $this->tm->getById($tournamentId);
+        if (!$tournament['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        $tournamentStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
+        if (!$tournamentStarted)
+        {
+            $this->tm->delete($tournamentId);
+        }
+        else
+        {
+            if (Security::getUser()->getRole() == UserType::ADMINISTRATOR)
+            {
+                $this->tm->delete($tournamentId, true);
+            }
+            else
+            {
+                FlashMessage::set(false, 'Access denied');
+            }
+        }
+
         return new Response('ok');
     }
 

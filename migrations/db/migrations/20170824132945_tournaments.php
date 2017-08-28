@@ -12,7 +12,6 @@ class Tournaments extends AbstractMigration
             ->addColumn('event_start', 'timestamp', ['null' => false])
             ->addColumn('entry_deadline', 'timestamp', ['null' => false])
             ->addColumn('drop_deadline', 'timestamp', ['null' => false])
-
             ->create();
     }
 

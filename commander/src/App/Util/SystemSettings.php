@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Provider;
+namespace App\Util;
 
 use App\Code\StatusCode;
 use App\Connector\MySQL;

@@ -11,7 +11,7 @@
         <div class="box-body">
             <div class="form-group">
                 <label for="tournament_name">Name <span style="color: red">*</span></label>
-                <input value="{{ data.tournament.name }}" name="name" type="text" required class="form-control" id="tournament_name" placeholder="Name of tournament">
+                <input {{ is_started ? 'disabled' : '' }} value="{{ data.tournament.name }}" name="name" type="text" required class="form-control" id="tournament_name" placeholder="Name of tournament">
             </div>
 
             <div class="form-group">
@@ -20,7 +20,7 @@
                     <div class="input-group-addon">
                         <i class="fa fa-calendar"></i>
                     </div>
-                    <input value="{{ data.tournament.event_start }}" name="reg_start" class="form-control" id="reg_start" type="text">
+                    <input {{ is_started ? 'disabled' : '' }} value="{{ data.tournament.event_start }}" name="reg_start" class="form-control" id="reg_start" type="text">
                 </div>
             </div>
 
@@ -51,16 +51,44 @@
                     <option {{ data.tournament.approve_method == 1 ? 'selected' : '' }} value="1">Manually</option>
                 </select>
             </div>
+
+            <div class="form-group">
+                <label for="start_date">Tournament start date <span style="color: red">*</span></label>
+                <div class="input-group">
+                    <div class="input-group-addon">
+                        <i class="fa fa-calendar"></i>
+                    </div>
+                    <input value="{{ data.tournament.date_start }}" name="start_date" class="form-control" id="start_date" type="text">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="end_date">Tournament end date <span style="color: red">*</span></label>
+                <div class="input-group">
+                    <div class="input-group-addon">
+                        <i class="fa fa-calendar"></i>
+                    </div>
+                    <input value="{{ data.tournament.date_end }}" name="end_date" class="form-control" id="end_date" type="text">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Tournament description</label>
+                <textarea id="description" class="form-control" name="description">{{ data.tournament.description }}</textarea>
+            </div>
+
             <button onclick="persistData()" class="btn btn-success btn-block"><i class="fa fa-check"></i> Save all changes</button>
         </div>
     </div>
 
     <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title" style="width: 100%">Tournament debates</h3>
+            <h3 class="box-title" style="width: 100%">Tournament events</h3>
         </div>
         <div class="box-body">
-            <button style="margin-bottom: 15px" onclick="addNewObject('debates')" class="btn btn-primary"><i class="fa fa-plus"></i> Add new debate</button>
+            {% if not is_started %}
+                <button style="margin-bottom: 15px" onclick="addNewObject('debates')" class="btn btn-primary"><i class="fa fa-plus"></i> Add new event</button>
+            {% endif %}
             <div id="debates">
                 {% for event in data.events %}
                     <form id="dt_{{ loop.index0 }}" data-id="{{ event.id }}">
@@ -69,12 +97,12 @@
 
                                 <div class="form-group">
                                     <label for="dt_name">Name <span style="color: red">*</span></label>
-                                    <input required value="{{ event.name }}" name="dt_name" id="dt_name" class="form-control" type="text" />
+                                    <input {{ is_started ? 'disabled' : '' }} required value="{{ event.name }}" name="dt_name" id="dt_name" class="form-control" type="text" />
                                 </div>
 
                                 <div class="form-group">
                                     <label for="dt_type">Type</label>
-                                    <select name="dt_type" id="dt_type" class="form-control">
+                                    <select {{ is_started ? 'disabled' : '' }} name="dt_type" id="dt_type" class="form-control">
                                         <option {{ event.type == 0 ? 'selected' : '' }} value="0">Single</option>
                                         <option {{ event.type == 1 ? 'selected' : '' }} value="1">With partner</option>
                                     </select>
@@ -82,15 +110,17 @@
 
                                 <div class="form-group">
                                     <label for="dt_cost">Cost <span style="color: red">*</span></label>
-                                    <input value="{{ event.cost }}" required name="dt_cost" id="dt_cost" type="number" class="form-control" />
+                                    <input {{ is_started ? 'disabled' : '' }} value="{{ event.cost }}" required name="dt_cost" id="dt_cost" type="number" class="form-control" />
                                 </div>
 
                                 <div class="form-group">
                                     <label for="dt_drop_cost">Drop fee after deadline <span style="color: red">*</span></label>
-                                    <input value="{{ event.drop_fee_cost }}" required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
+                                    <input {{ is_started ? 'disabled' : '' }} value="{{ event.drop_fee_cost }}" required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
                                 </div>
 
-                                <button type="button" onclick="removeField(this, 'event', {{ event.id }})" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove debate</button>
+                                {% if not is_started %}
+                                    <button type="button" onclick="removeField(this, 'event', {{ event.id }})" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove event</button>
+                                {% endif %}
                             </div>
                         </div>
                     </form>
@@ -101,8 +131,9 @@
 {% endblock %}
 
 {% block content %}
-
-    <button onclick="addNewObject('fields')" class="btn btn-primary"><i class="fa fa-plus"></i> Add new field</button>
+    {% if not is_started %}
+        <button onclick="addNewObject('fields')" class="btn btn-primary"><i class="fa fa-plus"></i> Add new field</button>
+    {% endif %}
 
     <div id="fields" style="margin-top: 20px">
         {% for attribute in attributes %}
@@ -111,7 +142,7 @@
                     <div class="panel-body" style="padding-bottom: 0">
                         <div class="form-group">
                             <label for="attr">Label</label>
-                            <input name="label" value="{{ attribute.label }}" class="form-control" type="text" />
+                            <input {{ is_started ? 'disabled' : '' }} name="label" value="{{ attribute.label }}" class="form-control" type="text" />
                         </div>
 
                         <div class="form-group">
@@ -126,14 +157,17 @@
                         <div id="attr_{{ loop.index0 }}_text" style="display: {{ (attribute.type != 1) ? 'block' : 'none' }}">
                             <div class="form-group">
                                 <label for="attr">Placeholder</label>
-                                <input value="{{ attribute.placeholder }}" name="placeholder" type="text" class="form-control" />
+                                <input {{ is_started ? 'disabled' : '' }} value="{{ attribute.placeholder }}" name="placeholder" type="text" class="form-control" />
                             </div>
                         </div>
 
                         <div id="attr_{{ loop.index0 }}_dropdown" style="display: {{ (attribute.type == 1 or attribute.type == 2) ? 'block' : 'none' }}">
                             <div class="form-group">
-                                <p><b>Items:</b> <button type="button" onclick="_addDropdownItem({{ loop.index0 }})" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i> Add item</button></p>
-                                <div id="attr_{{ loop.index0 }}_dropdown_items">
+                                <p><b>Items:</b>
+                                    {% if not is_started %}
+                                        <button type="button" onclick="_addDropdownItem({{ loop.index0 }})" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i> Add item</button></p>
+                                    {% endif %}
+                                    <div id="attr_{{ loop.index0 }}_dropdown_items">
                                     {% if attribute.type == 1 or attribute.type == 2 %}
                                         {% for item in attribute.data %}
                                             <div class="form-group form-inline">
@@ -148,25 +182,19 @@
 
                         <div class="form-group">
                             <label for="attr">Help text</label>
-                            <input value="{{ attribute.help_text }}" name="help_text" type="text" class="form-control" />
+                            <input {{ is_started ? 'disabled' : '' }} value="{{ attribute.help_text }}" name="help_text" type="text" class="form-control" />
                         </div>
 
                         <div class="form-group">
                             <label for="attr">Required</label>
-                            <select name="required" class="form-control">
+                            <select {{ is_started ? 'disabled' : '' }} name="required" class="form-control">
                                 <option {{ (attribute.required) ? '' : 'selected' }} value="0">No</option>
                                 <option {{ (attribute.required) ? 'selected' : '' }} value="1">Yes</option>
                             </select>
                         </div>
-
-                        <div class="form-group">
-                            <label for="attr">Editable</label>
-                            <select name="editable" class="form-control">
-                                <option {{ (attribute.editable) ? '' : 'selected' }} value="0">No</option>
-                                <option {{ (attribute.editable) ? 'selected' : '' }} value="1">Yes</option>
-                            </select>
-                        </div>
-                        <button type="button" onclick="removeField(this, 'field', {{ attribute.id }})" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
+                        {% if not is_started %}
+                            <button type="button" onclick="removeField(this, 'field', {{ attribute.id }})" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
+                        {% endif %}
                     </div>
                 </div>
             </form>
@@ -253,13 +281,6 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="attr">Editable</label>
-                        <select name="editable" class="form-control">
-                            <option value="0">No</option>
-                            <option value="1">Yes</option>
-                        </select>
-                    </div>
                     <button type="button" onclick="removeField(this)" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove field</button>
                 </div>
             </div>
@@ -273,6 +294,8 @@
         $('#reg_start').inputmask('yyyy/mm/dd');
         $('#reg_deadline').inputmask('yyyy/mm/dd');
         $('#drop_deadline').inputmask('yyyy/mm/dd');
+        $('#start_date').inputmask('yyyy/mm/dd');
+        $('#end_date').inputmask('yyyy/mm/dd');
     </script>
 
     <script>
@@ -310,6 +333,7 @@
                 var id = $(this).data('id');
                 var ser = _serializeToObject($(this).serializeArray());
                 ser["id"] = id;
+                ser["editable"] = 0;
                 data.push(ser);
             });
             return data;
@@ -325,7 +349,18 @@
             var approve_method = $("#approve_method").val();
             var drop_deadline = $("#drop_deadline").val();
 
-            $.post(window.location, {name: tournament_name, reg_start: reg_start, reg_deadline: reg_deadline, drop_deadline: drop_deadline, approve_method: approve_method, events: debates, fields: fields}, function(response) {
+            $.post(window.location, {
+                name: tournament_name,
+                reg_start: reg_start,
+                reg_deadline: reg_deadline,
+                drop_deadline: drop_deadline,
+                approve_method: approve_method,
+                events: debates,
+                fields: fields,
+                start_date: $("#start_date").val(),
+                end_date: $("#end_date").val(),
+                description: $("#description").val()
+            }, function(response) {
                 window.location = window.location; // refresh page scroll
             });
         }

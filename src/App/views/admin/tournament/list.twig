@@ -14,6 +14,8 @@
                     <th>Registration start</th>
                     <th>Registration end</th>
                     <th>Drop deadline</th>
+                    <th>Tournament start</th>
+                    <th>Tournament end</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -23,17 +25,21 @@
                         <td>{{ tournament.id }}</td>
                         <td>{{ tournament.name }}</td>
                         <td>{{ tournament.approve_method == 0 ? 'Auto' : 'Manually' }}</td>
-                        <td>{{ tournament.event_start|replace({'-': '/'}) }}</td>
-                        <td>{{ tournament.entry_deadline|replace({'-': '/'}) }}</td>
-                        <td>{{ tournament.drop_deadline|replace({'-': '/'}) }}</td>
+                        <td>{{ tournament.event_start|date('Y/d/m h:i A') }}</td>
+                        <td>{{ tournament.entry_deadline|date('Y/d/m h:i A') }}</td>
+                        <td>{{ tournament.drop_deadline|date('Y/d/m h:i A') }}</td>
+                        <td>{{ tournament.date_start|date('Y/d/m') }}</td>
+                        <td>{{ tournament.date_end|date('Y/d/m') }}</td>
                         <td>
-                            {% if not tournament.reg_started %}
-                                <a href="/admin/tournament/edit/{{ tournament.id }}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i> Edit</a>
-                                <button onclick="deleteTournament(this, {{ tournament.id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Delete</button>
+                            {% if tournament.reg_started %}
+                                <a href="/admin/tournament/members/{{ tournament.id }}" class="btn btn-xs btn-info"><i class="fa fa-check"></i> Members list</a>
                             {% endif %}
-
-                            {% if tournament.reg_started and tournament.approve_method == 1 %}
-                                <a href="/admin/tournament/approve/{{ tournament.id }}" class="btn btn-xs btn-info"><i class="fa fa-check"></i> Approve list</a>
+                            <a href="/admin/tournament/edit/{{ tournament.id }}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i> Edit</a>
+                            {% if tournament.reg_started and user.role == 5 %}
+                                <button onclick="adminDeleteTournamentConfirmation(this, {{ tournament.id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Delete</button>
+                            {% endif %}
+                            {% if not tournament.reg_started %}
+                                <button onclick="deleteTournament(this, {{ tournament.id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Delete</button>
                             {% endif %}
                         </td>
                     </tr>
@@ -44,7 +50,44 @@
         <p>No tournaments data found.</p>
     {% endif %}
 
+    {% if user.role == 5 %}
+        <div class="modal modal-danger fade" id="delete-tournament-confirm">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Deleting tournament</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this tournament? <b> Deleting this tournament will auto-refund all students who registered for this tournament and will permanently delete their registration data for this tournament.</b></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="adminDeleteTournament()" class="btn btn-outline"><i class="fa fa-check"></i> Yes</button>
+                        <button type="button" data-dismiss="modal" class="btn btn-outline"><i class="fa fa-times"></i> No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <script>
+        {% if user.role == 5 %}
+            function adminDeleteTournamentConfirmation(obj, id)
+            {
+                window.tournament_id = id;
+                window.tournament_obj = obj;
+                $("#delete-tournament-confirm").modal('show');
+            }
+
+            function adminDeleteTournament()
+            {
+                $.post('/admin/tournament/delete/' + window.tournament_id, {}, function (response) {
+                    $(window.tournament_obj).parent().parent().remove();
+                });
+                $("#delete-tournament-confirm").modal('hide');
+            }
+        {% endif %}
         function deleteTournament(obj, id)
         {
             $.post('/admin/tournament/delete/' + id, {}, function (response) {

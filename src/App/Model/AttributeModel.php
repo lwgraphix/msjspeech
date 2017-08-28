@@ -41,6 +41,31 @@ class AttributeModel extends BaseModel
         return $data;
     }
 
+    public function deleteAttributesByUserTournamentId($userTournamentId)
+    {
+        $sql = 'SELECT ua.id, a.type, ua.value
+                FROM user_attributes ua
+                INNER JOIN attributes a ON ua.attribute_id = a.id
+                WHERE ua.user_tournament_id = :utid';
+        $data = MySQL::get()->fetchAll($sql, ['utid' => $userTournamentId]);
+        $ids = [];
+        foreach($data as $row)
+        {
+            if ($row['type'] == AttributeType::ATTACHMENT)
+            {
+                // delete attachment from server
+                @unlink($row['value']);
+            }
+            $ids[] = $row['id'];
+        }
+
+        if (count($ids) > 0)
+        {
+            $sql = 'DELETE FROM user_attributes WHERE id IN ('. implode(',', $ids) .')';
+            MySQL::get()->exec($sql);
+        }
+    }
+
     public function getUserAttributes($userId, $group = AttributeGroupType::REGISTER, $userTournamentId = null)
     {
         if ($userTournamentId !== null && $group == AttributeGroupType::TOURNAMENT)
