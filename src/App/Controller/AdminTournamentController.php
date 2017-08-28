@@ -203,6 +203,39 @@ class AdminTournamentController extends BaseController {
 
     /**
      * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/tournament/delete/{tournamentId}")
+     * )
+     */
+    public function tournamentDeleteAction(Request $request, $tournamentId)
+    {
+        $this->tm->delete($tournamentId);
+        return new Response('ok');
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/tournament/approve/{tournamentId}")
+     * )
+     */
+    public function tournamentApproveList(Request $request, $tournamentId)
+    {
+        $list = $this->tm->getApproveList($tournamentId);
+        return $this->out($this->twig->render('admin/tournament/approve.twig', ['list' => $list]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/tournament/approve/{tournamentId}/decision")
+     * )
+     */
+    public function tournamentSetDecisionAction(Request $request, $tournamentId)
+    {
+        $this->tm->setDecision($request->get('id'), $request->get('state'));
+        return $this->out('ok');
+    }
+
+    /**
+     * @SLX\Route(
      *     @SLX\Request(method="POST", uri="/tournament/edit/{tournamentId}/delete")
      * )
      */

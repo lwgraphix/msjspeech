@@ -8,6 +8,7 @@ class EventStatusType
     const APPROVED = 1;
     const DECLINED = 2;
     const WAITING_PARTNER_RESPONSE = 3;
+    const DECLINED_BY_PARTNER = 4;
 
-    const NAMES = ['Waiting for approve', 'Approved', 'Declined', 'Waiting partner response'];
+    const NAMES = ['Waiting for approve', 'Approved', 'Declined', 'Waiting partner response', 'Declined by partner'];
 }

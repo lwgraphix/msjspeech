@@ -28,6 +28,18 @@ class TournamentsModel extends BaseModel
         return $data;
     }
 
+    public function delete($tournamentId)
+    {
+        $sql = 'DELETE FROM attributes WHERE tournament_id = :id';
+        MySQL::get()->exec($sql, ['id' => $tournamentId]);
+
+        $sql = 'DELETE FROM events WHERE tournament_id = :id';
+        MySQL::get()->exec($sql, ['id' => $tournamentId]);
+
+        $sql = 'DELETE FROM tournaments WHERE id = :id';
+        MySQL::get()->exec($sql, ['id' => $tournamentId]);
+    }
+
     public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events)
     {
         $sql = 'INSERT INTO tournaments (`name`, `event_start`, `entry_deadline`, `drop_deadline`, `approve_method`)
@@ -47,6 +59,86 @@ class TournamentsModel extends BaseModel
         }
 
         return $tournamentId;
+    }
+
+    public function setPartnerDecision($userTournamentId, $eventInfo, $status)
+    {
+        if ($status == 1)
+        {
+            // accepted
+            $sql = 'UPDATE user_tournaments SET status = :s WHERE id = :id';
+            $newStatus = ($eventInfo['approve_method'] == 0) ? EventStatusType::APPROVED : EventStatusType::WAITING_FOR_APPROVE;
+            MySQL::get()->exec($sql, [
+                's' => $newStatus,
+                'id' => $userTournamentId
+            ]);
+
+            Model::get('transaction_history')->createTransaction(
+                $eventInfo['partner_id'],
+                -($eventInfo['cost']),
+                'Joined the tournament "'. $eventInfo['tournament_name'] .'", event: "'. $eventInfo['event_name'] .'"'
+            );
+        }
+        else
+        {
+            // declined
+            $sql = 'UPDATE user_tournaments SET status = :s WHERE id = :id';
+            MySQL::get()->exec($sql, [
+                's' => EventStatusType::DECLINED_BY_PARTNER,
+                'id' => $userTournamentId
+            ]);
+
+            Model::get('transaction_history')->createTransaction(
+                $eventInfo['user_id'],
+                ($eventInfo['cost']),
+                'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because partner declined your request'
+            );
+        }
+    }
+
+    public function setDecision($userTournamentId, $status)
+    {
+
+        $sql = 'UPDATE user_tournaments SET status = :s WHERE id = :id';
+        $status = ($status == 1) ? EventStatusType::APPROVED : EventStatusType::DECLINED;
+        MySQL::get()->exec($sql, ['s' => $status, 'id' => $userTournamentId]);
+
+        if ($status == EventStatusType::DECLINED)
+        {
+            // refund money
+            $sql = 'SELECT user_id, partner_id, e.name as event_name, e.cost, t.name as tournament_name
+                    FROM user_tournaments ut
+                    INNER JOIN events e ON e.id = ut.event_id
+                    INNER JOIN tournaments t ON t.id = e.tournament_id
+                    WHERE ut.id = :id';
+            $data = MySQL::get()->fetchOne($sql, ['id' => $userTournamentId]);
+            $message = 'Refund for tournament "'.$data['tournament_name'].'", debate: "'. $data['event_name'] .'" because officer declined your application';
+            Model::get('transaction_history')->createTransaction($data['user_id'], $data['cost'], $message);
+            if ($data['partner_id'] !== null)
+            {
+                Model::get('transaction_history')->createTransaction($data['partner_id'], $data['cost'], $message);
+            }
+        }
+    }
+
+    public function getApproveList($tournamentId)
+    {
+        $sql = 'SELECT
+                  ut.id,
+                  own.id as own_id,
+                  CONCAT(own.first_name, \' \', own.last_name) as own_name,
+                  own.email as own_email,
+                  par.id as par_id,
+                  CONCAT(par.first_name, \' \', par.last_name) as par_name,
+                  par.email as par_email,
+                  e.name
+                FROM user_tournaments ut
+                INNER JOIN users own ON own.id = ut.user_id
+                LEFT JOIN users par ON par.id = ut.partner_id
+                INNER JOIN events e ON e.id = ut.event_id
+                WHERE ut.status = 0 AND e.tournament_id = :tid';
+        $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId]);
+        return $data;
     }
 
     public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod)
@@ -94,7 +186,8 @@ class TournamentsModel extends BaseModel
 
     public function getUserEventInfo($userEventId)
     {
-        $sql = 'SELECT e.id as event_id, e.cost, t.event_start, e.drop_fee_cost, t.entry_deadline, t.drop_deadline, e.name as event_name, t.name as tournament_name, ut.user_id, ut.partner_id, own_u.username as owner_name, par_u.username as partner_name, e.tournament_id FROM user_tournaments ut
+        $sql = 'SELECT e.id as event_id, ut.status as event_status, e.cost, t.event_start, e.drop_fee_cost, t.entry_deadline, t.drop_deadline, t.approve_method, e.name as event_name, t.name as tournament_name, ut.user_id, ut.partner_id, own_u.username as owner_name, par_u.username as partner_name, e.tournament_id
+                FROM user_tournaments ut
                 INNER JOIN events e ON ut.event_id = e.id
                 INNER JOIN tournaments t ON t.id = e.tournament_id
                 INNER JOIN users own_u ON own_u.id = ut.user_id
@@ -190,7 +283,7 @@ class TournamentsModel extends BaseModel
         Model::get('transaction_history')->createTransaction(
             $user->getId(),
             -($event['cost']),
-            'Joined the tournament "'. $tournament['name'] .'"'
+            'Joined the tournament "'. $tournament['name'] .'", debate: "'. $event['name'] .'"'
         );
     }
 

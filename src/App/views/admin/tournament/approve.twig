@@ -1,0 +1,55 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Approvement list for tournament
+{% endblock %}
+
+{% block content %}
+    {% if list|length %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Event</th>
+                    <th>User</th>
+                    <th>Partner</th>
+                    <th>Join information</th>
+                    <th>Decision</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in list %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.own_name }} (<a target="_blank" href="/user/profile?user_id={{ item.own_id }}">{{ item.own_email }}</a>)</td>
+                        <td>
+                            {% if not item.par_id is null %}
+                                {{ item.par_name }} (<a target="_blank" href="/user/profile?user_id={{ item.par_id }}">{{ item.par_email }}</a>)
+                            {% else %}
+                                No
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/tournament/view/{{ item.id }}?user_id={{ item.own_id }}" target="_blank" class="btn btn-xs btn-info"><i class="fa fa-eye"></i> View</a>
+                        </td>
+                        <td>
+                            <button onclick="setDecision(this, {{ item.id }}, 1)" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Approve</button>
+                            <button onclick="setDecision(this, {{ item.id }}, 0)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Decline</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No applicants found.</p>
+    {% endif %}
+
+    <script>
+        function setDecision(obj, id, state)
+        {
+            $.post('/admin/tournament/approve/{{ global.request.get('tournamentId') }}/decision', {id: id, state: state}, function (response) {
+                $(obj).parent().parent().remove();
+            });
+        }
+    </script>
+{% endblock %}

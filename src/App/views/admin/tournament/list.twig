@@ -29,7 +29,11 @@
                         <td>
                             {% if not tournament.reg_started %}
                                 <a href="/admin/tournament/edit/{{ tournament.id }}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i> Edit</a>
-                                <button class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Delete</button>
+                                <button onclick="deleteTournament(this, {{ tournament.id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Delete</button>
+                            {% endif %}
+
+                            {% if tournament.reg_started and tournament.approve_method == 1 %}
+                                <a href="/admin/tournament/approve/{{ tournament.id }}" class="btn btn-xs btn-info"><i class="fa fa-check"></i> Approve list</a>
                             {% endif %}
                         </td>
                     </tr>
@@ -39,4 +43,13 @@
     {% else %}
         <p>No tournaments data found.</p>
     {% endif %}
+
+    <script>
+        function deleteTournament(obj, id)
+        {
+            $.post('/admin/tournament/delete/' + id, {}, function (response) {
+                $(obj).parent().parent().remove();
+            });
+        }
+    </script>
 {% endblock %}

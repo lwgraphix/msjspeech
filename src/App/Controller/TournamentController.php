@@ -80,21 +80,74 @@ class TournamentController extends BaseController
         }
         else
         {
-            // check access to tournament data by partner and owner
-            if (Security::getUser()->getId() != $eventInfo['user_id'])
+            if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
             {
-                if (Security::getUser()->getId() != $eventInfo['partner_id'])
+                $adminMode = true;
+            }
+            else
+            {
+                $adminMode = false;
+                // check access to tournament data by partner and owner
+                if (Security::getUser()->getId() != $eventInfo['user_id'])
                 {
-                    FlashMessage::set(false, 'Record not found');
-                    return new RedirectResponse('/tournament/list');
+                    if (Security::getUser()->getId() != $eventInfo['partner_id'])
+                    {
+                        FlashMessage::set(false, 'Record not found');
+                        return new RedirectResponse('/tournament/list');
+                    }
                 }
             }
             
             $attributes = $this->am->getUserAttributes($eventInfo['user_id'], AttributeGroupType::TOURNAMENT, $eventInfo['event_id']);
             return $this->out($this->twig->render('user/tournament/view.twig', [
                 'event' => $eventInfo,
-                'attributes' => $attributes
+                'attributes' => $attributes,
+                'admin_mode' => $adminMode
             ]));
+        }
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/tournament/view/{eventId}")
+     * )
+     */
+    public function tournamentPartnerDecisionAction(Request $request, $eventId)
+    {
+        $eventInfo = $this->tm->getUserEventInfo($eventId);
+        if (!$eventInfo)
+        {
+            FlashMessage::set(false, 'Record not found');
+            return $this->out('ok');
+        }
+        else
+        {
+            if ($eventInfo['partner_id'] != Security::getUser()->getId())
+            {
+                FlashMessage::set(false, 'Accept event failed');
+                return $this->out('ok');
+            }
+
+            if ($eventInfo['event_status'] == EventStatusType::WAITING_PARTNER_RESPONSE && !DateUtil::isPassed($eventInfo['entry_deadline']))
+            {
+                $balance = Security::getUser()->getBalance();
+                if ($balance < $eventInfo['cost'] && intval($request->get('decision')) == 1)
+                {
+                    FlashMessage::set(false, 'Not enough money for join this debate. Please <a target="_blank" href="/user/balance">deposit</a> money and try join again');
+                    return $this->out('ok');
+                }
+                else
+                {
+                    $this->tm->setPartnerDecision($eventId, $eventInfo, intval($request->get('decision')));
+                    FlashMessage::set(true, 'Your decision applied');
+                    return $this->out('ok');
+                }
+            }
+            else
+            {
+                FlashMessage::set(false, 'Accept event failed');
+                return $this->out('ok');
+            }
         }
     }
 
@@ -269,7 +322,7 @@ class TournamentController extends BaseController
             );
 
             FlashMessage::set(true, 'You successfully joined the tournament');
-            return new RedirectResponse($request->headers->get('referer'));
+            return new RedirectResponse('/tournament/list');
         }
     }
 }

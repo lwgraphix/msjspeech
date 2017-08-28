@@ -78,8 +78,14 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if item.status == 3 and user.id == item.partner_id %}
-                                {{ event_status[item.status]|replace({'partner': 'your'}) }}
+                            {% if user.id == item.partner_id %}
+                                {% if item.status == 3 %}
+                                    {{ event_status[item.status]|replace({'partner': 'your'}) }}
+                                {% elseif item.status == 4 %}
+                                    {{ event_status[item.status]|replace({'partner': 'your decision'}) }}
+                                {% else %}
+                                    {{ event_status[item.status] }}
+                                {% endif %}
                             {% else %}
                                 {{ event_status[item.status] }}
                             {% endif %}
