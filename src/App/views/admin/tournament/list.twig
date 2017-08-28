@@ -21,7 +21,7 @@
             </thead>
             <tbody>
                 {% for tournament in tournaments %}
-                    <tr>
+                    <tr class="{{ tournament.reg_started and not tournament.reg_ended ? 'success' : '' }}">
                         <td>{{ tournament.id }}</td>
                         <td>{{ tournament.name }}</td>
                         <td>{{ tournament.approve_method == 0 ? 'Auto' : 'Manually' }}</td>
