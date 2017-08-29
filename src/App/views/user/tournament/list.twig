@@ -29,11 +29,11 @@
                             <tr>
                                 <td>{{ tournament.id }}</td>
                                 <td>{{ tournament.name }}</td>
-                                <td>{{ tournament.event_start|date('Y/d/m h:i A') }}</td>
-                                <td>{{ tournament.entry_deadline|date('Y/d/m h:i A') }}</td>
-                                <td>{{ tournament.drop_deadline|date('Y/d/m h:i A') }}</td>
-                                <td>{{ tournament.date_start|date('Y/d/m') }}</td>
-                                <td>{{ tournament.date_end|date('Y/d/m') }}</td>
+                                <td>{{ tournament.event_start|date('m/d/Y h:i A') }}</td>
+                                <td>{{ tournament.entry_deadline|date('m/d/Y h:i A') }}</td>
+                                <td>{{ tournament.drop_deadline|date('m/d/Y h:i A') }}</td>
+                                <td>{{ tournament.date_start|date('m/d/Y') }}</td>
+                                <td>{{ tournament.date_end|date('m/d/Y') }}</td>
                                 <td>
                                     <a href="/tournament/join/{{ tournament.id }}" class="btn btn-xs btn-primary">Join</a>
                                 </td>
@@ -96,10 +96,10 @@
                                 <span class="label {{ event_colors[item.status] }}">{{ event_status[item.status] }}</span>
                             {% endif %}
                         </td>
-                        <td>{{ item.entry_deadline|date('Y/d/m h:i A') }}</td>
-                        <td>{{ item.drop_deadline|date('Y/d/m h:i A') }}</td>
-                        <td>{{ item.date_start|date('Y/d/m') }}</td>
-                        <td>{{ item.date_end|date('Y/d/m') }}</td>
+                        <td>{{ item.entry_deadline|date('m/d/Y h:i A') }}</td>
+                        <td>{{ item.drop_deadline|date('m/d/Y h:i A') }}</td>
+                        <td>{{ item.date_start|date('m/d/Y') }}</td>
+                        <td>{{ item.date_end|date('m/d/Y') }}</td>
                         <td>
                             <a href="/tournament/view/{{ item.id }}" class="btn btn-xs btn-info">View</a>
                         </td>

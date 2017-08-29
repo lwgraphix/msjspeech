@@ -16,6 +16,7 @@
 {% block content %}
     <ul class="list-group" style="margin-bottom: 0">
         <li class="list-group-item"><b>Tournament: </b>{{ event.tournament_name }}</li>
+        <li class="list-group-item"><b>Status: </b><span class="label {{ event_colors[event.event_status] }}">{{ event_statuses[event.event_status] }}</span></li>
         <li class="list-group-item"><b>Description: </b>{{ event.tournament_description ? event.tournament_description : 'Not specified' }}</li>
         <li class="list-group-item"><b>Event: </b>{{ event.event_name }}</li>
         <li class="list-group-item"><b>Cost: </b>{{ event.cost|number_format(2, '.', ',') }}$</li>
@@ -60,7 +61,7 @@
         {% endif %}
     {% endif %}
 
-    {% if not (user.id == event.partner_id and event.event_status == 3) and event.event_status in [0,1,3] %}
+    {% if not (user.id == event.partner_id and event.event_status == 3) and event.event_status in [0,1,3] and not admin_mode %}
         <button style="margin-top: 15px" onclick="dropTournament()" class="btn btn-block btn-danger"><i class="fa fa-remove"></i> Drop tournament</button>
     {% endif %}
 

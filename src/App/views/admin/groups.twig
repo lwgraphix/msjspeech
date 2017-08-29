@@ -31,13 +31,13 @@
             </tr>
             </thead>
             <tbody>
-                {% for item in list %}
+                {% for id, item in list %}
                     <tr>
-                        <td>{{ item.id }}</td>
-                        <td id="group_{{ item.id }}">{{ item.name }}</td>
+                        <td>{{ id }}</td>
+                        <td id="group_{{ id }}">{{ item }}</td>
                         <td>
-                            <button onclick="editGroup({{ item.id }})" class="btn btn-xs btn-info"><i class="fa fa-pencil"></i> Edit</button>
-                            <button onclick="removeGroupConfirm({{ item.id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Remove</button>
+                            <button onclick="editGroup({{ id }})" class="btn btn-xs btn-info"><i class="fa fa-pencil"></i> Edit</button>
+                            <button onclick="removeGroupConfirm({{ id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Remove</button>
                         </td>
                     </tr>
                 {% endfor %}

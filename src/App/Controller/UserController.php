@@ -46,6 +46,8 @@ class UserController extends BaseController
     public function profileAction(Request $request)
     {
         // admin mode
+        $groups = Model::get('group')->getAll();
+
         if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
         {
             $user = User::loadById($request->get('user_id'));
@@ -62,13 +64,13 @@ class UserController extends BaseController
                 'attributes' => $attributes,
                 'view_user' => $user,
                 'roles' => UserType::NAMES,
-                'groups' => $userGroups
+                'groups' => $groups,
+                'user_groups' => $userGroups
             ]));
         }
 
-        $userGroups = Model::get('group')->getUserGroups(Security::getUser()->getId());
-        $groups = Model::get('group')->getAll();
         $attributes = Model::get('attribute')->getUserAttributes(Security::getUser()->getId());
+        $userGroups = Model::get('group')->getUserGroups(Security::getUser()->getId());
         return $this->out($this->twig->render('user/profile.twig', [
             'attributes' => $attributes,
             'user_groups' => $userGroups,

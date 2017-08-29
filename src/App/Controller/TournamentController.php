@@ -103,7 +103,9 @@ class TournamentController extends BaseController
             return $this->out($this->twig->render('user/tournament/view.twig', [
                 'event' => $eventInfo,
                 'attributes' => $attributes,
-                'admin_mode' => $adminMode
+                'admin_mode' => $adminMode,
+                'event_statuses' => EventStatusType::NAMES,
+                'event_colors' => EventStatusType::COLORS
             ]));
         }
     }
@@ -123,6 +125,13 @@ class TournamentController extends BaseController
         }
         else
         {
+            // if event drop by another user
+            if ($eventInfo['user_id'] != Security::getUser()->getId() && $eventInfo['partner_id'] != Security::getUser()->getId())
+            {
+                FlashMessage::set(false, 'You can\'t do that.');
+                return $this->out('no');
+            }
+
             $allowedStatusesToDrop = [
                 EventStatusType::WAITING_FOR_APPROVE,
                 EventStatusType::APPROVED,
