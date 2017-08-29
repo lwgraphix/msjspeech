@@ -93,9 +93,14 @@ class AdminController extends BaseController {
             $oldValue = SystemSettings::getInstance()->get($name);
             if ($oldValue == $value) continue;
 
-            if ($name == 'payment_allowed' && $value == 1 && empty($request->get('stripe_key')))
+            if (
+                $name == 'payment_allowed'
+                && $value == 1
+                && empty($request->get('private_stripe_key'))
+                && empty($request->get('public_stripe_key'))
+            )
             {
-                FlashMessage::set(false, 'Can\'t enable payment without stripe key!');
+                FlashMessage::set(false, 'Can\'t enable payment without stripe keys!');
                 return new RedirectResponse('/admin/settings');
             }
 

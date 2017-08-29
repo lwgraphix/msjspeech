@@ -9,16 +9,31 @@ use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
 use App\Type\EventStatusType;
+use App\Type\TournamentType;
+use App\Type\TransactionType;
 use App\Type\UserType;
 use App\Util\DateUtil;
 
 class TournamentsModel extends BaseModel
 {
 
+    /**
+     * @var TransactionHistoryModel
+     */
+    private $thm;
+
+    public function __construct()
+    {
+        $this->thm = Model::get('transaction_history');
+    }
+
     public function getAll()
     {
-        $sql = 'SELECT * FROM tournaments';
-        $data = MySQL::get()->fetchAll($sql);
+        $sql = 'SELECT * FROM tournaments WHERE status != :s';
+        $data = MySQL::get()->fetchAll($sql, [
+            's' => TournamentType::CANCELLED
+        ]);
+
         foreach($data as &$row)
         {
             $row['reg_started'] = DateUtil::isPassed($row['event_start']);
@@ -33,7 +48,7 @@ class TournamentsModel extends BaseModel
         if ($deleteAfterStart)
         {
             // refund all members who registered on this tournament
-            $sql = 'SELECT ut.*, e.cost, e.name as event_name, t.name as tournament_name
+            $sql = 'SELECT ut.*, e.id as event_id, e.cost, e.name as event_name, t.name as tournament_name
                     FROM user_tournaments ut
                     INNER JOIN events e ON e.id = ut.event_id
                     INNER JOIN tournaments t ON t.id = e.tournament_id
@@ -43,20 +58,34 @@ class TournamentsModel extends BaseModel
             $utIds = [];
             foreach($applications as $application)
             {
-                // only user
-                Model::get('transaction_history')->createTransaction(
+
+                $this->thm->createTransaction(
                     $application['user_id'],
                     ($application['cost']),
-                    'Refund for tournament "'.$application['tournament_name'].'", event: "'. $application['event_name'] .'" because administrator cancelled tournament'
+                    TransactionType::TOURNAMENT_REFUND,
+                    0,
+                    'Refund for tournament "'.$application['tournament_name'].'", event: "'. $application['event_name'] .'" because administrator cancelled tournament',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $application['event_id']
                 );
 
                 if ($application['partner_id'] !== null && $application['status'] != EventStatusType::WAITING_PARTNER_RESPONSE)
                 {
                     // only user
-                    Model::get('transaction_history')->createTransaction(
+                    $this->thm->createTransaction(
                         $application['partner_id'],
                         ($application['cost']),
-                        'Refund for tournament "'.$application['tournament_name'].'", event: "'. $application['event_name'] .'" because administrator cancelled tournament'
+                        TransactionType::TOURNAMENT_REFUND,
+                        0,
+                        'Refund for tournament "'.$application['tournament_name'].'", event: "'. $application['event_name'] .'" because administrator cancelled tournament',
+                        null,
+                        null,
+                        null,
+                        null,
+                        $application['event_id']
                     );
                 }
 
@@ -65,25 +94,29 @@ class TournamentsModel extends BaseModel
 
             if (count($utIds) > 0)
             {
+
                 // refunds done, go to delete user_tournaments
-                $sql = 'DELETE FROM user_tournaments WHERE id IN ('. implode(',', $utIds) .')';
+                $sql = 'UPDATE user_tournaments SET status = '. EventStatusType::CANCELLED .' WHERE id IN ('. implode(',', $utIds) .')';
                 MySQL::get()->exec($sql);
-
-                foreach($utIds as $id)
-                {
-                    Model::get('attribute')->deleteAttributesByUserTournamentId($id);
-                }
             }
+
+            $sql = 'UPDATE tournaments SET status = :s WHERE id = :id';
+            MySQL::get()->exec($sql, [
+                's' => TournamentType::CANCELLED,
+                'id' => $tournamentId
+            ]);
         }
+        else
+        {
+            $sql = 'DELETE FROM attributes WHERE tournament_id = :id';
+            MySQL::get()->exec($sql, ['id' => $tournamentId]);
 
-        $sql = 'DELETE FROM attributes WHERE tournament_id = :id';
-        MySQL::get()->exec($sql, ['id' => $tournamentId]);
+            $sql = 'DELETE FROM events WHERE tournament_id = :id';
+            MySQL::get()->exec($sql, ['id' => $tournamentId]);
 
-        $sql = 'DELETE FROM events WHERE tournament_id = :id';
-        MySQL::get()->exec($sql, ['id' => $tournamentId]);
-
-        $sql = 'DELETE FROM tournaments WHERE id = :id';
-        MySQL::get()->exec($sql, ['id' => $tournamentId]);
+            $sql = 'DELETE FROM tournaments WHERE id = :id';
+            MySQL::get()->exec($sql, ['id' => $tournamentId]);
+        }
     }
 
     public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events, $description = null, $pStartDate = null, $pEndDate = null)
@@ -132,10 +165,17 @@ class TournamentsModel extends BaseModel
                 'id' => $userTournamentId
             ]);
 
-            Model::get('transaction_history')->createTransaction(
+            $this->thm->createTransaction(
                 $eventInfo['partner_id'],
                 -($eventInfo['cost']),
-                'Joined the tournament "'. $eventInfo['tournament_name'] .'", event: "'. $eventInfo['event_name'] .'"'
+                TransactionType::TOURNAMENT_JOIN,
+                0,
+                'Joined the tournament "'. $eventInfo['tournament_name'] .'", event: "'. $eventInfo['event_name'] .'"',
+                null,
+                null,
+                null,
+                null,
+                $eventInfo['event_id']
             );
         }
         else
@@ -147,10 +187,17 @@ class TournamentsModel extends BaseModel
                 'id' => $userTournamentId
             ]);
 
-            Model::get('transaction_history')->createTransaction(
+            $this->thm->createTransaction(
                 $eventInfo['user_id'],
                 ($eventInfo['cost']),
-                'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because partner declined your request'
+                TransactionType::TOURNAMENT_REFUND,
+                0,
+                'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because partner declined your request',
+                null,
+                null,
+                null,
+                null,
+                $eventInfo['event_id']
             );
         }
         return true;
@@ -166,17 +213,41 @@ class TournamentsModel extends BaseModel
         if ($status == EventStatusType::DECLINED)
         {
             // refund money
-            $sql = 'SELECT user_id, partner_id, e.name as event_name, e.cost, t.name as tournament_name
+            $sql = 'SELECT user_id, partner_id, e.id as event_id, e.name as event_name, e.cost, t.name as tournament_name
                     FROM user_tournaments ut
                     INNER JOIN events e ON e.id = ut.event_id
                     INNER JOIN tournaments t ON t.id = e.tournament_id
                     WHERE ut.id = :id';
             $data = MySQL::get()->fetchOne($sql, ['id' => $userTournamentId]);
             $message = 'Refund for tournament "'.$data['tournament_name'].'", debate: "'. $data['event_name'] .'" because officer declined your application';
-            Model::get('transaction_history')->createTransaction($data['user_id'], $data['cost'], $message);
+
+            $this->thm->createTransaction(
+                $data['user_id'],
+                $data['cost'],
+                TransactionType::TOURNAMENT_REFUND,
+                0,
+                $message,
+                null,
+                null,
+                null,
+                null,
+                $data['event_id']
+            );
+
             if ($data['partner_id'] !== null)
             {
-                Model::get('transaction_history')->createTransaction($data['partner_id'], $data['cost'], $message);
+                $this->thm->createTransaction(
+                    $data['partner_id'],
+                    $data['cost'],
+                    TransactionType::TOURNAMENT_REFUND,
+                    0,
+                    $message,
+                    null,
+                    null,
+                    null,
+                    null,
+                    $data['event_id']
+                );
             }
         }
     }
@@ -237,40 +308,68 @@ class TournamentsModel extends BaseModel
 
         if (!$fee)
         {
-            Model::get('transaction_history')->createTransaction(
+            $this->thm->createTransaction(
                 $user->getId(),
                 $eventInfo['cost'],
-                'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop event'
+                TransactionType::TOURNAMENT_REFUND,
+                0,
+                'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop event',
+                null,
+                null,
+                null,
+                null,
+                $eventInfo['event_id']
             );
 
             if ($user->getId() == $eventInfo['user_id'])
             {
                 if ($eventInfo['partner_id'] !== null && $eventInfo['event_status'] != EventStatusType::WAITING_PARTNER_RESPONSE)
                 {
-                    Model::get('transaction_history')->createTransaction(
+                    $this->thm->createTransaction(
                         $eventInfo['partner_id'],
                         $eventInfo['cost'],
-                        'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event'
+                        TransactionType::TOURNAMENT_REFUND,
+                        0,
+                        'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event',
+                        null,
+                        null,
+                        null,
+                        null,
+                        $eventInfo['event_id']
                     );
                 }
             }
             else
             {
                 // dropped by partner
-                Model::get('transaction_history')->createTransaction(
+                $this->thm->createTransaction(
                     $eventInfo['user_id'],
                     $eventInfo['cost'],
-                    'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event'
+                    TransactionType::TOURNAMENT_REFUND,
+                    0,
+                    'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $eventInfo['event_id']
                 );
             }
         }
         else
         {
             // not refund and get fee from user who drop
-            Model::get('transaction_history')->createTransaction(
+            $this->thm->createTransaction(
                 $user->getId(),
                 -($eventInfo['drop_fee_cost']),
-                'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline'
+                TransactionType::TOURNAMENT_FEE,
+                0,
+                'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
+                null,
+                null,
+                null,
+                null,
+                $eventInfo['event_id']
             );
         }
     }
@@ -295,9 +394,12 @@ class TournamentsModel extends BaseModel
                 INNER JOIN tournaments t ON t.id = e.tournament_id
                 INNER JOIN users own_user ON own_user.id = ut.user_id
                 LEFT JOIN users partner_user ON partner_user.id = ut.partner_id
-                WHERE ut.user_id = :uid OR ut.partner_id = :uid
+                WHERE (ut.user_id = :uid OR ut.partner_id = :uid) AND t.status != :s
                 ORDER BY ut.id DESC';
-        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
+        $data = MySQL::get()->fetchAll($sql, [
+            'uid' => $userId,
+            's' => TournamentType::CANCELLED
+        ]);
         return $data;
     }
 
@@ -322,6 +424,7 @@ class TournamentsModel extends BaseModel
                   t.approve_method,
                   e.name as event_name,
                   t.name as tournament_name,
+                  t.status as tournament_status,
                   t.description as tournament_description,
                   ut.user_id,
                   ut.partner_id,
@@ -432,10 +535,17 @@ class TournamentsModel extends BaseModel
         }
 
         // get cash
-        Model::get('transaction_history')->createTransaction(
+        $this->thm->createTransaction(
             $user->getId(),
             -($event['cost']),
-            'Joined the tournament "'. $tournament['name'] .'", debate: "'. $event['name'] .'"'
+            TransactionType::TOURNAMENT_JOIN,
+            0,
+            'Joined the tournament "'. $tournament['name'] .'", event: "'. $event['name'] .'"',
+            null,
+            null,
+            null,
+            null,
+            $event['id']
         );
     }
 

@@ -34,13 +34,24 @@ class TransactionHistoryModel extends BaseModel
         return $data;
     }
 
-    public function createTransaction($userId, $amount, $description)
+    public function createTransaction($userId, $amount, $type, $creatorId, $memo1, $memo2 = null, $memo3 = null, $memo4 = null, $memo5 = null, $eventId = null)
     {
-        $sql = 'INSERT INTO transaction_history (user_id, amount, description) VALUES (:uid, :a, :d)';
+        $sql = 'INSERT INTO transaction_history
+                (user_id, amount, `type`, `creator_id`, `memo_1`, `memo_2`, `memo_3`, `memo_4`, `memo_5`, `event_id`)
+                VALUES
+                (:uid, :a, :t, :cid, :m1, :m2, :m3, :m4, :m5, :eid)';
+
         MySQL::get()->exec($sql, [
             'uid' => $userId,
             'a' => $amount,
-            'd' => $description
+            't' => $type,
+            'cid' => $creatorId,
+            'm1' => $memo1,
+            'm2' => $memo2,
+            'm3' => $memo3,
+            'm4' => $memo4,
+            'm5' => $memo5,
+            'eid' => $eventId
         ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Util\EventStatusType;
 use App\Util\RigStatusType;
 use App\Util\SystemSettings;
 use App\Util\TelegramBot;
+use App\Util\TransactionType;
 
 class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
 {
@@ -21,13 +22,24 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
         return $data;
     }
 
-    private function createTransaction($userId, $amount, $description)
+    public function createTransaction($userId, $amount, $type, $creatorId, $memo1, $memo2 = null, $memo3 = null, $memo4 = null, $memo5 = null, $eventId = null)
     {
-        $sql = 'INSERT INTO transaction_history (user_id, amount, description) VALUES (:uid, :a, :d)';
+        $sql = 'INSERT INTO transaction_history
+                (user_id, amount, `type`, `creator_id`, `memo_1`, `memo_2`, `memo_3`, `memo_4`, `memo_5`, `event_id`)
+                VALUES
+                (:uid, :a, :t, :cid, :m1, :m2, :m3, :m4, :m5, :eid)';
+
         MySQL::get()->exec($sql, [
             'uid' => $userId,
             'a' => $amount,
-            'd' => $description
+            't' => $type,
+            'cid' => $creatorId,
+            'm1' => $memo1,
+            'm2' => $memo2,
+            'm3' => $memo3,
+            'm4' => $memo4,
+            'm5' => $memo5,
+            'eid' => $eventId
         ]);
     }
 
@@ -44,7 +56,14 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
         $this->createTransaction(
             $eventInfo['user_id'],
             ($eventInfo['cost']),
-            'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because partner request is timed out'
+            TransactionType::TOURNAMENT_REFUND,
+            0,
+            'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because partner request is timed out',
+            null,
+            null,
+            null,
+            null,
+            $eventInfo['event_id']
         );
     }
 

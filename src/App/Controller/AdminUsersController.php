@@ -13,6 +13,7 @@ use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
 use App\Type\LinkType;
 use App\Code\ProtocolCode;
+use App\Type\TransactionType;
 use App\Type\UserType;
 use Silex\Application;
 use DDesrosiers\SilexAnnotations\Annotations as SLX;
@@ -72,7 +73,13 @@ class AdminUsersController extends BaseController {
         $this->thm->createTransaction(
             $request->get('user_id'),
             floatval($request->get('amount')),
-            $request->get('description')
+            TransactionType::MANUAL,
+            Security::getUser()->getId(),
+            $request->get('memo1'),
+            $request->get('memo2'),
+            $request->get('memo3'),
+            $request->get('memo4'),
+            $request->get('memo5')
         );
 
         FlashMessage::set(true, 'Transaction successfully created');

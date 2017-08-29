@@ -117,5 +117,8 @@
 <script src="/assets/js/app.min.js"></script>
 {% block js_library %}{% endblock %}
 {% block javascript %}{% endblock %}
+{% if not user is null and user.role in [4,5] %}
+    <script src="/assets/js/admin/table-copy.js"></script>
+{% endif %}
 </body>
 </html>

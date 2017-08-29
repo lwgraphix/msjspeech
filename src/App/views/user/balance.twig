@@ -36,8 +36,24 @@
                                         <input name="amount" type="number" required class="form-control" id="amount">
                                     </div>
                                     <div class="form-group">
-                                        <label for="description">Description <span style="color: red">*</span></label>
-                                        <input name="description" type="text" required class="form-control" id="description" placeholder="Reason">
+                                        <label for="memo1">Memo 1 <span style="color: red">*</span></label>
+                                        <input name="memo1" type="text" required class="form-control" id="memo1" placeholder="Reason">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="memo2">Memo 2</label>
+                                        <input name="memo2" type="text" class="form-control" id="memo2">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="memo3">Memo 3</label>
+                                        <input name="memo3" type="text" class="form-control" id="memo3">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="memo4">Memo 4</label>
+                                        <input name="memo4" type="text" class="form-control" id="memo4">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="memo5">Memo 5</label>
+                                        <input name="memo5" type="text" class="form-control" id="memo5">
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -74,7 +90,7 @@
                         <td>{{ transaction.id }}</td>
                         <td><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
                         <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
-                        <td>{{ transaction.description }}</td>
+                        <td>{{ transaction.memo_1 }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

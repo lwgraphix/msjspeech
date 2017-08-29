@@ -14,6 +14,7 @@ use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
 use App\Type\EventStatusType;
 use App\Type\EventType;
+use App\Type\TournamentType;
 use App\Type\UserType;
 use App\Util\DateUtil;
 use Silex\Application;
@@ -81,6 +82,12 @@ class TournamentController extends BaseController
         }
         else
         {
+            if ($eventInfo['tournament_status'] == TournamentType::CANCELLED)
+            {
+                FlashMessage::set(false, 'Record not found');
+                return new RedirectResponse('/tournament/list');
+            }
+
             if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
             {
                 $adminMode = true;

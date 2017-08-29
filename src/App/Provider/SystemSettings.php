@@ -64,6 +64,13 @@ class SystemSettings
         ],
 
         [
+            'label' => 'AWS Send email from',
+            'name' => 'aws_send_email_from',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
             'label' => 'Membership fee',
             'name' => 'membership_fee',
             'value' => 0,
