@@ -132,6 +132,12 @@ class TournamentController extends BaseController
         }
         else
         {
+            if ($eventInfo['tournament_status'] == TournamentType::CANCELLED)
+            {
+                FlashMessage::set(false, 'Record not found');
+                return $this->out('ok');
+            }
+
             // if event drop by another user
             if ($eventInfo['user_id'] != Security::getUser()->getId() && $eventInfo['partner_id'] != Security::getUser()->getId())
             {
@@ -173,6 +179,12 @@ class TournamentController extends BaseController
         }
         else
         {
+            if ($eventInfo['tournament_status'] == TournamentType::CANCELLED)
+            {
+                FlashMessage::set(false, 'Record not found');
+                return $this->out('ok');
+            }
+
             if ($eventInfo['partner_id'] != Security::getUser()->getId())
             {
                 FlashMessage::set(false, 'Accept event failed');
@@ -226,6 +238,12 @@ class TournamentController extends BaseController
             return new RedirectResponse('/tournament/list');
         }
 
+        if ($tournament['tournament']['status'] == TournamentType::CANCELLED)
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/tournament/list');
+        }
+
         if (!DateUtil::isPassed($tournament['tournament']['event_start']))
         {
             FlashMessage::set(false, 'Tournament registration is not started! You can\'t join this tournament.');
@@ -256,6 +274,12 @@ class TournamentController extends BaseController
         $tournament = $this->tm->getById($tournamentId);
 
         if (!$tournament['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/tournament/list');
+        }
+
+        if ($tournament['tournament']['status'] == TournamentType::CANCELLED)
         {
             FlashMessage::set(false, 'Tournament not found');
             return new RedirectResponse('/tournament/list');

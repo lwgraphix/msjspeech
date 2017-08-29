@@ -18,6 +18,7 @@ use App\Type\AttributeType;
 use App\Type\EventStatusType;
 use App\Type\LinkType;
 use App\Code\ProtocolCode;
+use App\Type\TournamentType;
 use App\Type\UserType;
 use App\Util\DateUtil;
 use Silex\Application;
@@ -111,6 +112,12 @@ class AdminTournamentController extends BaseController {
             return new RedirectResponse('/');
         }
 
+        if ($tournament['tournament']['status'] == TournamentType::CANCELLED)
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
         $isStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
 
         return $this->out($this->twig->render('admin/tournament/edit.twig', [
@@ -130,6 +137,12 @@ class AdminTournamentController extends BaseController {
     {
         $tournament = $this->tm->getById($tournamentId);
         if (!$tournament['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        if ($tournament['tournament']['status'] == TournamentType::CANCELLED)
         {
             FlashMessage::set(false, 'Tournament not found');
             return new RedirectResponse('/');
@@ -220,6 +233,12 @@ class AdminTournamentController extends BaseController {
             return new RedirectResponse('/');
         }
 
+        if ($tournament['tournament']['status'] == TournamentType::CANCELLED)
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
         $tournamentStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
         if (!$tournamentStarted)
         {
@@ -250,6 +269,19 @@ class AdminTournamentController extends BaseController {
         $requestedStatus = $request->get('event', 0);
         $list = $this->tm->getMembersList($tournamentId, $requestedStatus);
         $tournamentData = $this->tm->getById($tournamentId);
+
+        if (!$tournamentData['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        if ($tournamentData['tournament']['status'] == TournamentType::CANCELLED)
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
         return $this->out($this->twig->render('admin/tournament/members.twig', [
             'list' => $list,
             'event_statuses' => EventStatusType::NAMES,
@@ -264,6 +296,20 @@ class AdminTournamentController extends BaseController {
      */
     public function tournamentSetDecisionAction(Request $request, $tournamentId)
     {
+        $tournamentData = $this->tm->getById($tournamentId);
+
+        if (!$tournamentData['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        if ($tournamentData['tournament']['status'] == TournamentType::CANCELLED)
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
         $this->tm->setDecision($request->get('id'), $request->get('state'));
         return $this->out('ok');
     }
@@ -278,6 +324,12 @@ class AdminTournamentController extends BaseController {
         $tournament = $this->tm->getById($tournamentId);
 
         if (!$tournament['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        if ($tournament['tournament']['status'] == TournamentType::CANCELLED)
         {
             FlashMessage::set(false, 'Tournament not found');
             return new RedirectResponse('/');
