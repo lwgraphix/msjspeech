@@ -13,4 +13,6 @@ class StatusCode
     const CATEGORY_MAX_DEPTH = 5;
 
     const PAGE_SLUG_EXISTS = 6;
+
+    const STRIPE_CHARGE_FAILED = 7;
 }

@@ -18,6 +18,39 @@
             {% set user_balance = (admin_mode is defined) ? view_user.balance : user.balance %}
             <h4>Your current balance: {{ user_balance|number_format(2, '.', ',') }}$</h4>
 
+            {% if system_settings.get('payment_allowed') == 1 %}
+                <button class="btn btn-primary" data-toggle="modal" data-target="#deposit"><i class="fa fa-credit-card"></i> Deposit</button>
+                <div class="modal fade" id="deposit">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">Deposit money</h4>
+                            </div>
+                            <form id="deposit_form" method="post" action="/user/balance/deposit">
+                                <div class="modal-body">
+                                    <input type="hidden" name="token" id="stripe_token" />
+                                    <div style="border: 1px solid #d2d6de; padding: 10px">
+                                        <div id="card-element"></div>
+                                        <div id="card-errors" class="text-danger" role="alert"></div>
+                                    </div>
+                                    <div class="form-group" style="margin-top: 20px">
+                                        <label for="amount">Amount</label>
+                                        <input required class="form-control" type="number" step="0.01" id="amount" name="amount" />
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Deposit</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+
             {% if admin_mode is defined %}
                 <button class="btn btn-primary" data-toggle="modal" data-target="#add-transaction"><i class="fa fa-plus"></i> Create transaction</button>
                 <div class="modal fade" id="add-transaction">
@@ -67,6 +100,58 @@
             {% endif %}
         </div>
     </div>
+
+    {% if system_settings.get('payment_allowed') == 1 %}
+        <script src="https://js.stripe.com/v3/"></script>
+        <script>
+            var stripe = Stripe('{{ system_settings.get('public_stripe_key') }}');
+            var elements = stripe.elements();
+            var style = {
+                base: {
+                    color: '#32325d',
+                    lineHeight: '24px',
+                    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                    fontSmoothing: 'antialiased',
+                    fontSize: '16px',
+                    '::placeholder': {
+                        color: '#000000'
+                    }
+                },
+                invalid: {
+                    color: '#fa755a',
+                    iconColor: '#fa755a'
+                }
+            };
+            var card = elements.create('card', {style: style});
+            card.mount('#card-element');
+            card.addEventListener('change', function(event) {
+                var displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+
+            var form = document.getElementById('deposit_form');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                if ($(".StripeElement--empty").length == 0 && document.getElementById('card-errors').textContent == '')
+                {
+                    stripe.createToken(card).then(function(result) {
+                        if (result.error) {
+                            var errorElement = document.getElementById('card-errors');
+                            errorElement.textContent = result.error.message;
+                        } else {
+                            $("#stripe_token").val(result.token.id);
+                            form.submit();
+                        }
+                    });
+                }
+            });
+        </script>
+    {% endif %}
 {% endblock %}
 
 {% block title %}
@@ -81,7 +166,11 @@
                 <th>#</th>
                 <th>Amount</th>
                 <th>Date</th>
-                <th>Description</th>
+                <th>Memo 1</th>
+                <th>Memo 2</th>
+                <th>Memo 3</th>
+                <th>Memo 4</th>
+                <th>Memo 5</th>
             </tr>
             </thead>
             <tbody>
@@ -91,6 +180,10 @@
                         <td><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
                         <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
                         <td>{{ transaction.memo_1 }}</td>
+                        <td>{{ transaction.memo_2 }}</td>
+                        <td>{{ transaction.memo_3 }}</td>
+                        <td>{{ transaction.memo_4 }}</td>
+                        <td>{{ transaction.memo_5 }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

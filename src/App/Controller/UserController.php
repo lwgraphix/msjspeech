@@ -7,9 +7,11 @@ use App\Model\UserModel;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
+use App\Provider\Stripe;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\TransactionType;
 use App\Type\UserType;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -104,6 +106,50 @@ class UserController extends BaseController
         }
 
         return $this->out('ok');
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/user/balance/deposit")
+     * )
+     */
+    public function depositCashAction(Request $request)
+    {
+        $token = $request->get('token');
+        $amount = $request->get('amount');
+
+        if (empty($token) || empty($amount))
+        {
+            FlashMessage::set(false, 'Internal error');
+            return new RedirectResponse('/user/balance');
+        }
+
+        $description = Security::getUser()->getFullName() . ' (#'. Security::getUser()->getId() .')';
+        $charge = Stripe::charge($token, $amount, $description);
+        if ($charge !== true)
+        {
+            FlashMessage::set(false, $charge);
+            return new RedirectResponse('/user/balance');
+        }
+        else
+        {
+            // TODO: create transaction
+            Model::get('transaction_history')->createTransaction(
+                Security::getUser()->getId(),
+                $amount,
+                TransactionType::CARD_DEPOSIT,
+                0,
+                'Stripe deposit',
+                $memo2 = null,
+                $memo3 = null,
+                $memo4 = null,
+                $memo5 = null,
+                $eventId = null
+            );
+
+            FlashMessage::set(true, 'Your account deposited ' . $amount . '$');
+            return new RedirectResponse('/user/balance');
+        }
     }
 
     /**

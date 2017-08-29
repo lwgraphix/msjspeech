@@ -3,12 +3,16 @@ namespace App\Model;
 
 use App\Code\StatusCode;
 use App\Connector\MySQL;
+use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
+use App\Provider\Stripe;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\TransactionType;
 use App\Type\UserType;
+use App\Provider\SystemSettings;
 
 class UserModel extends BaseModel
 {
@@ -22,6 +26,18 @@ class UserModel extends BaseModel
         if ($user !== false)
         {
             return StatusCode::USER_EMAIL_EXISTS;
+        }
+
+        $stripeStatus = false;
+        if (!empty($data['stripe_token']))
+        {
+            $description = $data['first_name'] . ' ' . $data['last_name'] . ' ('. $data['email'] .') membership fee';
+            $stripeStatus = Stripe::charge($data['stripe_token'], SystemSettings::getInstance()->get('membership_fee'), $description);
+            if ($stripeStatus !== true)
+            {
+                FlashMessage::set(false, $stripeStatus);
+                return StatusCode::STRIPE_CHARGE_FAILED;
+            }
         }
 
         $pass = password_hash($data['password'], PASSWORD_BCRYPT);
@@ -41,6 +57,41 @@ class UserModel extends BaseModel
             'pe' => $data['parent_email'],
             'r' => UserType::PENDING
         ], true);
+
+        if ($stripeStatus === true)
+        {
+            Model::get('transaction_history')->createTransaction(
+                $userId,
+                SystemSettings::getInstance()->get('membership_fee'),
+                TransactionType::MEMBERSHIP_FEE,
+                0,
+                'Membership contribution',
+                $memo2 = null,
+                $memo3 = null,
+                $memo4 = null,
+                $memo5 = null,
+                $eventId = null
+            );
+
+            Model::get('transaction_history')->createTransaction(
+                $userId,
+                -(SystemSettings::getInstance()->get('membership_fee')),
+                TransactionType::MEMBERSHIP_FEE,
+                0,
+                'Membership contribution',
+                $memo2 = null,
+                $memo3 = null,
+                $memo4 = null,
+                $memo5 = null,
+                $eventId = null
+            );
+
+            $sql = 'UPDATE users SET payed_fee = :pf WHERE id = :id';
+            MySQL::get()->exec($sql, [
+                'pf' => SystemSettings::getInstance()->get('membership_fee'),
+                'id' => $userId
+            ]);
+        }
 
         // need for attachment create
         $userData = [
@@ -106,6 +157,45 @@ class UserModel extends BaseModel
 
         // TODO: if stripe_token available -> charge user and create transaction
         return true;
+    }
+
+    public function getByEmail($email)
+    {
+        $sql = 'SELECT * FROM users WHERE email = :e';
+        $data = MySQL::get()->fetchOne($sql, ['e' => $email]);
+        return $data;
+    }
+
+    public function restore($userId)
+    {
+        $exists = MySQL::get()->fetchColumn('SELECT hash FROM restore_users WHERE user_id = :uid', [
+            'uid' => $userId
+        ]);
+
+        if ($exists) return false;
+
+        $hash = md5(time() . $userId . rand(0, 99999));
+        $sql = 'INSERT INTO restore_users (hash, user_id, status) VALUES (:h, :uid, 0)';
+        MySQL::get()->exec($sql, ['h' => $hash, 'uid' => $userId]);
+        // TODO: email here
+        return true;
+    }
+
+    public function getRestoreData($hash)
+    {
+        $sql = 'SELECT * FROM restore_users WHERE hash = :h AND status = 0';
+        $data = MySQL::get()->fetchOne($sql, ['h' => $hash]);
+        return $data;
+    }
+
+    public function changePassword($userId, $newPassword, $hash)
+    {
+        $pHash = password_hash($newPassword, PASSWORD_BCRYPT);
+        $sql = 'UPDATE users SET password = :p WHERE id = :uid';
+        MySQL::get()->exec($sql, ['p' => $pHash, 'uid' => $userId]);
+
+        $sql = 'UPDATE restore_users SET status = 1 WHERE hash = :h';
+        MySQL::get()->exec($sql, ['h' => $hash]);
     }
 
     public function update(User $user, $data, $adminMode = false)

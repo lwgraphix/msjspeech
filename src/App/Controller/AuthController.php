@@ -85,7 +85,6 @@ class AuthController extends BaseController
             return new RedirectResponse('/');
         }
 
-        // if stripe token - charge stripe on ready user
         $requiredFields = [
             'email' => AttributeType::TEXT,
             'password' => AttributeType::TEXT,
@@ -152,6 +151,14 @@ class AuthController extends BaseController
                 FlashMessage::set(false, 'User with this email exists! Try another email or <a href="/auth/restore">restore</a> your account access.');
                 return new RedirectResponse('/auth/register');
             }
+            elseif ($status == StatusCode::STRIPE_CHARGE_FAILED)
+            {
+                $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+                return $this->out($this->twig->render('auth/register.twig', [
+                    'attributes' => $attributes,
+                    'flash_message' => FlashMessage::get()
+                ]));
+            }
             else
             {
                 FlashMessage::set(false, 'Internal error. Please contact with administrator.');
@@ -161,6 +168,7 @@ class AuthController extends BaseController
         else
         {
             // TODO: send email
+
             FlashMessage::set(true, 'You are registered! You can access your profile after administrator approvement. Wait for email message with approve status.');
             return new RedirectResponse('/');
         }
@@ -174,6 +182,88 @@ class AuthController extends BaseController
     public function authUserPageAction(Request $request)
     {
         return $this->out($this->twig->render('auth/login.twig'));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/auth/restore")
+     * )
+     */
+    public function authRestoreAction(Request $request)
+    {
+        return $this->out($this->twig->render('auth/forgot.twig'));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/auth/restore/{hash}")
+     * )
+     */
+    public function authRestoreByHashAction(Request $request, $hash)
+    {
+        $data = $this->um->getRestoreData($hash);
+        if (!$data)
+        {
+            FlashMessage::set(false, 'Your link is expired');
+            return new RedirectResponse('/');
+        }
+
+        return $this->out($this->twig->render('auth/reset.twig'));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/auth/restore/{hash}")
+     * )
+     */
+    public function authRestoreByHashPersistAction(Request $request, $hash)
+    {
+        $data = $this->um->getRestoreData($hash);
+        if (!$data)
+        {
+            FlashMessage::set(false, 'Your link is expired');
+            return new RedirectResponse('/');
+        }
+
+        if (empty($request->get('password')))
+        {
+            FlashMessage::set(false, 'Password is empty');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
+        $this->um->changePassword($data['user_id'], $request->get('password'), $hash);
+        FlashMessage::set(true, 'Password was changed. Try to sign in now.');
+
+        return new RedirectResponse('/auth/login');
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/auth/restore")
+     * )
+     */
+    public function authRestorePersistAction(Request $request)
+    {
+        $user = $this->um->getByEmail($request->get('email'));
+        if (!$user)
+        {
+            FlashMessage::set(false, 'User with this email not found');
+        }
+        else
+        {
+            $status = $this->um->restore($user['id']);
+            if (!$status)
+            {
+                FlashMessage::set(false, 'You already requested account restore. Check your email');
+            }
+            else
+            {
+                FlashMessage::set(true, 'Check your email for further instructions');
+            }
+
+        }
+
+        return new RedirectResponse($request->headers->get('referer'));
     }
 
     /**

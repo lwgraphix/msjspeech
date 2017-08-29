@@ -3,7 +3,8 @@
         "silex/silex": "^2.0",
         "ddesrosiers/silex-annotation-provider": "^2.0",
         "twig/twig": "^2.4",
-        "symfony/twig-bridge": "^3.3"
+        "symfony/twig-bridge": "^3.3",
+        "stripe/stripe-php": "^5.2"
     },
 
     "autoload": {

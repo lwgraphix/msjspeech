@@ -1,0 +1,58 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Change password
+{% endblock %}
+
+{% block content_header %}
+    <div class="alert alert-danger alert-dismissible" id="error-message" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <h4><i class="icon fa fa-check"></i> Error</h4>
+        <span id="error-text"></span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form onsubmit="return passwords_equal()" method="POST">
+        <div class="form-group">
+            <label for="password">New password</label>
+            <input name="password" type="password" required class="form-control" id="password">
+        </div>
+        <div class="form-group">
+            <label for="password_confirm">Confirm new password</label>
+            <input type="password" required class="form-control" id="password_confirm">
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Change password</button>
+        </div>
+    </form>
+
+    <script>
+        function passwords_equal()
+        {
+            var p = $("#password").val();
+            var pc = $("#password_confirm").val();
+
+            if (p != pc)
+            {
+                showError('Passwords not equal');
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        function showError(message)
+        {
+            var em = $("#error-message");
+            em.hide();
+            $("#error-text").html(message);
+            em.show();
+            $('html, body').animate({
+                scrollTop: em.offset().top - 25
+            }, 1000);
+        }
+
+    </script>
+{% endblock %}

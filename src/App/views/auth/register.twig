@@ -34,7 +34,7 @@
 
         <div class="form-group">
             <label for="email">Email address <span style="color: red">*</span></label>
-            <input name="email" type="email" required class="form-control" id="email" placeholder="Email">
+            <input value="{{ global.request.get('email') }}" name="email" type="email" required class="form-control" id="email" placeholder="Email">
         </div>
 
         <div class="form-group">
@@ -49,12 +49,12 @@
 
         <div class="form-group">
             <label for="first_name">First name <span style="color: red">*</span></label>
-            <input name="first_name" type="text" required class="form-control" id="first_name" placeholder="ex. Alex">
+            <input value="{{ global.request.get('first_name') }}" name="first_name" type="text" required class="form-control" id="first_name" placeholder="ex. Alex">
         </div>
 
         <div class="form-group">
             <label for="last_name">Last name <span style="color: red">*</span></label>
-            <input name="last_name" type="text" required class="form-control" id="last_name" placeholder="ex. Hoffman">
+            <input value="{{ global.request.get('last_name') }}" name="last_name" type="text" required class="form-control" id="last_name" placeholder="ex. Hoffman">
         </div>
 
         <blockquote>
@@ -63,17 +63,17 @@
 
         <div class="form-group">
             <label for="parent_email">Parent email</label>
-            <input name="parent_email" type="email" class="form-control" id="parent_email" placeholder="Parent email">
+            <input value="{{ global.request.get('parent_email') }}" name="parent_email" type="email" class="form-control" id="parent_email" placeholder="Parent email">
         </div>
 
         <div class="form-group">
             <label for="parent_first_name">Parent first name</label>
-            <input name="parent_first_name" type="text" class="form-control" id="parent_first_name" placeholder="ex. Alex">
+            <input value="{{ global.request.get('parent_first_name') }}" name="parent_first_name" type="text" class="form-control" id="parent_first_name" placeholder="ex. Alex">
         </div>
 
         <div class="form-group">
             <label for="parent_last_name">Parent last name</label>
-            <input name="parent_last_name" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
+            <input value="{{ global.request.get('parent_last_name') }}" name="parent_last_name" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
         </div>
 
         {% if attributes|length > 0 %}
@@ -85,11 +85,11 @@
                 <div class="form-group">
                     <label for="attr_{{ attribute.id }}">{{ attribute.label }} {{ (attribute.required) ? '<span style="color: red">*</span>' : '' }}</label>
                     {% if attribute.type == 0 %}
-                        <input {{ (attribute.required) ? 'required' : '' }} name="attr_{{ attribute.id }}" type="text" class="form-control" id="attr_{{ attribute.id }}" placeholder="{{ attribute.placeholder }}">
+                        <input value="{{ global.request.get('attr_' ~ attribute.id) }}" {{ (attribute.required) ? 'required' : '' }} name="attr_{{ attribute.id }}" type="text" class="form-control" id="attr_{{ attribute.id }}" placeholder="{{ attribute.placeholder }}">
                     {% elseif attribute.type == 1 %}
                         <select {{ (attribute.required) ? 'required' : '' }} class="form-control" name="attr_{{ attribute.id }}">
                             {% for item in attribute.data %}
-                                <option value="{{ loop.index0 }}">{{ item }}</option>
+                                <option {{ global.request.get('attr_' ~ attribute.id) == loop.index0 ? 'selected' : '' }} value="{{ loop.index0 }}">{{ item }}</option>
                             {% endfor %}
                         </select>
                     {% elseif attribute.type == 2 %}
@@ -209,7 +209,7 @@
         }
 
         {% if system_settings.get('membership_fee') > 0 and system_settings.get('payment_allowed') == 1 %}
-            var stripe = Stripe('{{ system_settings.get('stripe_key') }}');
+            var stripe = Stripe('{{ system_settings.get('public_stripe_key') }}');
             var elements = stripe.elements();
             var style = {
                 base: {

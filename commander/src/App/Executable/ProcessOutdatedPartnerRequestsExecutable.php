@@ -63,7 +63,7 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
             null,
             null,
             null,
-            $eventInfo['event_id']
+            $eventInfo['eve']
         );
     }
 
