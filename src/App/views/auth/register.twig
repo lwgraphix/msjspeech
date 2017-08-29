@@ -95,7 +95,7 @@
                     {% elseif attribute.type == 2 %}
                         {% for item in attribute.data %}
                             <div>
-                                <input class="{{ (attribute.required) ? 'required_checkbox' : '' }}" type="checkbox" id="attr_{{ attribute.id }}_{{ loop.index0 }}" name="attr_{{ attribute.id }}[]" value="{{ loop.index0 }}">
+                                <input {{ loop.index0 in global.request.get('attr_' ~ attribute.id) ? 'checked' : '' }} class="{{ (attribute.required) ? 'required_checkbox' : '' }}" type="checkbox" id="attr_{{ attribute.id }}_{{ loop.index0 }}" name="attr_{{ attribute.id }}[]" value="{{ loop.index0 }}">
                                 <label style="font-weight: normal;" for="attr_{{ attribute.id }}_{{ loop.index0 }}">{{ item }}</label>
                             </div>
                         {% endfor %}

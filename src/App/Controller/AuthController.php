@@ -113,7 +113,11 @@ class AuthController extends BaseController
                 if ($fld->getClientMimeType() != 'application/pdf')
                 {
                     FlashMessage::set(false, 'You can upload only PDF file!');
-                    return new RedirectResponse('/auth/register');
+                    $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+                    return $this->out($this->twig->render('auth/register.twig', [
+                        'attributes' => $attributes,
+                        'flash_message' => FlashMessage::get()
+                    ]));
                 }
             }
             else
@@ -124,7 +128,11 @@ class AuthController extends BaseController
             if ($fld === null)
             {
                 FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
-                return new RedirectResponse('/auth/register');
+                $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+                return $this->out($this->twig->render('auth/register.twig', [
+                    'attributes' => $attributes,
+                    'flash_message' => FlashMessage::get()
+                ]));
             }
         }
 
@@ -132,13 +140,21 @@ class AuthController extends BaseController
         if (!filter_var($request->get('email'), FILTER_VALIDATE_EMAIL))
         {
             FlashMessage::set(false, 'Wrong email address format. Check the typing of email correct and try again');
-            return new RedirectResponse('/auth/register');
+            $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+            return $this->out($this->twig->render('auth/register.twig', [
+                'attributes' => $attributes,
+                'flash_message' => FlashMessage::get()
+            ]));
         }
 
         if (!empty($request->get('parent_email')) && !filter_var($request->get('parent_email'), FILTER_VALIDATE_EMAIL))
         {
             FlashMessage::set(false, 'Wrong parent email address format. Check the typing of email correct and try again');
-            return new RedirectResponse('/auth/register');
+            $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+            return $this->out($this->twig->render('auth/register.twig', [
+                'attributes' => $attributes,
+                'flash_message' => FlashMessage::get()
+            ]));
         }
 
 
@@ -162,7 +178,11 @@ class AuthController extends BaseController
             else
             {
                 FlashMessage::set(false, 'Internal error. Please contact with administrator.');
-                return new RedirectResponse('/auth/register');
+                $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
+                return $this->out($this->twig->render('auth/register.twig', [
+                    'attributes' => $attributes,
+                    'flash_message' => FlashMessage::get()
+                ]));
             }
         }
         else
