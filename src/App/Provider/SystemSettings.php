@@ -71,6 +71,20 @@ class SystemSettings
         ],
 
         [
+            'label' => 'BCC send to',
+            'name' => 'bcc_receiver',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
+            'label' => 'Email signature',
+            'name' => 'email_signature',
+            'value' => null,
+            'boolean' => 0
+        ],
+
+        [
             'label' => 'Membership fee',
             'name' => 'membership_fee',
             'value' => 0,
@@ -114,6 +128,7 @@ class SystemSettings
     public function __construct()
     {
         $this->_selfIntegrityCheck();
+        Email::getInstance(); // init email types too
     }
 
     // restore settings where

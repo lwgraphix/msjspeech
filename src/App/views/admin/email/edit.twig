@@ -1,0 +1,27 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Email template for "{{ templates[global.request.get('type')] }}"
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <div class="form-group">
+            <label for="subject">Subject <span style="color: red">*</span></label>
+            <input value="{{ template_data.subject }}" required name="subject" id="subject" type="text" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label for="template">Template <span style="color: red">*</span></label>
+            <textarea required rows=15 class="form-control" name="content" id="template">{{ template_data.content }}</textarea>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                Available variables: <b>
+                    {% for var in template_data.available_variables %}
+                        [{{ var }}]{{ (loop.index != template_data.available_variables|length) ? ', ' : '' }}
+                    {% endfor %}
+                </b>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-check"></i> Save changes</button>
+    </form>
+{% endblock %}

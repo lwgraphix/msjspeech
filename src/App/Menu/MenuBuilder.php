@@ -31,6 +31,7 @@ class MenuBuilder
                     new MenuItem('Tournament list', '/admin/tournament/list', 'list'),
                 ]))
                 ->add(new MenuItem('User groups', '/admin/groups/list', 'users'))
+                ->add(new MenuItem('Email templates', '/admin/email/list', 'envelope'));
             ;
             $menu->add($adminGroup);
         }

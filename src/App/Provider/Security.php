@@ -34,6 +34,13 @@ class Security
         self::$session->set('user', $user->serialize());
     }
 
+    public static function getHost()
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $domainName = $_SERVER['HTTP_HOST'].'/';
+        return $protocol . $domainName;
+    }
+
     public static function setAccessLevel($role)
     {
         if (self::$user === null)

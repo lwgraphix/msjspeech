@@ -4,12 +4,14 @@ namespace App\Controller;
 use App\Model\AlertModel;
 use App\Model\AttributeModel;
 use App\Model\UserModel;
+use App\Provider\Email;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\SystemSettings;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EmailType;
 use App\Type\LinkType;
 use App\Code\ProtocolCode;
 use App\Type\UserType;
@@ -109,6 +111,62 @@ class AdminController extends BaseController {
 
         FlashMessage::set(true, 'Settings updated');
         return new RedirectResponse('/admin/settings');
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/email/list")
+     * )
+     */
+    public function emailTemplateListAction(Request $request)
+    {
+        $templates = EmailType::NAMES;
+        return $this->out($this->twig->render('admin/email/list.twig', [
+            'templates' => $templates
+        ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/email/edit/{type}")
+     * )
+     */
+    public function emailTemplateEditAction(Request $request, $type)
+    {
+        $templates = EmailType::NAMES;
+
+        if ($type > count($templates) - 1)
+        {
+            FlashMessage::set(false, 'Email type not exists');
+            return new RedirectResponse('/admin/email/list');
+        }
+
+        $template = Email::getInstance()->getTemplate($type);
+
+        return $this->out($this->twig->render('admin/email/edit.twig', [
+            'templates' => $templates,
+            'template_data' => $template
+        ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/email/edit/{type}")
+     * )
+     */
+    public function emailTemplateEditPersistAction(Request $request, $type)
+    {
+        $templates = EmailType::NAMES;
+
+        if ($type > count($templates) - 1)
+        {
+            FlashMessage::set(false, 'Email type not exists');
+            return new RedirectResponse('/admin/email/list');
+        }
+
+        Email::getInstance()->updateTemplate($type, $request->get('subject'), $request->get('content'));
+        FlashMessage::set(true, 'Template updated');
+        return new RedirectResponse($request->headers->get('referer'));
     }
 
     /**

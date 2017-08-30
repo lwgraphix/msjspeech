@@ -3,6 +3,7 @@ namespace App\Model;
 
 use App\Code\StatusCode;
 use App\Connector\MySQL;
+use App\Provider\Email;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
@@ -10,6 +11,7 @@ use App\Provider\Stripe;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EmailType;
 use App\Type\TransactionType;
 use App\Type\UserType;
 use App\Provider\SystemSettings;
@@ -31,7 +33,7 @@ class UserModel extends BaseModel
         $stripeStatus = false;
         if (!empty($data['stripe_token']))
         {
-            $description = $data['first_name'] . ' ' . $data['last_name'] . ' ('. $data['email'] .') membership fee';
+            $description = $data['first_name'] . ' ' . $data['last_name'] . ' ('. $data['email'] .') membership contribution';
             $stripeStatus = Stripe::charge($data['stripe_token'], SystemSettings::getInstance()->get('membership_fee'), $description);
             if ($stripeStatus !== true)
             {
@@ -65,7 +67,7 @@ class UserModel extends BaseModel
                 SystemSettings::getInstance()->get('membership_fee'),
                 TransactionType::MEMBERSHIP_FEE,
                 0,
-                'Membership contribution',
+                'Stripe deposit',
                 $memo2 = null,
                 $memo3 = null,
                 $memo4 = null,
@@ -155,7 +157,27 @@ class UserModel extends BaseModel
             }
         }
 
-        // TODO: if stripe_token available -> charge user and create transaction
+        // Generate email
+        $userObject = User::loadById($userId);
+        $form = 'Email: ' . $userObject->getEmail() . PHP_EOL;
+        $form .= 'First name: ' . $userObject->getFirstName() . PHP_EOL;
+        $form .= 'Last name: ' . $userObject->getLastName() . PHP_EOL;
+        $form .= 'Parent email: ' . $userObject->getParentEmail() . PHP_EOL;
+        $form .= 'Parent first name: ' . $userObject->getParentFirstName() . PHP_EOL;
+        $form .= 'Parent last name: ' . $userObject->getParentLastName() . PHP_EOL;
+
+        $attrs = Model::get('attribute')->getUserAttributes($userObject->getId());
+        foreach($attrs as $attr)
+        {
+            $value = (is_array($attr['value'])) ? implode(', ', $attr['value']) : $attr['value'];
+            $value = (empty($value)) ? 'Not specified' : $value;
+            $form .= $attr['label'] . ': ' . $value . PHP_EOL;
+        }
+
+        Email::getInstance()->createMessage(EmailType::MEMBERSHIP_REGISTRATION, [
+            'form' => $form
+        ], $userObject);
+
         return true;
     }
 
@@ -166,9 +188,9 @@ class UserModel extends BaseModel
         return $data;
     }
 
-    public function restore($userId)
+    public function restore($userId, $email)
     {
-        $exists = MySQL::get()->fetchColumn('SELECT hash FROM restore_users WHERE user_id = :uid', [
+        $exists = MySQL::get()->fetchColumn('SELECT hash FROM restore_users WHERE user_id = :uid AND status = 0', [
             'uid' => $userId
         ]);
 
@@ -177,7 +199,12 @@ class UserModel extends BaseModel
         $hash = md5(time() . $userId . rand(0, 99999));
         $sql = 'INSERT INTO restore_users (hash, user_id, status) VALUES (:h, :uid, 0)';
         MySQL::get()->exec($sql, ['h' => $hash, 'uid' => $userId]);
-        // TODO: email here
+
+        $user = User::loadById($userId);
+        Email::getInstance()->createMessage(EmailType::ACCOUNT_RESTORE_ACCESS, [
+            'restore_link' => Security::getHost() . 'auth/restore/' . $hash
+        ], $user);
+
         return true;
     }
 

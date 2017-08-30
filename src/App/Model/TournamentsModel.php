@@ -358,6 +358,17 @@ class TournamentsModel extends BaseModel
         }
         else
         {
+            if ($user->getId() == $eventInfo['user_id'])
+            {
+                // send owner email - you drop
+                // send partner email - partner drop
+            }
+            else
+            {
+                // send partner email - you drop
+                // send owner email - partner drop
+            }
+
             // not refund and get fee from user who drop
             $this->thm->createTransaction(
                 $user->getId(),

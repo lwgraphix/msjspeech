@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Code\StatusCode;
 use App\Model\UserModel;
+use App\Provider\Email;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
@@ -89,7 +90,10 @@ class AuthController extends BaseController
             'email' => AttributeType::TEXT,
             'password' => AttributeType::TEXT,
             'first_name' => AttributeType::TEXT,
-            'last_name' => AttributeType::TEXT
+            'last_name' => AttributeType::TEXT,
+            'parent_email' => AttributeType::TEXT,
+            'parent_first_name' => AttributeType::TEXT,
+            'parent_last_name' => AttributeType::TEXT
         ];
 
         // adding custom required attributes to check
@@ -147,7 +151,7 @@ class AuthController extends BaseController
             ]));
         }
 
-        if (!empty($request->get('parent_email')) && !filter_var($request->get('parent_email'), FILTER_VALIDATE_EMAIL))
+        if (!filter_var($request->get('parent_email'), FILTER_VALIDATE_EMAIL))
         {
             FlashMessage::set(false, 'Wrong parent email address format. Check the typing of email correct and try again');
             $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
@@ -267,18 +271,18 @@ class AuthController extends BaseController
         $user = $this->um->getByEmail($request->get('email'));
         if (!$user)
         {
-            FlashMessage::set(false, 'User with this email not found');
+            FlashMessage::set(true, 'If you are registered, you will receive reset link on your email');
         }
         else
         {
-            $status = $this->um->restore($user['id']);
+            $status = $this->um->restore($user['id'], $user['email']);
             if (!$status)
             {
                 FlashMessage::set(false, 'You already requested account restore. Check your email');
             }
             else
             {
-                FlashMessage::set(true, 'Check your email for further instructions');
+                FlashMessage::set(true, 'If you are registered, you will receive reset link on your email');
             }
 
         }

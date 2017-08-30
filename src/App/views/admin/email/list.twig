@@ -1,0 +1,23 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Email template list
+{% endblock %}
+
+{% block content %}
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Type</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for template in templates %}
+            <tr>
+                <td>{{ template }}</td>
+                <td><a class="btn btn-primary btn-xs" href="/admin/email/edit/{{ loop.index0 }}"><i class="fa fa-pencil"></i> Edit</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

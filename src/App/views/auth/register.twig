@@ -62,18 +62,18 @@
         </blockquote>
 
         <div class="form-group">
-            <label for="parent_email">Parent email</label>
-            <input value="{{ global.request.get('parent_email') }}" name="parent_email" type="email" class="form-control" id="parent_email" placeholder="Parent email">
+            <label for="parent_email">Parent email <span style="color: red">*</span></label>
+            <input required value="{{ global.request.get('parent_email') }}" name="parent_email" type="email" class="form-control" id="parent_email" placeholder="Parent email">
         </div>
 
         <div class="form-group">
-            <label for="parent_first_name">Parent first name</label>
-            <input value="{{ global.request.get('parent_first_name') }}" name="parent_first_name" type="text" class="form-control" id="parent_first_name" placeholder="ex. Alex">
+            <label for="parent_first_name">Parent first name <span style="color: red">*</span></label>
+            <input required value="{{ global.request.get('parent_first_name') }}" name="parent_first_name" type="text" class="form-control" id="parent_first_name" placeholder="ex. Alex">
         </div>
 
         <div class="form-group">
-            <label for="parent_last_name">Parent last name</label>
-            <input value="{{ global.request.get('parent_last_name') }}" name="parent_last_name" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
+            <label for="parent_last_name">Parent last name <span style="color: red">*</span></label>
+            <input required value="{{ global.request.get('parent_last_name') }}" name="parent_last_name" type="text" class="form-control" id="parent_last_name" placeholder="ex. Hoffman">
         </div>
 
         {% if attributes|length > 0 %}
