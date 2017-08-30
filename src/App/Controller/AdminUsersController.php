@@ -5,12 +5,14 @@ use App\Model\AlertModel;
 use App\Model\AttributeModel;
 use App\Model\TransactionHistoryModel;
 use App\Model\UserModel;
+use App\Provider\Email;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EmailType;
 use App\Type\LinkType;
 use App\Code\ProtocolCode;
 use App\Type\TransactionType;
@@ -102,9 +104,16 @@ class AdminUsersController extends BaseController {
         }
         else
         {
+            $user = User::loadById($request->get('user_id'));
+            $oldRole = $user->getRole();
             $status = $this->um->setRole($request->get('user_id'), $newRole, $adminRole);
             if ($status)
             {
+                Email::getInstance()->createMessage(EmailType::USER_ROLE_CHANGE, [
+                    'old_status' => UserType::NAMES[$oldRole],
+                    'new_status' => UserType::NAMES[$newRole]
+                ], $user);
+
                 FlashMessage::set(true, 'Role changed');
             }
             else

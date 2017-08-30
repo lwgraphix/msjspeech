@@ -558,6 +558,8 @@ class TournamentsModel extends BaseModel
             null,
             $event['id']
         );
+
+        //  [tournament_name], [form], [event_name], [event_cost], [old_balance], [new_balance], [drop_deadline], [link_to_history], [link_account_balance], [username], [signature], [website_name]
     }
 
     public function createEvent($tournamentId, $name, $type, $cost, $dropFeeCost)
