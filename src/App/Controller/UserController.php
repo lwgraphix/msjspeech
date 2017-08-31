@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Code\StatusCode;
 use App\Model\UserModel;
+use App\Provider\Email;
 use App\Provider\FlashMessage;
 use App\Provider\Model;
 use App\Provider\Security;
@@ -11,6 +12,7 @@ use App\Provider\Stripe;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EmailType;
 use App\Type\TransactionType;
 use App\Type\UserType;
 use Silex\Application;
@@ -133,7 +135,16 @@ class UserController extends BaseController
         }
         else
         {
-            // TODO: create transaction
+            $oldBalance = Security::getUser()->getBalance();
+
+            Email::getInstance()->createMessage(EmailType::TRANSACTION_CREATE, [
+                'increased_or_decreased' => 'increased',
+                'amount' => floatval($amount),
+                'old_balance' => $oldBalance,
+                'new_balance' => Security::getUser()->getBalance(),
+                'link_account_balance' => Security::getHost() . 'user/balance'
+            ], Security::getUser());
+
             Model::get('transaction_history')->createTransaction(
                 Security::getUser()->getId(),
                 $amount,
