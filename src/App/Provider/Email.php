@@ -54,7 +54,8 @@ class Email
             'event_cost',
             'old_balance',
             'new_balance',
-            'link_account_balance'
+            'link_account_balance',
+            'drop_fee'
         ],
 
         EmailType::TOURNAMENT_PARTNER_DROP_BEFORE_DEADLINE => [
@@ -122,6 +123,12 @@ class Email
 
         EmailType::ACCOUNT_RESTORE_ACCESS => [
             'restore_link'
+        ],
+
+        EmailType::PARTNER_CANCELLED => [
+            'partner_name',
+            'tournament_name',
+            'event_name'
         ]
     ];
 

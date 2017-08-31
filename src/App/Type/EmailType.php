@@ -11,13 +11,14 @@ class EmailType
     const TOURNAMENT_DROP_AFTER_DEADLINE = 4;
     const TOURNAMENT_PARTNER_DROP_BEFORE_DEADLINE = 5;
     const TOURNAMENT_PARTNER_DROP_AFTER_DEADLINE = 6;
-    const TRANSACTION_CREATE = 7;
+    const TRANSACTION_CREATE = 7; // done
     const PARTNER_REQUEST = 8; // done
-    const PARTNER_REQUEST_DECLINE = 9;
-    const PARTNER_REQUEST_ACCEPT = 10;
-    const PARTNER_REQUEST_EXPIRED = 11;
+    const PARTNER_REQUEST_DECLINE = 9; // done
+    const PARTNER_REQUEST_ACCEPT = 10; // done
+    const PARTNER_REQUEST_EXPIRED = 11; // done
     const TOURNAMENT_JUDGE = 12; // done
     const ACCOUNT_RESTORE_ACCESS = 13; // done
+    const PARTNER_CANCELLED = 14;
 
     const NAMES = [
         'Membership registration',
@@ -33,6 +34,7 @@ class EmailType
         'Partner request accept',
         'Partner request expired',
         'Tournament judge',
-        'Account restore access'
+        'Account restore access',
+        'Partner request cancelled'
     ];
 }

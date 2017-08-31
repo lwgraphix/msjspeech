@@ -72,6 +72,9 @@ class AdminUsersController extends BaseController {
      */
     public function addUserTransactionAction(Request $request)
     {
+        $receiverUser = User::loadById($request->get('user_id'));
+        $oldBalance = $receiverUser->getBalance();
+
         $this->thm->createTransaction(
             $request->get('user_id'),
             floatval($request->get('amount')),
@@ -83,6 +86,16 @@ class AdminUsersController extends BaseController {
             $request->get('memo4'),
             $request->get('memo5')
         );
+
+        $newBalance = $receiverUser->getBalance();
+
+        Email::getInstance()->createMessage(EmailType::TRANSACTION_CREATE, [
+            'increased_or_decreased' => ($oldBalance > $newBalance) ? 'decreased' : 'increased',
+            'amount' => floatval($request->get('amount')),
+            'old_balance' => $oldBalance,
+            'new_balance' => $newBalance,
+            'link_account_balance' => Security::getHost() . 'user/balance'
+        ], $receiverUser);
 
         FlashMessage::set(true, 'Transaction successfully created');
         return new RedirectResponse($request->headers->get('referer'));

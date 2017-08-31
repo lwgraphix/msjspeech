@@ -148,6 +148,8 @@ class TournamentsModel extends BaseModel
 
     public function setPartnerDecision($userTournamentId, $eventInfo, $status)
     {
+        $decisioner = User::loadById($eventInfo['partner_id']);
+
         if ($status == 1)
         {
             // check for partner not joined with other
@@ -167,7 +169,14 @@ class TournamentsModel extends BaseModel
                 'id' => $userTournamentId
             ]);
 
-            $decisioner = User::loadById($eventInfo['partner_id']);
+
+            // send email accept
+            Email::getInstance()->createMessage(EmailType::PARTNER_REQUEST_ACCEPT, [
+                'partner_name' => $decisioner->getFullName(),
+                'tournament_name' => $eventInfo['tournament_name'],
+                'event_name' => $eventInfo['event_name']
+            ], User::loadById($eventInfo['user_id']));
+
             $oldBalance = $decisioner->getBalance();
             $this->thm->createTransaction(
                 $eventInfo['partner_id'],
@@ -237,6 +246,9 @@ class TournamentsModel extends BaseModel
                 'id' => $userTournamentId
             ]);
 
+            $ownerUser = User::loadById($eventInfo['user_id']);
+            $oldBalance = $ownerUser->getBalance();
+
             $this->thm->createTransaction(
                 $eventInfo['user_id'],
                 ($eventInfo['cost']),
@@ -249,6 +261,16 @@ class TournamentsModel extends BaseModel
                 null,
                 $eventInfo['event_id']
             );
+
+            Email::getInstance()->createMessage(EmailType::PARTNER_REQUEST_DECLINE, [
+                'partner_name' => $decisioner->getFullName(),
+                'tournament_name' => $eventInfo['tournament_name'],
+                'event_name' => $eventInfo['event_name'],
+                'event_cost' => $eventInfo['cost'],
+                'old_balance' => $oldBalance,
+                'new_balance' => $ownerUser->getBalance(),
+                'link_account_balance' => Security::getHost() . 'user/balance'
+            ], $ownerUser);
         }
         return true;
     }
@@ -356,42 +378,105 @@ class TournamentsModel extends BaseModel
         $sql = 'UPDATE user_tournaments SET status = :s WHERE id = :id';
         MySQL::get()->exec($sql, ['s' => EventStatusType::DROPPED, 'id' => $eventInfo['user_event_id']]);
 
+        $ownerUser = User::loadById($eventInfo['user_id']);
+        $partnerUser = User::loadById($eventInfo['partner_id']);
+
         if (!$fee)
         {
-            $this->thm->createTransaction(
-                $user->getId(),
-                $eventInfo['cost'],
-                TransactionType::TOURNAMENT_REFUND,
-                0,
-                'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop event',
-                null,
-                null,
-                null,
-                null,
-                $eventInfo['event_id']
-            );
-
             if ($user->getId() == $eventInfo['user_id'])
             {
-                if ($eventInfo['partner_id'] !== null && $eventInfo['event_status'] != EventStatusType::WAITING_PARTNER_RESPONSE)
+                // refund user
+                $oldBalance = $ownerUser->getBalance();
+
+                $this->thm->createTransaction(
+                    $eventInfo['user_id'],
+                    $eventInfo['cost'],
+                    TransactionType::TOURNAMENT_REFUND,
+                    0,
+                    'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop event',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $eventInfo['event_id']
+                );
+
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_DROP_BEFORE_DEADLINE, [
+                    'tournament_name' => $eventInfo['tournament_name'],
+                    'event_name' => $eventInfo['event_name'],
+                    'event_cost' => $eventInfo['cost'],
+                    'old_balance' => $oldBalance,
+                    'new_balance' => $ownerUser->getBalance(),
+                    'link_account_balance' => Security::getHost() . 'user/balance'
+                ], $ownerUser);
+
+                if (!empty($eventInfo['partner_id']))
                 {
-                    $this->thm->createTransaction(
-                        $eventInfo['partner_id'],
-                        $eventInfo['cost'],
-                        TransactionType::TOURNAMENT_REFUND,
-                        0,
-                        'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event',
-                        null,
-                        null,
-                        null,
-                        null,
-                        $eventInfo['event_id']
-                    );
+                    if ($eventInfo['event_status'] == EventStatusType::WAITING_PARTNER_RESPONSE)
+                    {
+                        // send cancel request
+                        Email::getInstance()->createMessage(EmailType::PARTNER_CANCELLED, [
+                            'partner_name' => $ownerUser->getFullName(),
+                            'tournament_name' => $eventInfo['tournament_name'],
+                            'event_name' => $eventInfo['event_name']
+                        ], $partnerUser);
+                    }
+                    else
+                    {
+                        $oldBalance = $partnerUser->getBalance();
+                        // refund partner
+                        $this->thm->createTransaction(
+                            $eventInfo['partner_id'],
+                            $eventInfo['cost'],
+                            TransactionType::TOURNAMENT_REFUND,
+                            0,
+                            'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because your partner drop event',
+                            null,
+                            null,
+                            null,
+                            null,
+                            $eventInfo['event_id']
+                        );
+
+                        Email::getInstance()->createMessage(EmailType::TOURNAMENT_PARTNER_DROP_BEFORE_DEADLINE, [
+                            'partner_name' => $ownerUser->getFullName(),
+                            'tournament_name' => $eventInfo['tournament_name'],
+                            'event_name' => $eventInfo['event_name'],
+                            'event_cost' => $eventInfo['cost'],
+                            'old_balance' => $oldBalance,
+                            'new_balance' => $partnerUser->getBalance(),
+                            'link_account_balance' => Security::getHost() . 'user/balance'
+                        ], $partnerUser);
+                    }
                 }
             }
             else
             {
                 // dropped by partner
+                $oldBalance = $partnerUser->getBalance();
+                $this->thm->createTransaction(
+                    $eventInfo['partner_id'],
+                    $eventInfo['cost'],
+                    TransactionType::TOURNAMENT_REFUND,
+                    0,
+                    'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop event',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $eventInfo['event_id']
+                );
+
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_DROP_BEFORE_DEADLINE, [
+                    'tournament_name' => $eventInfo['tournament_name'],
+                    'event_name' => $eventInfo['event_name'],
+                    'event_cost' => $eventInfo['cost'],
+                    'old_balance' => $oldBalance,
+                    'new_balance' => $partnerUser->getBalance(),
+                    'link_account_balance' => Security::getHost() . 'user/balance'
+                ], $partnerUser);
+
+                $oldBalance = $ownerUser->getBalance();
                 $this->thm->createTransaction(
                     $eventInfo['user_id'],
                     $eventInfo['cost'],
@@ -404,34 +489,90 @@ class TournamentsModel extends BaseModel
                     null,
                     $eventInfo['event_id']
                 );
+
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_PARTNER_DROP_BEFORE_DEADLINE, [
+                    'partner_name' => $partnerUser->getFullName(),
+                    'tournament_name' => $eventInfo['tournament_name'],
+                    'event_name' => $eventInfo['event_name'],
+                    'event_cost' => $eventInfo['cost'],
+                    'old_balance' => $oldBalance,
+                    'new_balance' => $ownerUser->getBalance(),
+                    'link_account_balance' => Security::getHost() . 'user/balance'
+                ], $ownerUser);
             }
         }
         else
         {
             if ($user->getId() == $eventInfo['user_id'])
             {
-                // send owner email - you drop
-                // send partner email - partner drop
+                $oldBalance = $ownerUser->getBalance();
+
+                $this->thm->createTransaction(
+                    $ownerUser->getId(),
+                    -($eventInfo['drop_fee_cost']),
+                    TransactionType::TOURNAMENT_FEE,
+                    0,
+                    'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $eventInfo['event_id']
+                );
+
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_DROP_AFTER_DEADLINE, [
+                    'tournament_name' => $eventInfo['tournament_name'],
+                    'event_name' => $eventInfo['event_name'],
+                    'event_cost' => $eventInfo['cost'],
+                    'old_balance' => $oldBalance,
+                    'new_balance' => $ownerUser->getBalance(),
+                    'link_account_balance' => Security::getHost() . 'user/balance',
+                    'drop_fee' => $eventInfo['drop_fee_cost']
+                ], $ownerUser);
+
+                if (!empty($eventInfo['partner_id']))
+                {
+                    // send message to partner
+                    Email::getInstance()->createMessage(EmailType::TOURNAMENT_PARTNER_DROP_AFTER_DEADLINE, [
+                        'partner_name' => $ownerUser->getFullName(),
+                        'tournament_name' => $eventInfo['tournament_name'],
+                        'event_name' => $eventInfo['event_name']
+                    ], $partnerUser);
+                }
             }
             else
             {
-                // send partner email - you drop
-                // send owner email - partner drop
+                $oldBalance = $partnerUser->getBalance();
+                $this->thm->createTransaction(
+                    $partnerUser->getId(),
+                    -($eventInfo['drop_fee_cost']),
+                    TransactionType::TOURNAMENT_FEE,
+                    0,
+                    'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
+                    null,
+                    null,
+                    null,
+                    null,
+                    $eventInfo['event_id']
+                );
+
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_DROP_AFTER_DEADLINE, [
+                    'tournament_name' => $eventInfo['tournament_name'],
+                    'event_name' => $eventInfo['event_name'],
+                    'event_cost' => $eventInfo['cost'],
+                    'old_balance' => $oldBalance,
+                    'new_balance' => $partnerUser->getBalance(),
+                    'link_account_balance' => Security::getHost() . 'user/balance',
+                    'drop_fee' => $eventInfo['drop_fee_cost']
+                ], $partnerUser);
+
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_PARTNER_DROP_AFTER_DEADLINE, [
+                    'partner_name' => $partnerUser->getFullName(),
+                    'tournament_name' => $eventInfo['tournament_name'],
+                    'event_name' => $eventInfo['event_name']
+                ], $ownerUser);
             }
 
-            // not refund and get fee from user who drop
-            $this->thm->createTransaction(
-                $user->getId(),
-                -($eventInfo['drop_fee_cost']),
-                TransactionType::TOURNAMENT_FEE,
-                0,
-                'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
-                null,
-                null,
-                null,
-                null,
-                $eventInfo['event_id']
-            );
         }
     }
 
