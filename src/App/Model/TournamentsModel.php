@@ -3,11 +3,13 @@ namespace App\Model;
 
 use App\Code\StatusCode;
 use App\Connector\MySQL;
+use App\Provider\Email;
 use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EmailType;
 use App\Type\EventStatusType;
 use App\Type\TournamentType;
 use App\Type\TransactionType;
@@ -165,6 +167,8 @@ class TournamentsModel extends BaseModel
                 'id' => $userTournamentId
             ]);
 
+            $decisioner = User::loadById($eventInfo['partner_id']);
+            $oldBalance = $decisioner->getBalance();
             $this->thm->createTransaction(
                 $eventInfo['partner_id'],
                 -($eventInfo['cost']),
@@ -177,6 +181,52 @@ class TournamentsModel extends BaseModel
                 null,
                 $eventInfo['event_id']
             );
+
+            $partnerUserObject = User::loadById($eventInfo['user_id']);
+            $formPartner = $partnerUserObject->getFullName() . ' ('. $partnerUserObject->getUsername() .')';
+            $userEventAttributes = Model::get('attribute')->getUserAttributes($partnerUserObject->getId(), AttributeGroupType::TOURNAMENT, $eventInfo['user_event_id']);
+
+            $form = 'Partner : ' . $formPartner . PHP_EOL;
+            $form .= 'Judge name: ' . $eventInfo['judge_name'] . PHP_EOL;
+            $form .= 'Judge email: ' . $eventInfo['judge_email'] . PHP_EOL;
+
+            foreach($userEventAttributes as $attr)
+            {
+                $form .= $attr['label'] . ': ';
+
+                if ($attr['type'] == AttributeType::TEXT || $attr['type'] == AttributeType::DROPDOWN)
+                {
+                    $value = $attr['value'];
+                }
+                elseif ($attr['type'] == AttributeType::CHECKBOX)
+                {
+                    $value = implode(',', $attr['value']);
+                }
+                elseif ($attr['type'] == AttributeType::ATTACHMENT)
+                {
+                    $value = Security::getHost() . 'attachment/' . $attr['user_attr_id'];
+                }
+
+                if (empty($value)) $value = 'Not specified';
+
+                $form .= $value . PHP_EOL;
+            }
+
+            //  [form]
+            $emailData = [
+                'tournament_name' => $eventInfo['tournament_name'],
+                'event_name' => $eventInfo['event_name'],
+                'event_cost' => $eventInfo['cost'],
+                'drop_deadline' => date('m/d/Y h:i A', $eventInfo['drop_deadline']),
+                'link_to_history' => Security::getHost() . 'tournament/list',
+                'link_account_balance' => Security::getHost() . 'user/balance',
+                'old_balance' => $oldBalance,
+                'new_balance' => $decisioner->getBalance(),
+                'form' => $form
+            ];
+
+            Email::getInstance()->createMessage(EmailType::TOURNAMENT_JOIN, $emailData, $decisioner);
+
         }
         else
         {
@@ -441,7 +491,9 @@ class TournamentsModel extends BaseModel
                   ut.partner_id,
                   own_u.username as owner_name,
                   par_u.username as partner_name,
-                  e.tournament_id
+                  e.tournament_id,
+                  ut.judge_name,
+                  ut.judge_email
                 FROM user_tournaments ut
                 INNER JOIN events e ON ut.event_id = e.id
                 INNER JOIN tournaments t ON t.id = e.tournament_id
@@ -545,6 +597,9 @@ class TournamentsModel extends BaseModel
             }
         }
 
+        // save for email data
+        $userOldBalance = $user->getBalance();
+
         // get cash
         $this->thm->createTransaction(
             $user->getId(),
@@ -559,7 +614,60 @@ class TournamentsModel extends BaseModel
             $event['id']
         );
 
-        //  [tournament_name], [form], [event_name], [event_cost], [old_balance], [new_balance], [drop_deadline], [link_to_history], [link_account_balance], [username], [signature], [website_name]
+        // email data generate
+        if ($partnerId === null)
+        {
+            $formPartner = 'No';
+        }
+        else
+        {
+            $partnerUserObject = User::loadById($partnerId);
+            $formPartner = $partnerUserObject->getFullName() . ' ('. $partnerUserObject->getUsername() .')';
+        }
+
+        $eventInfo = $this->getUserEventInfo($utid);
+        $userEventAttributes = Model::get('attribute')->getUserAttributes($user->getId(), AttributeGroupType::TOURNAMENT, $utid);
+
+        $form = 'Partner : ' . $formPartner . PHP_EOL;
+        $form .= 'Judge name: ' . $eventInfo['judge_name'] . PHP_EOL;
+        $form .= 'Judge email: ' . $eventInfo['judge_email'] . PHP_EOL;
+
+        foreach($userEventAttributes as $attr)
+        {
+            $form .= $attr['label'] . ': ';
+
+            if ($attr['type'] == AttributeType::TEXT || $attr['type'] == AttributeType::DROPDOWN)
+            {
+                $value = $attr['value'];
+            }
+            elseif ($attr['type'] == AttributeType::CHECKBOX)
+            {
+                $value = implode(',', $attr['value']);
+            }
+            elseif ($attr['type'] == AttributeType::ATTACHMENT)
+            {
+                $value = Security::getHost() . 'attachment/' . $attr['user_attr_id'];
+            }
+
+            if (empty($value)) $value = 'Not specified';
+
+            $form .= $value . PHP_EOL;
+        }
+
+        //  [form]
+        $emailData = [
+            'tournament_name' => $tournament['name'],
+            'event_name' => $event['name'],
+            'event_cost' => $event['cost'],
+            'drop_deadline' => date('m/d/Y h:i A', $tournament['drop_deadline']),
+            'link_to_history' => Security::getHost() . 'tournament/list',
+            'link_account_balance' => Security::getHost() . 'user/balance',
+            'old_balance' => $userOldBalance,
+            'new_balance' => $user->getBalance(),
+            'form' => $form
+        ];
+
+        Email::getInstance()->createMessage(EmailType::TOURNAMENT_JOIN, $emailData, $user);
     }
 
     public function createEvent($tournamentId, $name, $type, $cost, $dropFeeCost)

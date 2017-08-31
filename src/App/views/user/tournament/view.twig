@@ -20,7 +20,8 @@
         <li class="list-group-item"><b>Description: </b>{{ event.tournament_description ? event.tournament_description : 'Not specified' }}</li>
         <li class="list-group-item"><b>Event: </b>{{ event.event_name }}</li>
         <li class="list-group-item"><b>Cost: </b>{{ event.cost|number_format(2, '.', ',') }}$</li>
-
+        <li class="list-group-item"><b>Judge name: </b>{{ event.judge_name ? event.judge_name : 'Not specified' }}</li>
+        <li class="list-group-item"><b>Judge email: </b>{{ event.judge_email ? event.judge_email : 'Not specified' }}</li>
         <li class="list-group-item"><b>Drop after deadline cost: </b>{{ event.drop_fee_cost|number_format(2, '.', ',') }}$</li>
         <li class="list-group-item"><b>Registration start: </b>{{ event.event_start|replace({'-': '/'}) }}</li>
         <li class="list-group-item"><b>Registration end: </b>{{ event.entry_deadline|replace({'-': '/'}) }}</li>

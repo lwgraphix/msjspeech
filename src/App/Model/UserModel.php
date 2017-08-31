@@ -167,11 +167,27 @@ class UserModel extends BaseModel
         $form .= 'Parent last name: ' . $userObject->getParentLastName() . PHP_EOL;
 
         $attrs = Model::get('attribute')->getUserAttributes($userObject->getId());
+
         foreach($attrs as $attr)
         {
-            $value = (is_array($attr['value'])) ? implode(', ', $attr['value']) : $attr['value'];
-            $value = (empty($value)) ? 'Not specified' : $value;
-            $form .= $attr['label'] . ': ' . $value . PHP_EOL;
+            $form .= $attr['label'] . ': ';
+
+            if ($attr['type'] == AttributeType::TEXT || $attr['type'] == AttributeType::DROPDOWN)
+            {
+                $value = $attr['value'];
+            }
+            elseif ($attr['type'] == AttributeType::CHECKBOX)
+            {
+                $value = implode(',', $attr['value']);
+            }
+            elseif ($attr['type'] == AttributeType::ATTACHMENT)
+            {
+                $value = Security::getHost() . 'attachment/' . $attr['user_attr_id'];
+            }
+
+            if (empty($value)) $value = 'Not specified';
+
+            $form .= $value . PHP_EOL;
         }
 
         Email::getInstance()->createMessage(EmailType::MEMBERSHIP_REGISTRATION, [
