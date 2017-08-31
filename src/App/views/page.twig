@@ -2,7 +2,7 @@
 {% block title %}
     {{ page.name }}
     {% if user and (user.role == 4 or user.role == 5) %}
-        <a href="/pages/{{ global.request.get('slug') }}/edit" class="btn btn-info pull-right btn-xs"><i class="fa fa-pencil"></i> Edit this page</a>
+        <a href="/pages/{{ global.request.get('slug') == '' ? 'home' : global.request.get('slug') }}/edit" class="btn btn-info pull-right btn-xs"><i class="fa fa-pencil"></i> Edit this page</a>
     {% endif %}
 
 {% endblock %}

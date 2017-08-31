@@ -19,6 +19,7 @@ use Silex\Application;
 use DDesrosiers\SilexAnnotations\Annotations as SLX;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class AlertController
@@ -111,6 +112,45 @@ class AdminController extends BaseController {
 
         FlashMessage::set(true, 'Settings updated');
         return new RedirectResponse('/admin/settings');
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/attachment/download/{attrId}")
+     * )
+     */
+    public function getAllAttachmentsAction(Request $request, $attrId)
+    {
+        if (Security::getUser()->getRole() < UserType::OFFICER)
+        {
+            FlashMessage::set(false, 'Access denied');
+            return new RedirectResponse('/');
+        }
+        else
+        {
+            $binaryArchive = Model::get('attachment')->getAllAttachmentZip($attrId);
+            if (!$binaryArchive)
+            {
+                FlashMessage::set(false, 'Not found files for this field');
+                return new RedirectResponse($request->headers->get('referer'));
+            }
+            else
+            {
+                $response = new Response();
+                $response->headers->add([
+                    'Content-Type' => 'application/octet-stream',
+                    'Content-Disposition' => 'attachment; filename=attachment_'. $attrId .'.zip',
+                    'Content-Description' => 'File Transfer',
+                    'Expires' => 0,
+                    'Cache-Control' => 'must-revalidate',
+                    'Pragma' => 'public',
+                    'Content-Length' => $binaryArchive['size']
+
+                ]);
+                $response->setContent($binaryArchive['data']);
+                return $response;
+            }
+        }
     }
 
     /**

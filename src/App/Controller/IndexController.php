@@ -41,7 +41,8 @@ class IndexController extends BaseController
      */
     public function indexAction(Request $request)
     {
-        return $this->out($this->twig->render('index.twig'));
+        $page = $this->pm->getBySlug('home');
+        return $this->out($this->twig->render('page.twig', ['page' => $page]));
     }
 
     /**

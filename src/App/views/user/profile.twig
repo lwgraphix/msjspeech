@@ -32,7 +32,7 @@
                     {% if not (admin_user.role == 4 and (user.role == 4 or user.role == 5)) %}
                         <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#edit-role-modal"><i class="fa fa-user"></i> Change user role</button>
                     {% endif %}
-                    <a target="_blank" href="/user/balance?user_id={{ user.id }}" class="btn btn-sm btn-success"><i class="fa fa-money"></i> User transactions</a>
+                    <a  href="/user/balance?user_id={{ user.id }}" class="btn btn-sm btn-success"><i class="fa fa-money"></i> User transactions</a>
                 {% endif %}
                 <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#edit-profile-modal"><i class="fa fa-pencil"></i> Change information</button>
             </p>

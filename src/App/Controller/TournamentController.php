@@ -17,6 +17,7 @@ use App\Type\EventType;
 use App\Type\TournamentType;
 use App\Type\UserType;
 use App\Util\DateUtil;
+use App\Util\SystemSettings;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -74,6 +75,12 @@ class TournamentController extends BaseController
      */
     public function tournamentViewAction(Request $request, $eventId)
     {
+        if (Security::getUser()->getRole() == UserType::SUSPENDED)
+        {
+            FlashMessage::set(false, 'Your account is suspended');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+        
         $eventInfo = $this->tm->getUserEventInfo($eventId);
         if (!$eventInfo)
         {
@@ -124,6 +131,12 @@ class TournamentController extends BaseController
      */
     public function tournamentDropAction(Request $request, $eventId)
     {
+        if (Security::getUser()->getRole() == UserType::SUSPENDED)
+        {
+            FlashMessage::set(false, 'Your account is suspended');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
         $eventInfo = $this->tm->getUserEventInfo($eventId);
         if (!$eventInfo)
         {
@@ -171,6 +184,12 @@ class TournamentController extends BaseController
      */
     public function tournamentPartnerDecisionAction(Request $request, $eventId)
     {
+        if (Security::getUser()->getRole() == UserType::SUSPENDED)
+        {
+            FlashMessage::set(false, 'Your account is suspended');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
         $eventInfo = $this->tm->getUserEventInfo($eventId);
         if (!$eventInfo)
         {
@@ -230,6 +249,12 @@ class TournamentController extends BaseController
      */
     public function tournamentJoinAction(Request $request, $tournamentId)
     {
+        if (Security::getUser()->getRole() == UserType::SUSPENDED)
+        {
+            FlashMessage::set(false, 'Your account is suspended');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
         $tournament = $this->tm->getById($tournamentId);
 
         if (!$tournament['tournament'])
@@ -271,6 +296,12 @@ class TournamentController extends BaseController
      */
     public function tournamentJoinPersistAction(Request $request, $tournamentId)
     {
+        if (Security::getUser()->getRole() == UserType::SUSPENDED)
+        {
+            FlashMessage::set(false, 'Your account is suspended');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
         $tournament = $this->tm->getById($tournamentId);
 
         if (!$tournament['tournament'])
@@ -389,9 +420,8 @@ class TournamentController extends BaseController
         }
 
         //check balance
-        if ($eventInfo['cost'] > Security::getUser()->getBalance())
+        if (SystemSettings::getInstance()->get('negative_balance') == 0 && $eventInfo['cost'] > Security::getUser()->getBalance())
         {
-            // TODO: if ENABLED NEGATIVE BALANCES -> PASS THIS CHECK
             FlashMessage::set(false, 'Not enough money for join this debate. Please <a target="_blank" href="/user/balance">deposit</a> money and try join again');
             return new RedirectResponse($request->headers->get('referer'));
         }

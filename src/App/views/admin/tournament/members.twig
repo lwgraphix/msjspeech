@@ -27,16 +27,16 @@
                     <tr>
                         <td>{{ loop.index }}</td>
                         <td>{{ item.name }}</td>
-                        <td>{{ item.own_name }} (<a target="_blank" href="/user/profile?user_id={{ item.own_id }}">{{ item.own_email }}</a>)</td>
+                        <td>{{ item.own_name }} (<a  href="/user/profile?user_id={{ item.own_id }}">{{ item.own_email }}</a>)</td>
                         <td>
                             {% if not item.par_id is null %}
-                                {{ item.par_name }} (<a target="_blank" href="/user/profile?user_id={{ item.par_id }}">{{ item.par_email }}</a>)
+                                {{ item.par_name }} (<a  href="/user/profile?user_id={{ item.par_id }}">{{ item.par_email }}</a>)
                             {% else %}
                                 No
                             {% endif %}
                         </td>
                         <td>
-                            <a href="/tournament/view/{{ item.id }}?user_id={{ item.own_id }}" target="_blank" class="btn btn-xs btn-info"><i class="fa fa-eye"></i> View</a>
+                            <a href="/tournament/view/{{ item.id }}?user_id={{ item.own_id }}"  class="btn btn-xs btn-info"><i class="fa fa-eye"></i> View</a>
                         </td>
                         <td>
                             {% if global.request.get('event') == 0 %}

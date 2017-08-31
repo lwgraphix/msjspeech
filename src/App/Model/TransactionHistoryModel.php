@@ -13,7 +13,7 @@ class TransactionHistoryModel extends BaseModel
 {
     public function getBalance($userId)
     {
-        $sql = 'SELECT SUM(amount) FROM transaction_history WHERE user_id = :uid';
+        $sql = 'SELECT SUM(amount) FROM transaction_history WHERE user_id = :uid AND status = 1';
         $balance = MySQL::get()->fetchColumn($sql, ['uid' => $userId]);
         if (!$balance) $balance = 0;
         return floatval($balance);
@@ -21,9 +21,15 @@ class TransactionHistoryModel extends BaseModel
 
     public function getHistory($userId)
     {
-        $sql = 'SELECT * FROM transaction_history WHERE user_id = :uid ORDER BY id DESC';
+        $sql = 'SELECT * FROM transaction_history WHERE user_id = :uid AND status = 1 ORDER BY id DESC';
         $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
         return $data;
+    }
+
+    public function deleteTransaction($transactionId)
+    {
+        $sql = 'UPDATE transaction_history SET status = 0 WHERE id = :id';
+        MySQL::get()->exec($sql, ['id' => $transactionId]);
     }
 
     public function createTransaction($userId, $amount, $type, $creatorId, $memo1, $memo2 = null, $memo3 = null, $memo4 = null, $memo5 = null, $eventId = null)

@@ -103,6 +103,25 @@ class AdminUsersController extends BaseController {
 
     /**
      * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/users/transactions/delete")
+     * )
+     */
+    public function deleteTransactionAction(Request $request)
+    {
+        if (Security::getUser()->getRole() != UserType::ADMINISTRATOR)
+        {
+            FlashMessage::set(false, 'Access denied');
+            return $this->out('no');
+        }
+        else
+        {
+            Model::get('transaction_history')->deleteTransaction($request->get('id'));
+            return $this->out('ok');
+        }
+    }
+
+    /**
+     * @SLX\Route(
      *     @SLX\Request(method="POST", uri="/users/role/set")
      * )
      */

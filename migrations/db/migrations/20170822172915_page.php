@@ -13,6 +13,11 @@ class Page extends AbstractMigration
             ->addColumn('name', 'string', ['null' => true])
             ->addColumn('public', 'integer', ['null' => false])
             ->create();
+
+        $table->insert([
+            ['category_id' => 0, 'slug' => 'home', 'name' => 'Home page', 'public' => 1],
+            ['category_id' => 0, 'slug' => 'terms', 'name' => 'Terms', 'public' => 1]
+        ])->saveData();
     }
 
     public function down()

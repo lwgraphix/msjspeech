@@ -6,7 +6,7 @@
         <div class="alert bg-blue-gradient alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
             <h4><i class="icon fa fa-user"></i> Admin mode</h4>
-            You are viewing <b>{{ view_user.fullname }} (<a target="_blank" href="/user/profile?user_id={{ view_user.id }}">{{ view_user.email }}</a>)</b> balance
+            You are viewing <b>{{ view_user.fullname }} (<a  href="/user/profile?user_id={{ view_user.id }}">{{ view_user.email }}</a>)</b> balance
         </div>
     {% endif %}
 
@@ -171,6 +171,7 @@
                 <th>Memo 3</th>
                 <th>Memo 4</th>
                 <th>Memo 5</th>
+                {% if admin_mode is defined and user.role == 5 %}<th>Actions</th>{% endif %}
             </tr>
             </thead>
             <tbody>
@@ -184,12 +185,29 @@
                         <td>{{ transaction.memo_3 }}</td>
                         <td>{{ transaction.memo_4 }}</td>
                         <td>{{ transaction.memo_5 }}</td>
+                        {% if admin_mode is defined and user.role == 5 %}
+                            <td>
+                                <button onclick="deleteTransaction({{ transaction.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
         <p>You don't have any transactions.</p>
+    {% endif %}
+
+    {% if admin_mode is defined and user.role == 5 %}
+        <script>
+            function deleteTransaction(tId)
+            {
+                $.post('/admin/users/transactions/delete', {id: tId}, function(response)
+                {
+                    window.location.reload();
+                });
+            }
+        </script>
     {% endif %}
 
 {% endblock %}

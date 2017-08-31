@@ -8,7 +8,10 @@ use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\UserType;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use ZipArchive;
 
 class AttachmentModel extends BaseModel
 {
@@ -49,6 +52,40 @@ class AttachmentModel extends BaseModel
                 WHERE ua.id = :aid';
         $data = MySQL::get()->fetchOne($sql, ['aid' => $attributeId]);
         return $data;
+    }
+
+    public function getAllAttachmentZip($attributeId)
+    {
+        $attachDirectory = realpath(__DIR__ . '/../../../uploads/' . $attributeId . '/');
+        if (!file_exists($attachDirectory)) return false;
+
+        $tmpFile = tempnam('/tmp', $attributeId);
+
+        $za = new ZipArchive();
+        $za->open($tmpFile, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($attachDirectory),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $name => $file)
+        {
+            if (!$file->isDir())
+            {
+                $filePath = $file->getRealPath();
+                $relativePath = substr($filePath, strlen($attachDirectory) + 1);
+                $za->addFile($filePath, $relativePath);
+            }
+        }
+
+        $za->close();
+
+        $archiveContent = file_get_contents($tmpFile);
+        $size = filesize($tmpFile);
+        unlink($tmpFile);
+
+        return ['data' => $archiveContent, 'size' => $size];
     }
 
     public function getUserAttachment($userId, $userAttributeId)

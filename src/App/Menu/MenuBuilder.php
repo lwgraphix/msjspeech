@@ -59,7 +59,7 @@ class MenuBuilder
 
         foreach($rootPages as $page)
         {
-            if ($page['public'] || !self::$isGuest)
+            if (($page['public'] || !self::$isGuest) && !in_array($page['slug'], ['home', 'terms']))
             {
                 $pagesGroup->add(new MenuItem($page['name'], '/pages/' . $page['slug'], 'circle-o'));
             }
