@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Type;
+namespace App\Util;
 
 class EmailType
 {

@@ -186,9 +186,9 @@ class TournamentsModel extends BaseModel
             $formPartner = $partnerUserObject->getFullName() . ' ('. $partnerUserObject->getUsername() .')';
             $userEventAttributes = Model::get('attribute')->getUserAttributes($partnerUserObject->getId(), AttributeGroupType::TOURNAMENT, $eventInfo['user_event_id']);
 
-            $form = 'Partner : ' . $formPartner . PHP_EOL;
-            $form .= 'Judge name: ' . $eventInfo['judge_name'] . PHP_EOL;
-            $form .= 'Judge email: ' . $eventInfo['judge_email'] . PHP_EOL;
+            $form = 'Partner: ' . $formPartner . PHP_EOL;
+            $form .= 'Judge name: ' . (!empty($eventInfo['judge_name']) ? $eventInfo['judge_name'] : 'Not specified') . PHP_EOL;
+            $form .= 'Judge email: ' . (!empty($eventInfo['judge_email']) ? $eventInfo['judge_email'] : 'Not specified') . PHP_EOL;
 
             foreach($userEventAttributes as $attr)
             {
@@ -217,7 +217,7 @@ class TournamentsModel extends BaseModel
                 'tournament_name' => $eventInfo['tournament_name'],
                 'event_name' => $eventInfo['event_name'],
                 'event_cost' => $eventInfo['cost'],
-                'drop_deadline' => date('m/d/Y h:i A', $eventInfo['drop_deadline']),
+                'drop_deadline' => DateUtil::convertToUSATime($eventInfo['drop_deadline']),
                 'link_to_history' => Security::getHost() . 'tournament/list',
                 'link_account_balance' => Security::getHost() . 'user/balance',
                 'old_balance' => $oldBalance,
@@ -511,10 +511,18 @@ class TournamentsModel extends BaseModel
                 VALUES (:uid, :eid, :pid, :s, :jn, :je)';
         $partnerId = ($partnerUser === null) ? null : $partnerUser['id'];
 
+        if (isset($data['judge_name'], $data['judge_email']))
+        {
+            Email::getInstance()->createMessage(EmailType::TOURNAMENT_JUDGE, [
+                'judge_name' => $data['judge_name'],
+                'tournament_name' => $tournament['name'],
+                'event_name' => $event['name'],
+            ], $user, $data['judge_email']);
+        }
+
         if ($partnerId !== null)
         {
             $status = EventStatusType::WAITING_PARTNER_RESPONSE;
-            // CREATE INVITE REQUEST HERE (EMAIL)
         }
         else
         {
@@ -536,6 +544,14 @@ class TournamentsModel extends BaseModel
             MySQL::get()->exec('UPDATE user_tournaments SET partner_request_time = NOW() WHERE id = :id', [
                 'id' => $utid
             ]);
+
+            // send email
+            Email::getInstance()->createMessage(EmailType::PARTNER_REQUEST, [
+                'partner_name' => $user->getFullName() . ' ('. $user->getUsername() .')',
+                'tournament_name' => $tournament['name'],
+                'event_name' => $event['name'],
+                'join_link' => Security::getHost() . 'tournament/view/' . $utid
+            ], User::loadById($partnerId));
         }
 
         // need for attachment create
@@ -628,9 +644,9 @@ class TournamentsModel extends BaseModel
         $eventInfo = $this->getUserEventInfo($utid);
         $userEventAttributes = Model::get('attribute')->getUserAttributes($user->getId(), AttributeGroupType::TOURNAMENT, $utid);
 
-        $form = 'Partner : ' . $formPartner . PHP_EOL;
-        $form .= 'Judge name: ' . $eventInfo['judge_name'] . PHP_EOL;
-        $form .= 'Judge email: ' . $eventInfo['judge_email'] . PHP_EOL;
+        $form = 'Partner: ' . $formPartner . PHP_EOL;
+        $form .= 'Judge name: ' . (!empty($eventInfo['judge_name']) ? $eventInfo['judge_name'] : 'Not specified') . PHP_EOL;
+        $form .= 'Judge email: ' . (!empty($eventInfo['judge_email']) ? $eventInfo['judge_email'] : 'Not specified') . PHP_EOL;
 
         foreach($userEventAttributes as $attr)
         {
@@ -654,12 +670,11 @@ class TournamentsModel extends BaseModel
             $form .= $value . PHP_EOL;
         }
 
-        //  [form]
         $emailData = [
             'tournament_name' => $tournament['name'],
             'event_name' => $event['name'],
             'event_cost' => $event['cost'],
-            'drop_deadline' => date('m/d/Y h:i A', $tournament['drop_deadline']),
+            'drop_deadline' => DateUtil::convertToUSATime($tournament['drop_deadline']),
             'link_to_history' => Security::getHost() . 'tournament/list',
             'link_account_balance' => Security::getHost() . 'user/balance',
             'old_balance' => $userOldBalance,

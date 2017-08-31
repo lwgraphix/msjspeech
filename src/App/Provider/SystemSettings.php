@@ -22,6 +22,13 @@ class SystemSettings
         ],
 
         [
+            'label' => 'Site URL',
+            'name' => 'site_url',
+            'value' => null,
+            'boolean' => 0
+        ],
+
+        [
             'label' => 'Club user registration allowed',
             'name' => 'register_allowed',
             'value' => 0,

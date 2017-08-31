@@ -4,6 +4,7 @@ namespace App\Executable;
 
 use App\Util\MergeInsert;
 use App\Util\MySQL;
+use App\Util\SystemSettings;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use App\Util\Configuration;
@@ -22,6 +23,18 @@ class BaseExecutable
     {
         $this->in = $input;
         $this->out = $output;
+    }
+
+    public function getHost()
+    {
+        return rtrim(SystemSettings::getInstance()->get('site_url'), '/') . '/';
+    }
+
+    public function dateIsPassed($date)
+    {
+        $point = new \DateTime($date);
+        $now = new \DateTime();
+        return $now > $point;
     }
 
     public function log($message)

@@ -4,20 +4,25 @@ namespace App\Executable;
 
 use App\Connector\MySQL;
 use App\Connector\Redis;
+use App\Util\Email;
+use App\Util\EmailType;
 use App\Util\EventStatusType;
 use App\Util\RigStatusType;
 use App\Util\SystemSettings;
 use App\Util\TelegramBot;
 use App\Util\TransactionType;
+use App\Util\User;
 
 class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
 {
 
     private function getOutdatedRequests()
     {
-        $sql = 'SELECT *, time_to_sec(timediff(NOW(), partner_request_time)) / 3600 as diff
-                FROM user_tournaments
-                WHERE status = 3';
+        $sql = 'SELECT ut.*, t.entry_deadline, time_to_sec(timediff(NOW(), partner_request_time)) / 3600 as diff
+                FROM user_tournaments ut
+                INNER JOIN events e ON e.id = ut.event_id
+                INNER JOIN tournaments t ON t.id = e.tournament_id
+                WHERE ut.status = 3';
         $data = MySQL::get()->fetchAll($sql);
         return $data;
     }
@@ -52,7 +57,11 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
             'id' => $userTournamentId
         ]);
 
-        // TODO: send email?
+        $partnerUser = User::loadById($eventInfo['partner_id']);
+        $ownerUser = User::loadById($eventInfo['user_id']);
+
+        $oldBalance = $ownerUser->getBalance();
+
         $this->createTransaction(
             $eventInfo['user_id'],
             ($eventInfo['cost']),
@@ -63,8 +72,20 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
             null,
             null,
             null,
-            $eventInfo['eve']
+            $eventInfo['event_id']
         );
+
+        Email::getInstance()->createMessage(EmailType::PARTNER_REQUEST_EXPIRED, [
+            'partner_name' => $partnerUser->getFullName(),
+            'tournament_name' => $eventInfo['tournament_name'],
+            'event_name' => $eventInfo['event_name'],
+            'event_cost' => $eventInfo['cost'],
+            'old_balance' => $oldBalance,
+            'new_balance' => $ownerUser->getBalance(),
+            'link_account_balance' => $this->getHost() . 'user/balance'
+        ], $ownerUser);
+
+        // TODO: send email to partner?
     }
 
     public function getUserEventInfo($userTournamentId)
@@ -103,7 +124,7 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
         $timeoutHours = SystemSettings::getInstance()->get('auto_decline_timeout');
         foreach($requests as $request)
         {
-            if (floatval($request['diff']) >= floatval($timeoutHours))
+            if (floatval($request['diff']) >= floatval($timeoutHours) || $this->dateIsPassed($request['entry_deadline']))
             {
                 $eventInfo = $this->getUserEventInfo($request['id']);
                 $this->decline($request['id'], $eventInfo);

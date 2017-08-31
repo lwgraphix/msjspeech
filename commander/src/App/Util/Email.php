@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Provider;
+namespace App\Util;
 
 use App\Code\StatusCode;
 use App\Connector\MySQL;
-use App\Type\EmailType;
+use App\Util\EmailType;
 use App\Type\UserType;
 use SimpleEmailService;
 use SimpleEmailServiceMessage;
