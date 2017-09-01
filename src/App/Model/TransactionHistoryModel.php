@@ -26,6 +26,32 @@ class TransactionHistoryModel extends BaseModel
         return $data;
     }
 
+    public function getHistoryByType($type)
+    {
+        $where = ($type != -1) ? 'AND th.type = :t' : '';
+        $selectData = [];
+        $sql = 'SELECT
+                  th.*,
+                  e.name as event_name,
+                  t.name as tournament_name,
+                  user.id as user_id,
+                  CONCAT(user.first_name, \' \', user.last_name) as user_fullname,
+                  user.email as user_email,
+                  creator.id as c_creator_id,
+                  CONCAT(creator.first_name, \' \', creator.last_name) as creator_fullname,
+                  creator.email as creator_email
+                FROM transaction_history th
+                LEFT JOIN events e ON e.id = th.event_id
+                LEFT JOIN tournaments t ON t.id = e.tournament_id
+                INNER JOIN users user ON user.id = th.user_id
+                LEFT JOIN users creator ON creator.id = th.creator_id
+                WHERE th.status = 1 '. $where .'
+                ORDER BY th.id DESC';
+        if ($type != -1) $selectData['t'] = $type;
+        $data = MySQL::get()->fetchAll($sql, $selectData);
+        return $data;
+    }
+
     public function deleteTransaction($transactionId)
     {
         $sql = 'UPDATE transaction_history SET status = 0 WHERE id = :id';

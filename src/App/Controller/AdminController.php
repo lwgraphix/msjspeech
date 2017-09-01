@@ -14,6 +14,7 @@ use App\Type\AttributeType;
 use App\Type\EmailType;
 use App\Type\LinkType;
 use App\Code\ProtocolCode;
+use App\Type\TransactionType;
 use App\Type\UserType;
 use Silex\Application;
 use DDesrosiers\SilexAnnotations\Annotations as SLX;
@@ -163,6 +164,30 @@ class AdminController extends BaseController {
         $templates = EmailType::NAMES;
         return $this->out($this->twig->render('admin/email/list.twig', [
             'templates' => $templates
+        ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/transactions/list")
+     * )
+     */
+    public function transactionsListAction(Request $request)
+    {
+        $type = $request->get('type', 0);
+        $types = TransactionType::NAMES;
+
+        if ($type > count($types) - 1)
+        {
+            FlashMessage::set(false, 'Transaction type not exists');
+            return new RedirectResponse('/admin/transactions/list');
+        }
+
+        $list = Model::get('transaction_history')->getHistoryByType($type);
+
+        return $this->out($this->twig->render('admin/transactions_list.twig', [
+            'types' => $types,
+            'list' => $list
         ]));
     }
 

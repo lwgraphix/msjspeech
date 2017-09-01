@@ -1,0 +1,77 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Transactions list
+{% endblock %}
+
+{% block content %}
+    <ul class="nav nav-tabs">
+        {% for type in types %}
+            <li class="{{ global.request.get('type') == loop.index0  ? 'active' : '' }}"><a href="/admin/transactions/list?type={{ loop.index0 }}">{{ type }}</a></li>
+        {% endfor %}
+        <li class="{{ global.request.get('type') == -1 ? 'active' : '' }}"><a href="/admin/transactions/list?type=-1">All</a></li>
+    </ul>
+
+    {% if list|length %}
+        <table style="margin-top: 20px" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Tournament</th>
+                    <th>Event</th>
+                    <th>Created by</th>
+                    <th>Memo 1</th>
+                    <th>Memo 2</th>
+                    <th>Memo 3</th>
+                    <th>Memo 4</th>
+                    <th>Memo 5</th>
+                    {% if user.role == 5 %}<th>Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in list %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.user_fullname }} (<a href="/user/profile?user_id={{ item.user_id }}">{{ item.user_email }}</a>)</td>
+                        <td><span class="text-{{ (item.amount < 0) ? 'danger' : 'success' }}">{{ item.amount|number_format(2, '.', ',') }}$</span></td>
+                        <td>{{ item.tournament_name ? item.tournament_name : '-' }}</td>
+                        <td>{{ item.event_name ? item.event_name : '-' }}</td>
+                        <td>
+                            {% if item.creator_id == 0 %}
+                                System
+                            {% else %}
+                                {{ item.creator_fullname }} (<a href="/user/profile?user_id={{ item.c_creator_id }}">{{ item.creator_email }}</a>)
+                            {% endif %}
+                        </td>
+                        <td>{{ item.memo_1 }}</td>
+                        <td>{{ item.memo_2 }}</td>
+                        <td>{{ item.memo_3 }}</td>
+                        <td>{{ item.memo_4 }}</td>
+                        <td>{{ item.memo_5 }}</td>
+                        {% if user.role == 5 %}
+                            <td>
+                                <button onclick="deleteTransaction({{ item.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="margin-top: 20px">No transactions found.</p>
+    {% endif %}
+
+    {% if user.role == 5 %}
+        <script>
+            function deleteTransaction(tId)
+            {
+                $.post('/admin/users/transactions/delete', {id: tId}, function(response)
+                {
+                    window.location.reload();
+                });
+            }
+        </script>
+    {% endif %}
+
+{% endblock %}

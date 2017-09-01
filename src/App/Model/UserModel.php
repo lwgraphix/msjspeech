@@ -418,6 +418,13 @@ class UserModel extends BaseModel
         return $data;
     }
 
+    public function getAllActive()
+    {
+        $sql = 'SELECT * FROM users WHERE role NOT IN (0, 1, 2)';
+        $data = MySQL::get()->fetchAll($sql);
+        return $data;
+    }
+
     public function getById($id)
     {
         $sql = 'SELECT * FROM users WHERE id = :id';

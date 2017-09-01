@@ -285,7 +285,7 @@ class TournamentController extends BaseController
             'tournament' => $tournament['tournament'],
             'events' => $tournament['events'],
             'attributes' => $this->am->getAll(AttributeGroupType::TOURNAMENT, $tournamentId),
-            'users' => Model::get('user')->getAll()
+            'users' => Model::get('user')->getAllActive()
         ]));
     }
 
