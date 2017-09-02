@@ -3,6 +3,7 @@
 namespace App\Controller;
 use App\Model\AlertModel;
 use App\Model\AttributeModel;
+use App\Model\EmailModel;
 use App\Model\UserModel;
 use App\Provider\Email;
 use App\Provider\FlashMessage;
@@ -41,12 +42,18 @@ class AdminController extends BaseController {
      */
     private $am;
 
+    /**
+     * @var EmailModel
+     */
+    private $em;
+
     public function __construct(Application $app)
     {
         parent::__construct($app);
         Security::setAccessLevel(UserType::OFFICER);
         $this->um = Model::get('user');
         $this->am = Model::get('attribute');
+        $this->em = Model::get('email');
     }
 
     /**
@@ -83,6 +90,7 @@ class AdminController extends BaseController {
      */
     public function settingsListAction(Request $request)
     {
+        Security::setAccessLevel(UserType::ADMINISTRATOR);
         return $this->out($this->twig->render('admin/settings.twig'));
     }
 
@@ -93,6 +101,7 @@ class AdminController extends BaseController {
      */
     public function settingsSaveListAction(Request $request)
     {
+        Security::setAccessLevel(UserType::ADMINISTRATOR);
         foreach($request->request->all() as $name => $value)
         {
             // check equals
@@ -200,38 +209,38 @@ class AdminController extends BaseController {
      */
     public function massEmailSendAction(Request $request, $type)
     {
+        $list = $this->em->getUsersByEmailType(
+            $type,
+            $request->get('group_id'),
+            $request->get('tournament_id'),
+            $request->get('event_id')
+        );
+
+        if ($list === false)
+        {
+            FlashMessage::set(false, 'No members in group');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
+        // generate appendix
         switch($type)
         {
             case 1:
-                // all users
-                $list = $this->um->getAll();
                 $appendix = 'to all users';
-                break;
+            break;
 
             case 2:
-                // user group (group_id)
-                $list = $this->um->getAllByGroupId($request->get('group_id'));
-                $group = Model::get('group')->getById($request->get('group_id'));
-                $appendix = 'to user group "'. $group['name'] .'"';
-                break;
+                $appendix = 'to user group "'. Model::get('group')->getById($request->get('group_id'))['name'] .'"';
+            break;
 
             case 3:
-                // tournament (tournament_id)
-                // event (tournament_id, event_id)
-                $list = [];
-                $appendix = '';
-                break;
-
-            default:
-                FlashMessage::set(false, 'Email type not found');
-                return new RedirectResponse($request->headers->get('referer'));
-                break;
-        }
-
-        if (count($list) == 0)
-        {
-            FlashMessage::set(false, 'There is no members, you cannot send email.');
-            return new RedirectResponse('/');
+                $names = Model::get('tournaments')->getNamesByTournament(
+                    $request->get('tournament_id'),
+                    $request->get('event_id')
+                );
+                $eventAppendix = (!empty($names['event'])) ? ', event "'. $names['event'] .'"' : '';
+                $appendix = 'to applicants of tournament "'. $names['tournament'] .'"' . $eventAppendix;
+            break;
         }
 
         return $this->out($this->twig->render('admin/mass_email_send.twig', [
@@ -248,83 +257,49 @@ class AdminController extends BaseController {
      */
     public function massEmailSendPersistAction(Request $request, $type)
     {
-        switch ($type) {
+
+        $list = $this->em->getUsersByEmailType(
+            $type,
+            $request->get('group_id'),
+            $request->get('tournament_id'),
+            $request->get('event_id')
+        );
+
+        if ($list === false)
+        {
+            FlashMessage::set(false, 'No members in group');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
+        // generate appendix
+        switch($type)
+        {
             case 1:
-                // all users
-                $list = $this->um->getAll();
                 $appendix = 'to all users';
                 break;
 
             case 2:
-                // user group (group_id)
-                $list = $this->um->getAllByGroupId($request->get('group_id'));
-                $group = Model::get('group')->getById($request->get('group_id'));
-                $appendix = 'to user group "' . $group['name'] . '"';
+                $appendix = 'to user group "'. Model::get('group')->getById($request->get('group_id'))['name'] .'"';
                 break;
 
             case 3:
-                // tournament (tournament_id)
-                // event (tournament_id, event_id)
-                $list = [];
-                $appendix = '';
+                $names = Model::get('tournaments')->getNamesByTournament(
+                    $request->get('tournament_id'),
+                    $request->get('event_id')
+                );
+                $eventAppendix = (!empty($names['event'])) ? ', event "'. $names['event'] .'"' : '';
+                $appendix = 'to applicants of tournament "'. $names['tournament'] .'"' . $eventAppendix;
                 break;
-
-            default:
-                FlashMessage::set(false, 'Email type not found');
-                return new RedirectResponse($request->headers->get('referer'));
-                break;
-        }
-
-        if (count($list) == 0) {
-            FlashMessage::set(false, 'There is no members, you cannot send email.');
-            return new RedirectResponse('/');
         }
 
         $sendToParents = $request->get('parents_send') == 'on';
-        $messages = [];
-
-        foreach ($list as $user) {
-            $m = new SimpleEmailServiceMessage();
-
-            if ($sendToParents) {
-                if (empty($user['parent_email'])) continue; // skip message if parent not exists
-                $m->addTo($user['parent_email']);
-            } else {
-                $m->addTo($user['email']);
-                if (!empty($user['parent_email'])) {
-                    $m->addCC($user['parent_email']);
-                }
-            }
-            $m->setFrom(SystemSettings::getInstance()->get('aws_send_email_from'));
-            $m->setSubject($request->get('subject'));
-            $m->setMessageFromString($request->get('content'));
-            $messages[] = $m;
-        }
-
-        $adminMessageContent = 'This letter was sent by ' . Security::getUser()->getFullName() . ' ' . $appendix . PHP_EOL;
-        $adminMessageContent .= '===============================================' . PHP_EOL;
-        $adminMessageContent .= 'Subject: ' . $request->get('subject') . PHP_EOL;
-        $adminMessageContent .= 'Content: ' . $request->get('content');
-
-        $adminMessage = new SimpleEmailServiceMessage();
-        $adminMessage->addTo(SystemSettings::getInstance()->get('bcc_receiver'));
-        $adminMessage->setFrom(SystemSettings::getInstance()->get('aws_send_email_from'));
-        $adminMessage->setSubject('Mass email started');
-        $adminMessage->setMessageFromString($adminMessageContent);
-
-        $messages[] = $adminMessage;
-
-        $ses = new SimpleEmailService(
-            SystemSettings::getInstance()->get('aws_access_key'),
-            SystemSettings::getInstance()->get('aws_secret_key')
+        $this->em->sendMassEmail(
+            $list,
+            $sendToParents,
+            $request->get('subject'),
+            $request->get('content'),
+            $appendix
         );
-
-        $ses->setBulkMode(true);
-        foreach ($messages as $message)
-        {
-            $ses->sendEmail($message);
-        }
-        $ses->setBulkMode(false);
 
         FlashMessage::set(true, 'Messages sended');
         return new RedirectResponse($request->headers->get('referer'));

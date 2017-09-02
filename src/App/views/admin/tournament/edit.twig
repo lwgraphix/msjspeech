@@ -77,6 +77,7 @@
                 <textarea id="description" class="form-control" name="description">{{ data.tournament.description }}</textarea>
             </div>
 
+            <a style="margin-bottom: 15px" href="/admin/email/send/3?tournament_id={{ data.tournament.id }}" class="btn btn-info"><i class="fa fa-paper-plane"></i> Send mass email to this tournament applicants</a>
             <button onclick="persistData()" class="btn btn-success btn-block"><i class="fa fa-check"></i> Save all changes</button>
         </div>
     </div>
@@ -122,6 +123,7 @@
                                     <button type="button" onclick="removeField(this, 'event', {{ event.id }})" class="btn btn-danger" style="margin-bottom: 15px"><i class="fa fa-remove"></i> Remove event</button>
                                 {% endif %}
                             </div>
+                            <a style="margin-bottom: 15px; margin-left: 15px" href="/admin/email/send/3?tournament_id={{ data.tournament.id }}&event_id={{ event.id }}" class="btn btn-info"><i class="fa fa-paper-plane"></i> Send mass email to this event applicants</a>
                         </div>
                     </form>
                 {% endfor %}

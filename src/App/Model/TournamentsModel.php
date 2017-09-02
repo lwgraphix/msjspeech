@@ -324,23 +324,29 @@ class TournamentsModel extends BaseModel
         }
     }
 
-    public function getMembersList($tournamentId, $eventStatus)
+    public function getMembersList($tournamentId, $eventId = null, $eventStatus = null)
     {
+        $statusWhere = ($eventStatus === null) ? '' : 'AND ut.status = ' . $eventStatus;
+        $eventWhere = ($eventId === null) ? '' : 'AND e.id = ' . $eventId;
         $sql = 'SELECT
                   ut.id,
                   own.id as own_id,
                   CONCAT(own.first_name, \' \', own.last_name) as own_name,
                   own.email as own_email,
+                  own.parent_email as own_parent_email,
+                  own.role as own_role,
                   par.id as par_id,
                   CONCAT(par.first_name, \' \', par.last_name) as par_name,
                   par.email as par_email,
+                  par.parent_email as par_parent_email,
+                  par.role as par_role,
                   e.name
                 FROM user_tournaments ut
                 INNER JOIN users own ON own.id = ut.user_id
                 LEFT JOIN users par ON par.id = ut.partner_id
-                INNER JOIN events e ON e.id = ut.event_id
-                WHERE ut.status = :s AND e.tournament_id = :tid';
-        $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId, 's' => $eventStatus]);
+                INNER JOIN events e ON e.id = ut.event_id '. $eventWhere .'
+                WHERE e.tournament_id = :tid ' . $statusWhere;
+        $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId]);
         return $data;
     }
 
@@ -871,6 +877,22 @@ class TournamentsModel extends BaseModel
 
         $events = MySQL::get()->fetchAll('SELECT * FROM events WHERE tournament_id = :id', ['id' => $tournament['id']]);
         return ['tournament' => $tournament, 'events' => $events];
+    }
+
+    public function getNamesByTournament($tournamentId, $eventId = null)
+    {
+        $t = $this->getById($tournamentId);
+        $names['tournament'] = $t['tournament']['name'];
+
+        if ($eventId !== null)
+        {
+            foreach($t['events'] as $event)
+            {
+                if ($event['id'] == $eventId) $names['event'] = $event['name'];
+            }
+        }
+
+        return $names;
     }
 
     private function _convertDateToTimestamp($date)

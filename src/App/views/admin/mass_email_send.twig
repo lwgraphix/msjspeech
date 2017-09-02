@@ -14,8 +14,7 @@
                 <tr>
                     <th>#</th>
                     <th>Email</th>
-                    <th>First name</th>
-                    <th>Last name</th>
+                    <th>Name</th>
                     <th>Parent email</th>
                     <th>Role</th>
                 </tr>
@@ -25,8 +24,7 @@
                     <tr>
                         <td>{{ user.id }}</td>
                         <td><a href="/user/profile?user_id={{ user.id }}">{{ user.email }}</a></td>
-                        <td>{{ user.first_name }}</td>
-                        <td>{{ user.last_name }}</td>
+                        <td>{{ user.full_name }}</td>
                         <td>{{ user.parent_email ? user.parent_email : '-' }}</td>
                         <td>{{ roles[user.role] }}</td>
                     </tr>
