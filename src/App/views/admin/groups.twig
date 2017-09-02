@@ -36,6 +36,7 @@
                         <td>{{ id }}</td>
                         <td id="group_{{ id }}">{{ item }}</td>
                         <td>
+                            <a class="btn btn-primary btn-xs" href="/admin/email/send/2?group_id={{ id }}"><i class="fa fa-paper-plane"></i> Send mass email</a>
                             <button onclick="editGroup({{ id }})" class="btn btn-xs btn-info"><i class="fa fa-pencil"></i> Edit</button>
                             <button onclick="removeGroupConfirm({{ id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Remove</button>
                         </td>

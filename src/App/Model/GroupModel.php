@@ -64,6 +64,13 @@ class GroupModel extends BaseModel
         return $groups;
     }
 
+    public function getById($groupId)
+    {
+        $sql = 'SELECT * FROM groups WHERE id = :gid';
+        $data = MySQL::get()->fetchOne($sql, ['gid' => $groupId]);
+        return $data;
+    }
+
     public function link($groupId, $userId)
     {
         $sql = 'INSERT INTO user_groups (user_id, group_id) VALUES (:uid, :gid)';

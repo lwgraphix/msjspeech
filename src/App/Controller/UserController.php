@@ -215,7 +215,10 @@ class UserController extends BaseController
         $requiredFields = [
             'email' => AttributeType::TEXT,
             'first_name' => AttributeType::TEXT,
-            'last_name' => AttributeType::TEXT
+            'last_name' => AttributeType::TEXT,
+            'parent_email' => AttributeType::TEXT,
+            'parent_first_name' => AttributeType::TEXT,
+            'parent_last_name' => AttributeType::TEXT
         ];
 
         // adding custom required attributes to check

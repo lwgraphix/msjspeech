@@ -418,6 +418,21 @@ class UserModel extends BaseModel
         return $data;
     }
 
+    public function getAllByGroupId($groupId)
+    {
+        $sql = 'SELECT u.*
+                FROM user_groups ug
+                INNER JOIN users u ON u.id = ug.user_id
+                WHERE ug.group_id = :gid';
+        $data = MySQL::get()->fetchAll($sql, ['gid' => $groupId]);
+        return $data;
+    }
+
+    public function getAllByTournament($tournamentId, $eventId = null)
+    {
+        //$sql = 'SE'
+    }
+
     public function getAllActive()
     {
         $sql = 'SELECT * FROM users WHERE role NOT IN (0, 1, 2)';

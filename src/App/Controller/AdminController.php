@@ -18,6 +18,8 @@ use App\Type\TransactionType;
 use App\Type\UserType;
 use Silex\Application;
 use DDesrosiers\SilexAnnotations\Annotations as SLX;
+use SimpleEmailService;
+use SimpleEmailServiceMessage;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -189,6 +191,143 @@ class AdminController extends BaseController {
             'types' => $types,
             'list' => $list
         ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/email/send/{type}")
+     * )
+     */
+    public function massEmailSendAction(Request $request, $type)
+    {
+        switch($type)
+        {
+            case 1:
+                // all users
+                $list = $this->um->getAll();
+                $appendix = 'to all users';
+                break;
+
+            case 2:
+                // user group (group_id)
+                $list = $this->um->getAllByGroupId($request->get('group_id'));
+                $group = Model::get('group')->getById($request->get('group_id'));
+                $appendix = 'to user group "'. $group['name'] .'"';
+                break;
+
+            case 3:
+                // tournament (tournament_id)
+                // event (tournament_id, event_id)
+                $list = [];
+                $appendix = '';
+                break;
+
+            default:
+                FlashMessage::set(false, 'Email type not found');
+                return new RedirectResponse($request->headers->get('referer'));
+                break;
+        }
+
+        if (count($list) == 0)
+        {
+            FlashMessage::set(false, 'There is no members, you cannot send email.');
+            return new RedirectResponse('/');
+        }
+
+        return $this->out($this->twig->render('admin/mass_email_send.twig', [
+            'list' => $list,
+            'appendix' => $appendix,
+            'roles' => UserType::NAMES
+        ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/email/send/{type}")
+     * )
+     */
+    public function massEmailSendPersistAction(Request $request, $type)
+    {
+        switch ($type) {
+            case 1:
+                // all users
+                $list = $this->um->getAll();
+                $appendix = 'to all users';
+                break;
+
+            case 2:
+                // user group (group_id)
+                $list = $this->um->getAllByGroupId($request->get('group_id'));
+                $group = Model::get('group')->getById($request->get('group_id'));
+                $appendix = 'to user group "' . $group['name'] . '"';
+                break;
+
+            case 3:
+                // tournament (tournament_id)
+                // event (tournament_id, event_id)
+                $list = [];
+                $appendix = '';
+                break;
+
+            default:
+                FlashMessage::set(false, 'Email type not found');
+                return new RedirectResponse($request->headers->get('referer'));
+                break;
+        }
+
+        if (count($list) == 0) {
+            FlashMessage::set(false, 'There is no members, you cannot send email.');
+            return new RedirectResponse('/');
+        }
+
+        $sendToParents = $request->get('parents_send') == 'on';
+        $messages = [];
+
+        foreach ($list as $user) {
+            $m = new SimpleEmailServiceMessage();
+
+            if ($sendToParents) {
+                if (empty($user['parent_email'])) continue; // skip message if parent not exists
+                $m->addTo($user['parent_email']);
+            } else {
+                $m->addTo($user['email']);
+                if (!empty($user['parent_email'])) {
+                    $m->addCC($user['parent_email']);
+                }
+            }
+            $m->setFrom(SystemSettings::getInstance()->get('aws_send_email_from'));
+            $m->setSubject($request->get('subject'));
+            $m->setMessageFromString($request->get('content'));
+            $messages[] = $m;
+        }
+
+        $adminMessageContent = 'This letter was sent by ' . Security::getUser()->getFullName() . ' ' . $appendix . PHP_EOL;
+        $adminMessageContent .= '===============================================' . PHP_EOL;
+        $adminMessageContent .= 'Subject: ' . $request->get('subject') . PHP_EOL;
+        $adminMessageContent .= 'Content: ' . $request->get('content');
+
+        $adminMessage = new SimpleEmailServiceMessage();
+        $adminMessage->addTo(SystemSettings::getInstance()->get('bcc_receiver'));
+        $adminMessage->setFrom(SystemSettings::getInstance()->get('aws_send_email_from'));
+        $adminMessage->setSubject('Mass email started');
+        $adminMessage->setMessageFromString($adminMessageContent);
+
+        $messages[] = $adminMessage;
+
+        $ses = new SimpleEmailService(
+            SystemSettings::getInstance()->get('aws_access_key'),
+            SystemSettings::getInstance()->get('aws_secret_key')
+        );
+
+        $ses->setBulkMode(true);
+        foreach ($messages as $message)
+        {
+            $ses->sendEmail($message);
+        }
+        $ses->setBulkMode(false);
+
+        FlashMessage::set(true, 'Messages sended');
+        return new RedirectResponse($request->headers->get('referer'));
     }
 
     /**
