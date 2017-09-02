@@ -110,4 +110,11 @@
     {% else %}
         <p>No tournaments found.</p>
     {% endif %}
+
+    <script>
+        $(function() {
+            $("table").tablesorter({
+            });
+        });
+    </script>
 {% endblock %}

@@ -178,7 +178,7 @@
                 {% for transaction in history %}
                     <tr>
                         <td>{{ transaction.id }}</td>
-                        <td><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
+                        <td data-amount="{{ transaction.amount }}"><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
                         <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
                         <td>{{ transaction.memo_1 }}</td>
                         <td>{{ transaction.memo_2 }}</td>
@@ -210,4 +210,15 @@
         </script>
     {% endif %}
 
+    <script>
+        $(function() {
+            $("table").tablesorter({
+                headers: {
+                    1: {
+                        sorter:'balance'
+                    }
+                }
+            });
+        });
+    </script>
 {% endblock %}

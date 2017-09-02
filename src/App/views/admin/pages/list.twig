@@ -27,7 +27,7 @@
                         <td>{{ page.slug }}</td>
                         <td>{{ page.public ? 'Yes' : 'No' }}</td>
                         <td>{{ not page.category_name ? 'Root' : page.category_name }}</td>
-                        <td>{{ page.timestamp|replace({'-': '/'}) }}</td>
+                        <td>{{ page.timestamp|date('m/d/Y h:i A') }}</td>
                         <td>{{ page.first_name ~ ' ' ~ page.last_name }} (<a href="/user/profile?user_id={{ page.author_id }}">{{ page.email }}</a>)</td>
                         <td>{{ not page.reason ? '-' : page.reason }}</td>
                         <td>
@@ -67,6 +67,13 @@
                 $("#delete_page_id").val(id);
                 $("#delete-page-confirm").modal('show');
             }
+        </script>
+
+        <script>
+            $(function() {
+                $("table").tablesorter({
+                });
+            });
         </script>
     {% else %}
         <p>No pages created.</p>

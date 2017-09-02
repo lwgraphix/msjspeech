@@ -117,14 +117,25 @@
 <!-- REQUIRED JS SCRIPTS -->
 <script src="/assets/js/bootstrap.min.js"></script>
 <script src="/assets/js/app.min.js"></script>
+<script src="/assets/js/jquery.tablesorter.min.js"></script>
+<script>
+    // parser balance for tables
+    $.tablesorter.addParser({
+        id: 'balance',
+        is: function(s) {
+            return false;
+        },
+        format: function(s, table, cell) {
+            return $(cell).attr('data-amount') || s;
+        },
+        type: 'numeric',
+        parsed: false
+    });
+</script>
 {% block js_library %}{% endblock %}
 {% block javascript %}{% endblock %}
 {% if not user is null and user.role in [4,5] %}
     <script src="/assets/js/admin/table-copy.js"></script>
 {% endif %}
-<script src="/assets/js/jquery.tablesorter.min.js"></script>
-<script>
-    $("table").tablesorter();
-</script>
 </body>
 </html>

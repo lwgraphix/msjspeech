@@ -18,6 +18,7 @@
                     <th>#</th>
                     <th>User</th>
                     <th>Amount</th>
+                    <th>Created at</th>
                     <th>Tournament</th>
                     <th>Event</th>
                     <th>Created by</th>
@@ -34,7 +35,8 @@
                     <tr>
                         <td>{{ item.id }}</td>
                         <td>{{ item.user_fullname }} (<a href="/user/profile?user_id={{ item.user_id }}">{{ item.user_email }}</a>)</td>
-                        <td><span class="text-{{ (item.amount < 0) ? 'danger' : 'success' }}">{{ item.amount|number_format(2, '.', ',') }}$</span></td>
+                        <td data-amount="{{ item.amount }}"><span class="text-{{ (item.amount < 0) ? 'danger' : 'success' }}">{{ item.amount|number_format(2, '.', ',') }}$</span></td>
+                        <td>{{ item.timestamp|date('m/d/Y h:i A') }}</td>
                         <td>{{ item.tournament_name ? item.tournament_name : '-' }}</td>
                         <td>{{ item.event_name ? item.event_name : '-' }}</td>
                         <td>
@@ -74,4 +76,15 @@
         </script>
     {% endif %}
 
+    <script>
+        $(function() {
+            $("table").tablesorter({
+                headers: {
+                    2: {
+                        sorter:'balance'
+                    }
+                }
+            });
+        });
+    </script>
 {% endblock %}
