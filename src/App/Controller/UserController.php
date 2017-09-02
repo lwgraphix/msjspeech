@@ -89,9 +89,17 @@ class UserController extends BaseController
      */
     public function userGroupSaveAction(Request $request)
     {
+        $adminMode = false;
+        $groupInfo = Model::get('group')->getById($request->get('id'));
+        if (!$groupInfo)
+        {
+            return $this->out('no');
+        }
+
         if ($request->get('user_id') !== null && Security::getUser()->getRole() >= UserType::OFFICER)
         {
             $userId = $request->get('user_id');
+            $adminMode = true;
         }
         else
         {
@@ -100,11 +108,17 @@ class UserController extends BaseController
 
         if (intval($request->get('check')) == 0)
         {
-            Model::get('group')->unlink($request->get('id'), $userId);
+            if ($groupInfo['joinable'] == 1 || $adminMode)
+            {
+                Model::get('group')->unlink($request->get('id'), $userId);
+            }
         }
         else
         {
-            Model::get('group')->link($request->get('id'), $userId);
+            if ($groupInfo['joinable'] == 1 || $adminMode)
+            {
+                Model::get('group')->link($request->get('id'), $userId);
+            }
         }
 
         return $this->out('ok');

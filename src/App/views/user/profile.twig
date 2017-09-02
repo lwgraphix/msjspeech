@@ -171,11 +171,13 @@
                             <div class="form-group">
                                 <label for="groups">Groups</label>
                                 {% for id, group in groups %}
-                                    {% set checked = id in user_groups|keys ? 'checked' : '' %}
-                                    <div>
-                                        <input {{ checked }} onclick="changeGroup(this, {{ id }})" id="group_{{ id }}" type="checkbox">
-                                        <label style="font-weight: normal;" for="group_{{ id }}">{{ group }}</label>
-                                    </div>
+                                    {% if group.joinable == 1 or admin_mode is defined %}
+                                        {% set checked = id in user_groups|keys ? 'checked' : '' %}
+                                        <div>
+                                            <input {{ checked }} onclick="changeGroup(this, {{ id }})" id="group_{{ id }}" type="checkbox">
+                                            <label style="font-weight: normal;" for="group_{{ id }}">{{ group.name }}</label>
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
                         {% endif %}

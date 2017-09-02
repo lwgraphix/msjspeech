@@ -1,18 +1,22 @@
 {% extends 'layout.twig' %}
 {% block title %}
-    User groups
+    Members groups
 {% endblock %}
 
 {% block content_header %}
     <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title" style="width: 100%">Create new user group</h3>
+            <h3 class="box-title" style="width: 100%">Create new members group</h3>
         </div>
         <div class="box-body">
             <form method="post" action="/admin/groups/create">
                 <div class="form-group">
                     <label for="name">Name</label>
                     <input name="name" type="text" required id="name" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <input name="joinable" type="checkbox" checked id="joinable" />
+                    <label for="joinable">Can user join</label>
                 </div>
                 <button class="btn btn-success btn-block"><i class="fa fa-plus"></i> Create group</button>
             </form>
@@ -27,6 +31,7 @@
             <tr>
                 <th>#</th>
                 <th>Name</th>
+                <th>Can user join</th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -34,10 +39,14 @@
                 {% for id, item in list %}
                     <tr>
                         <td>{{ id }}</td>
-                        <td id="group_{{ id }}">{{ item }}</td>
+                        <td id="group_{{ id }}">{{ item.name }}</td>
+                        <td>{{ item.joinable == 0 ? 'No' : 'Yes' }}</td>
                         <td>
                             <a class="btn btn-primary btn-xs" href="/admin/email/send/2?group_id={{ id }}"><i class="fa fa-paper-plane"></i> Send mass email</a>
-                            <button onclick="editGroup({{ id }})" class="btn btn-xs btn-info"><i class="fa fa-pencil"></i> Edit</button>
+                            {% if item.joinable == 0 %}
+                                <a class="btn bg-purple btn-xs" href="/admin/groups/members/{{ id }}"><i class="fa fa-users"></i> Manage members</a>
+                            {% endif %}
+                            <button onclick="editGroup({{ id }})" class="btn btn-xs btn-info"><i class="fa fa-pencil"></i> Edit name</button>
                             <button onclick="removeGroupConfirm({{ id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Remove</button>
                         </td>
                     </tr>

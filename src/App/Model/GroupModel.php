@@ -22,15 +22,16 @@ class GroupModel extends BaseModel
         $groups = [];
         foreach($data as $row)
         {
-            $groups[$row['id']] = $row['name'];
+            $groups[$row['id']] = $row;
         }
         return $groups;
     }
 
-    public function create($name)
+    public function create($name, $joinable = null)
     {
-        $sql = 'INSERT INTO groups (`name`) VALUES (:n)';
-        $id = MySQL::get()->exec($sql, ['n' => trim($name)], true);
+        $join = ($joinable === null) ? 0 : 1;
+        $sql = 'INSERT INTO groups (`name`, `joinable`) VALUES (:n, :j)';
+        $id = MySQL::get()->exec($sql, ['n' => trim($name), 'j' => $join], true);
         return $id;
     }
 
@@ -62,6 +63,25 @@ class GroupModel extends BaseModel
             $groups[$row['id']] = $row['name'];
         }
         return $groups;
+    }
+
+    public function getUsersByGroupId($groupId)
+    {
+        $sql = 'SELECT u.*
+                FROM user_groups ug
+                INNER JOIN users u ON u.id = ug.user_id
+                WHERE ug.group_id = :gid';
+        $data = MySQL::get()->fetchAll($sql, ['gid' => $groupId]);
+        return $data;
+    }
+
+    public function getUsersExceptGroupId($groupId)
+    {
+        $sql = 'SELECT *
+                FROM users u
+                WHERE u.id NOT IN (SELECT user_id FROM user_groups WHERE group_id = :gid) AND role NOT IN (0, 1)';
+        $data = MySQL::get()->fetchAll($sql, ['gid' => $groupId]);
+        return $data;
     }
 
     public function getById($groupId)

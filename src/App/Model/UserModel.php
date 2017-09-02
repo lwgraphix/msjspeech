@@ -418,6 +418,13 @@ class UserModel extends BaseModel
         return $data;
     }
 
+    public function getAllByRole($role)
+    {
+        $sql = 'SELECT * FROM users WHERE role = :r';
+        $data = MySQL::get()->fetchAll($sql, ['r' => $role]);
+        return $data;
+    }
+
     public function getAllByGroupId($groupId)
     {
         $sql = 'SELECT u.*

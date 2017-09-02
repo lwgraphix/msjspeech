@@ -1,0 +1,118 @@
+{% extends 'layout.twig' %}
+{% block title %}
+    Members in group "{{ name }}"
+{% endblock %}
+
+{% block content_header %}
+    <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title" style="width: 100%">Available members</h3>
+        </div>
+        <div class="box-body">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Parent name</th>
+                    <th>Parent email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td><a  href="/user/profile?user_id={{ user.id }}">{{ user.email }}</a></td>
+                        <td>{{ user.first_name }} {{ user.last_name }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.parent_first_name }} {{ user.parent_last_name }}</td>
+                        <td>{{ user.parent_email }}</td>
+                        <td>{{ roles[user.role] }}</td>
+                        <td>
+                            <button onclick="group_link({{ user.id }})" class="btn btn-xs btn-success"><i class="fa fa-plus"></i> Add in group</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    {% if list|length %}
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Parent name</th>
+                <th>Parent email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in list %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td><a  href="/user/profile?user_id={{ user.id }}">{{ user.email }}</a></td>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.parent_first_name }} {{ user.parent_last_name }}</td>
+                    <td>{{ user.parent_email }}</td>
+                    <td>{{ roles[user.role] }}</td>
+                    <td>
+                        <button onclick="group_unlink({{ user.id }})" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i> Delete from group</button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No members in group</p>
+    {% endif %}
+
+    <div class="modal modal-danger fade" id="delete-group-confirm">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Deleting user group</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this user group? <b> Deleting this user group will permanently delete information about members in this group without any restore.</b></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="delete-group-confirm-button" data-id="" onclick="removeGroup()" class="btn btn-outline"><i class="fa fa-check"></i> Yes</button>
+                    <button type="button" data-dismiss="modal" class="btn btn-outline"><i class="fa fa-times"></i> No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function group_link(user_id)
+        {
+            $.post(window.location, {id: user_id, type: 1}, function(response)
+            {
+                window.location.reload();
+            });
+        }
+
+        function group_unlink(user_id)
+        {
+            $.post(window.location, {id: user_id, type: 0}, function(response)
+            {
+                window.location.reload();
+            });
+        }
+    </script>
+{% endblock %}

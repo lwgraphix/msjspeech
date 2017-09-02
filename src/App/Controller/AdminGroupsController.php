@@ -60,12 +60,48 @@ class AdminGroupsController extends BaseController {
 
     /**
      * @SLX\Route(
+     *     @SLX\Request(method="GET", uri="/groups/members/{groupId}")
+     * )
+     */
+    public function groupsMembersListAction(Request $request, $groupId)
+    {
+        $name = $this->gm->getById($groupId)['name'];
+        $list = $this->gm->getUsersByGroupId($groupId);
+        $users = $this->gm->getUsersExceptGroupId($groupId);
+        return $this->out($this->twig->render('admin/groups_members.twig', [
+            'list' => $list,
+            'users' => $users,
+            'roles' => UserType::NAMES,
+            'name' => $name
+        ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/groups/members/{groupId}")
+     * )
+     */
+    public function groupsMembersListLinkAction(Request $request, $groupId)
+    {
+        if ($request->get('type') == 0)
+        {
+            $this->gm->unlink($groupId, $request->get('id'));
+        }
+        else
+        {
+            $this->gm->link($groupId, $request->get('id'));
+        }
+        return $this->out('ok');
+    }
+
+    /**
+     * @SLX\Route(
      *     @SLX\Request(method="POST", uri="/groups/create")
      * )
      */
     public function groupsCreateAction(Request $request)
     {
-        $this->gm->create($request->get('name'));
+        $this->gm->create($request->get('name'), $request->get('joinable'));
         FlashMessage::set(true, 'Group created.');
         return new RedirectResponse($request->headers->get('referer'));
     }
