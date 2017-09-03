@@ -167,6 +167,12 @@ class TournamentsModel extends BaseModel
         ]);
     }
 
+    public function deleteGroupLink($tournamentId, $groupId)
+    {
+        $sql = 'DELETE FROM tournament_groups WHERE tournament_id = :tid AND group_id = :gid';
+        MySQL::get()->exec($sql, ['tid' => $tournamentId, 'gid' => $groupId]);
+    }
+
     public function setPartnerDecision($userTournamentId, $eventInfo, $status)
     {
         $decisioner = User::loadById($eventInfo['partner_id']);
@@ -371,7 +377,7 @@ class TournamentsModel extends BaseModel
         return $data;
     }
 
-    public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $description = null, $pStartDate = null, $pEndDate = null)
+    public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $description = null, $pStartDate = null, $pEndDate = null, $private)
     {
         $sql = 'UPDATE tournaments SET
                 `name` = :n,
@@ -381,7 +387,8 @@ class TournamentsModel extends BaseModel
                 `approve_method` = :am,
                 `description` = :d,
                 `date_start` = :psd,
-                `date_end` = :ped
+                `date_end` = :ped,
+                `private` = :p
                 WHERE id = :id';
         MySQL::get()->exec($sql, [
             'n' => $name,
@@ -392,6 +399,7 @@ class TournamentsModel extends BaseModel
             'd' => $description,
             'psd' => str_replace('/', '-', $pStartDate),
             'ped' => str_replace('/', '-', $pEndDate),
+            'p' => $private,
             'id' => $id
         ]);
     }
@@ -897,7 +905,16 @@ class TournamentsModel extends BaseModel
         if (!$tournament) return false;
 
         $events = MySQL::get()->fetchAll('SELECT * FROM events WHERE tournament_id = :id', ['id' => $tournament['id']]);
-        return ['tournament' => $tournament, 'events' => $events];
+
+        $groupsRaw = 'SELECT g.id, g.name FROM tournament_groups tg INNER JOIN groups g ON g.id = tg.group_id WHERE tg.tournament_id = :tid';
+        $groupsRaw = MySQL::get()->fetchAll($groupsRaw, ['tid' => $id]);
+        $groups = [];
+        foreach($groupsRaw as $group)
+        {
+            $groups[$group['id']] = $group;
+        }
+
+        return ['tournament' => $tournament, 'events' => $events, 'groups' => $groups];
     }
 
     public function getNamesByTournament($tournamentId, $eventId = null)

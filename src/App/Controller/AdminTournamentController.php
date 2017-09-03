@@ -129,13 +129,55 @@ class AdminTournamentController extends BaseController {
         }
 
         $isStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
+        $userGroups = $this->gm->getAll();
 
         return $this->out($this->twig->render('admin/tournament/edit.twig', [
             'data' => $tournament,
             'attributes' => $this->am->getAll(AttributeGroupType::TOURNAMENT, $tournamentId),
             'attribute_types' => AttributeType::NAMES,
-            'is_started' => $isStarted
+            'is_started' => $isStarted,
+            'groups' => $userGroups
         ]));
+    }
+
+    /**
+     * @SLX\Route(
+     *     @SLX\Request(method="POST", uri="/tournament/edit/{tournamentId}/group")
+     * )
+     */
+    public function tournamentGroupPersistAction(Request $request, $tournamentId)
+    {
+        $tournament = $this->tm->getById($tournamentId);
+        if (!$tournament['tournament'])
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        if ($tournament['tournament']['status'] == TournamentType::CANCELLED)
+        {
+            FlashMessage::set(false, 'Tournament not found');
+            return new RedirectResponse('/');
+        }
+
+        $tournamentStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
+        if (!$tournamentStarted)
+        {
+            if ($request->get('check') == 0)
+            {
+                $this->tm->deleteGroupLink($tournamentId, $request->get('group_id'));
+            }
+            else
+            {
+                $this->tm->createGroupLink($tournamentId, $request->get('group_id'));
+            }
+        }
+        else
+        {
+            return $this->out('no');
+        }
+
+        return $this->out('ok');
     }
 
     /**
@@ -222,7 +264,8 @@ class AdminTournamentController extends BaseController {
             $request->get('approve_method'),
             $request->get('description'),
             $request->get('start_date'),
-            $request->get('end_date')
+            $request->get('end_date'),
+            intval($request->get('private'))
         );
 
         FlashMessage::set(true, 'Tournament data updated!');
