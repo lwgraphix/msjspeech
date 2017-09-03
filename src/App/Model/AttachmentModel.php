@@ -7,6 +7,7 @@ use App\Provider\Model;
 use App\Provider\Security;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
+use App\Type\EventStatusType;
 use App\Type\UserType;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -79,10 +80,11 @@ class AttachmentModel extends BaseModel
                 // retrieve event name
                 $exploded = explode('_', $relativePath);
                 $uaId = strtok(array_pop($exploded), '.');
-                $eventName = $this->getEventNameByUserAttributeId($uaId);
-                if ($eventName !== false)
+                $eventInfo = $this->getEventInfoByUserAttributeId($uaId);
+                if ($eventInfo !== false)
                 {
-                    $eventName = preg_replace('/\W/', '', $eventName) . '_'; // clear bad chars
+                    if ($eventInfo['status'] != EventStatusType::APPROVED) continue;
+                    $eventName = preg_replace('/\W/', '', $eventInfo['name']) . '_';
                     $za->addFile($filePath, $eventName . $relativePath);
                 }
                 else
@@ -102,14 +104,14 @@ class AttachmentModel extends BaseModel
         return ['data' => $archiveContent, 'size' => $size];
     }
 
-    private function getEventNameByUserAttributeId($userAttributeId)
+    private function getEventInfoByUserAttributeId($userAttributeId)
     {
-        $sql = 'SELECT e.name
+        $sql = 'SELECT e.name, ut.status
                 FROM user_attributes ua
                 INNER JOIN user_tournaments ut ON ut.id = ua.user_tournament_id
                 INNER JOIN events e ON e.id = ut.event_id
                 WHERE ua.id = :uaid';
-        $data = MySQL::get()->fetchColumn($sql, ['uaid' => $userAttributeId]);
+        $data = MySQL::get()->fetchOne($sql, ['uaid' => $userAttributeId]);
         return $data;
     }
 
