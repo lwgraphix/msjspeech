@@ -54,7 +54,7 @@
 
             <div class="form-group">
                 <label for="private">Private tournament (only for user groups) <span style="color: red">*</span></label>
-                <select onchange="showGroups(this.value)" name="private" id="private" class="form-control">
+                <select {{ is_started ? 'disabled' : '' }} onchange="showGroups(this.value)" name="private" id="private" class="form-control">
                     <option {{ data.tournament.private == 0 ? 'selected' : '' }} value="0">No</option>
                     <option {{ data.tournament.private == 1 ? 'selected' : '' }} value="1">Yes</option>
                 </select>
@@ -64,7 +64,7 @@
                 <label>Groups</label>
                 {% for group in groups %}
                     <div>
-                        <input onclick="changeGroup(this, {{ group.id }})" {{ group.id in data.groups|keys ? 'checked' : '' }} class="required_checkbox" type="checkbox" id="group_{{ group.id }}" name="groups[]" value="{{ group.id }}">
+                        <input {{ is_started ? 'disabled' : '' }} onclick="changeGroup(this, {{ group.id }})" {{ group.id in data.groups|keys ? 'checked' : '' }} class="required_checkbox" type="checkbox" id="group_{{ group.id }}" name="groups[]" value="{{ group.id }}">
                         <label style="font-weight: normal;" for="group_{{ group.id }}">{{ group.name }}</label>
                     </div>
                 {% endfor %}

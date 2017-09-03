@@ -435,16 +435,25 @@ class UserModel extends BaseModel
         return $data;
     }
 
-    public function getAllByTournament($tournamentId, $eventId = null)
-    {
-        //$sql = 'SE'
-    }
 
     public function getAllActive()
     {
         $sql = 'SELECT * FROM users WHERE role NOT IN (0, 1, 2)';
         $data = MySQL::get()->fetchAll($sql);
         return $data;
+    }
+
+    public function getAllAllowedToPrivateTournament($tournamentId)
+    {
+        $sql = 'SELECT u.*
+                FROM users u
+                LEFT JOIN user_groups ug ON ug.user_id = u.id
+                LEFT JOIN tournament_groups tg ON tg.tournament_id = :tId AND tg.group_id = ug.group_id
+                WHERE tg.id IS NOT NULL
+                GROUP BY u.id';
+        $data = MySQL::get()->fetchAll($sql, ['tId' => $tournamentId]);
+        return $data;
+
     }
 
     public function getById($id)

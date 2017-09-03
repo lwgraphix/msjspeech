@@ -45,6 +45,53 @@ class TournamentsModel extends BaseModel
         return $data;
     }
 
+    public function isUserAllowedToJoin($tournamentId, $userId, $private = 0)
+    {
+        if ($private == 0) return true; // public tournament
+        $available = $this->getPrivateTournamentsForUser($userId);
+        $ids = [];
+        foreach($available as $row)
+        {
+            $ids[] = $row['id'];
+        }
+
+        return in_array($tournamentId, $ids);
+    }
+
+    public function getUserAvailableTournaments($userId)
+    {
+        $sql = 'SELECT * FROM tournaments WHERE status != :s AND NOW() > event_start AND private = 0';
+        $data = MySQL::get()->fetchAll($sql, ['s' => TournamentType::CANCELLED]);
+
+        // get private tournaments
+        $private = $this->getPrivateTournamentsForUser($userId);
+        foreach($private as $privateTournament)
+        {
+            $data[] = $privateTournament;
+        }
+
+        foreach($data as &$row)
+        {
+            $row['reg_started'] = DateUtil::isPassed($row['event_start']);
+            $row['reg_ended'] = DateUtil::isPassed($row['entry_deadline']);
+            $row['drop_ended'] = DateUtil::isPassed($row['drop_deadline']);
+        }
+
+        return $data;
+    }
+
+    public function getPrivateTournamentsForUser($userId)
+    {
+        $sql = 'SELECT t.*
+                FROM tournaments t
+                LEFT JOIN user_groups ug ON ug.user_id = :uid
+                LEFT JOIN tournament_groups tg ON tg.tournament_id = t.id AND tg.group_id = ug.group_id
+                WHERE tg.id IS NOT NULL AND t.private = 1
+                GROUP BY t.id';
+        $data = MySQL::get()->fetchAll($sql, ['uid' => $userId]);
+        return $data;
+    }
+
     public function delete($tournamentId, $deleteAfterStart = false)
     {
         if ($deleteAfterStart)

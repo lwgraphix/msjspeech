@@ -58,7 +58,7 @@ class TournamentController extends BaseController
      */
     public function tournamentListAction(Request $request)
     {
-        $tournaments = $this->tm->getAll();
+        $tournaments = $this->tm->getUserAvailableTournaments(Security::getUser()->getId());
         $history = $this->tm->getUserTournaments(Security::getUser()->getId());
         return $this->out($this->twig->render('user/tournament/list.twig', [
             'tournaments' => $tournaments,
@@ -281,11 +281,19 @@ class TournamentController extends BaseController
             return new RedirectResponse('/tournament/list');
         }
 
+        if (!$this->tm->isUserAllowedToJoin($tournamentId, Security::getUser()->getId(), $tournament['tournament']['private']))
+        {
+            FlashMessage::set(false, 'You dont allowed to join this tournament');
+            return new RedirectResponse('/tournament/list');
+        }
+
+        $users = ($tournament['tournament']['private'] == 0) ? Model::get('user')->getAllActive() : Model::get('user')->getAllAllowedToPrivateTournament($tournamentId);
+
         return $this->out($this->twig->render('user/tournament/join.twig', [
             'tournament' => $tournament['tournament'],
             'events' => $tournament['events'],
             'attributes' => $this->am->getAll(AttributeGroupType::TOURNAMENT, $tournamentId),
-            'users' => Model::get('user')->getAllActive()
+            'users' => $users
         ]));
     }
 
@@ -328,7 +336,12 @@ class TournamentController extends BaseController
             return new RedirectResponse('/tournament/list');
         }
 
-        // if stripe token - charge stripe on ready user
+        if (!$this->tm->isUserAllowedToJoin($tournamentId, Security::getUser()->getId(), $tournament['tournament']['private']))
+        {
+            FlashMessage::set(false, 'You dont allowed to join this tournament');
+            return new RedirectResponse('/tournament/list');
+        }
+
         $requiredFields = [
             'debate_type' => AttributeType::TEXT
         ];
@@ -409,11 +422,19 @@ class TournamentController extends BaseController
                 }
                 else
                 {
-                    $partnerUser = Model::get('user')->getById($request->get('partner_id'));
-                    if (!$partnerUser)
+                    if (!$this->tm->isUserAllowedToJoin($tournamentId, $request->get('partner_id'), $tournament['tournament']['private']))
                     {
-                        FlashMessage::set(false, 'Partner not found');
+                        FlashMessage::set(false, 'Your partner can\'t join this tournament');
                         return new RedirectResponse($request->headers->get('referer'));
+                    }
+                    else
+                    {
+                        $partnerUser = Model::get('user')->getById($request->get('partner_id'));
+                        if (!$partnerUser)
+                        {
+                            FlashMessage::set(false, 'Partner not found');
+                            return new RedirectResponse($request->headers->get('referer'));
+                        }
                     }
                 }
             }

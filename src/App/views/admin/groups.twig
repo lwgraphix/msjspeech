@@ -43,9 +43,7 @@
                         <td>{{ item.joinable == 0 ? 'No' : 'Yes' }}</td>
                         <td>
                             <a class="btn btn-primary btn-xs" href="/admin/email/send/2?group_id={{ id }}"><i class="fa fa-paper-plane"></i> Send mass email</a>
-                            {% if item.joinable == 0 %}
-                                <a class="btn bg-purple btn-xs" href="/admin/groups/members/{{ id }}"><i class="fa fa-users"></i> Manage members</a>
-                            {% endif %}
+                            <a class="btn bg-purple btn-xs" href="/admin/groups/members/{{ id }}"><i class="fa fa-users"></i> Manage members</a>
                             <button onclick="editGroup({{ id }})" class="btn btn-xs btn-info"><i class="fa fa-pencil"></i> Edit name</button>
                             <button onclick="removeGroupConfirm({{ id }})" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Remove</button>
                         </td>
