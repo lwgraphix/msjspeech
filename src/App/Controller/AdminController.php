@@ -301,7 +301,7 @@ class AdminController extends BaseController {
             $list,
             $sendToParents,
             $request->get('subject'),
-            $request->get('content'),
+            $content,
             $appendix
         );
 
