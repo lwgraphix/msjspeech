@@ -17,7 +17,7 @@ use App\Type\EventType;
 use App\Type\TournamentType;
 use App\Type\UserType;
 use App\Util\DateUtil;
-use App\Util\SystemSettings;
+use App\Provider\SystemSettings;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;

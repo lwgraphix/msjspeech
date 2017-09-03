@@ -65,7 +65,7 @@ class UserModel extends BaseModel
             Model::get('transaction_history')->createTransaction(
                 $userId,
                 SystemSettings::getInstance()->get('membership_fee'),
-                TransactionType::MEMBERSHIP_FEE,
+                TransactionType::CARD_DEPOSIT,
                 0,
                 'Stripe deposit',
                 $memo2 = null,

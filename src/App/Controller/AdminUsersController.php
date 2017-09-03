@@ -60,8 +60,14 @@ class AdminUsersController extends BaseController {
      */
     public function usersListAction(Request $request)
     {
-        $users = $this->um->getAll();
+        $role = $request->get('role', 0);
+        $users = ($role == -1) ? $this->um->getAll() : $this->um->getAllByRole($role);
         $roles = UserType::NAMES;
+        if ($role > count($roles) - 1 || $role < -1)
+        {
+            FlashMessage::set(false, 'Role not found');
+            return new RedirectResponse('/admin/users/list');
+        }
         return $this->out($this->twig->render('admin/users/list.twig', ['users' => $users, 'roles' => $roles]));
     }
 

@@ -116,16 +116,19 @@ class TournamentsModel extends BaseModel
             $sql = 'DELETE FROM events WHERE tournament_id = :id';
             MySQL::get()->exec($sql, ['id' => $tournamentId]);
 
+            $sql = 'DELETE FROM tournament_groups WHERE tournament_id = :id';
+            MySQL::get()->exec($sql, ['id' => $tournamentId]);
+
             $sql = 'DELETE FROM tournaments WHERE id = :id';
             MySQL::get()->exec($sql, ['id' => $tournamentId]);
         }
     }
 
-    public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events, $description = null, $pStartDate = null, $pEndDate = null)
+    public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events, $description = null, $pStartDate = null, $pEndDate = null, $private, $groups = [])
     {
         $sql = 'INSERT INTO tournaments
-                (`name`, `event_start`, `entry_deadline`, `drop_deadline`, `approve_method`, `description`, `date_start`, `date_end`)
-                VALUES (:n, :es, :ed, :dd, :am, :d, :psd, :ped)';
+                (`name`, `event_start`, `entry_deadline`, `drop_deadline`, `approve_method`, `description`, `date_start`, `date_end`, `private`)
+                VALUES (:n, :es, :ed, :dd, :am, :d, :psd, :ped, :p)';
 
         $tournamentId = MySQL::get()->exec($sql, [
             'n' => trim($name),
@@ -135,7 +138,8 @@ class TournamentsModel extends BaseModel
             'am' => $approveMethod,
             'd' => $description,
             'psd' => $pStartDate,
-            'ped' => $pEndDate
+            'ped' => $pEndDate,
+            'p' => $private
         ], true);
 
         foreach($events as $event)
@@ -143,7 +147,24 @@ class TournamentsModel extends BaseModel
             $this->createEvent($tournamentId, $event['dt_name'], $event['dt_type'], $event['dt_cost'], $event['dt_drop_cost']);
         }
 
+        if ($private == 1 && count($groups) > 0)
+        {
+            foreach($groups as $groupId)
+            {
+                $this->createGroupLink($tournamentId, $groupId);
+            }
+        }
+
         return $tournamentId;
+    }
+
+    public function createGroupLink($tournamentId, $groupId)
+    {
+        $sql = 'INSERT INTO tournament_groups (tournament_id, group_id) VALUES (:tId, :gId)';
+        MySQL::get()->exec($sql, [
+            'tId' => $tournamentId,
+            'gId' => $groupId
+        ]);
     }
 
     public function setPartnerDecision($userTournamentId, $eventInfo, $status)

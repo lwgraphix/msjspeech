@@ -60,6 +60,24 @@
             </div>
 
             <div class="form-group">
+                <label for="private">Private tournament (only for user groups) <span style="color: red">*</span></label>
+                <select onchange="showGroups(this.value)" name="private" id="private" class="form-control">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+
+            <div id="groups" style="display: none" class="form-group">
+                <label>Groups</label>
+                {% for group in groups %}
+                    <div>
+                        <input class="required_checkbox" type="checkbox" id="group_{{ group.id }}" name="groups[]" value="{{ group.id }}">
+                        <label style="font-weight: normal;" for="group_{{ group.id }}">{{ group.name }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
                 <label for="start_date">Tournament start date <span style="color: red">*</span></label>
                 <div class="input-group">
                     <div class="input-group-addon">
@@ -147,6 +165,18 @@
             return target.replace(new RegExp(search, 'g'), replacement);
         };
 
+        function showGroups(val)
+        {
+            if (val == 0)
+            {
+                $("#groups").hide();
+            }
+            else
+            {
+                $("#groups").show();
+            }
+        }
+
         function addNewDebate()
         {
             var field_template = $("#debate-template").html().replaceAll(/\$1/, fields_count);
@@ -179,6 +209,20 @@
                 return;
             }
 
+            var private = $("#private").val();
+            if (private == 1 && !checkboxes_validate())
+            {
+                return;
+            }
+
+            var groups = [];
+            if (private == 1)
+            {
+                $("#groups input:checked").each(function() {
+                    groups.push($(this).val());
+                });
+            }
+
             var tournament_name = $("#tournament_name").val();
             var reg_start = $("#reg_start").val();
             var reg_deadline = $("#reg_deadline").val();
@@ -193,10 +237,42 @@
                 events: fields,
                 start_date: $("#start_date").val(),
                 end_date: $("#end_date").val(),
-                description: $("#description").val()
+                description: $("#description").val(),
+                private: private,
+                groups: groups
+
             }, function(response) {
                 window.location = '/admin/tournament/edit/' + response.id; // refresh page scroll
             }, 'json');
+        }
+
+        function checkboxes_validate()
+        {
+            var status = true;
+            // validate checkboxes
+            var required_checkboxes = [];
+            $(".required_checkbox").each(function() {
+                if (required_checkboxes.indexOf($(this)[0].name) == -1)
+                {
+                    required_checkboxes.push($(this)[0].name);
+                }
+            });
+
+            required_checkboxes.forEach(function(item) {
+                var item_accessor = $("input[name='"+ item +"']");
+                item_accessor.parent().parent().removeClass('has-error');
+                if ($("input[name='"+ item +"']:checked").length == 0)
+                {
+                    item_accessor.parent().parent().addClass('has-error');
+                    status = false;
+                    $('html, body').animate({
+                        scrollTop: item_accessor.offset().top - 25
+                    }, 100);
+                    return;
+                }
+            });
+
+            return status;
         }
 
         function showError(message)

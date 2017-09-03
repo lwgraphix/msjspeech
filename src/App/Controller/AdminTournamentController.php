@@ -5,6 +5,7 @@ use App\Code\StatusCode;
 use App\Model\AlertModel;
 use App\Model\AttributeModel;
 use App\Model\CategoriesModel;
+use App\Model\GroupModel;
 use App\Model\PagesModel;
 use App\Model\TournamentsModel;
 use App\Model\TransactionHistoryModel;
@@ -44,12 +45,18 @@ class AdminTournamentController extends BaseController {
      */
     private $am;
 
+    /**
+     * @var GroupModel
+     */
+    private $gm;
+
     public function __construct(Application $app)
     {
         parent::__construct($app);
         Security::setAccessLevel(UserType::OFFICER);
         $this->tm = Model::get('tournaments');
         $this->am = Model::get('attribute');
+        $this->gm = Model::get('group');
     }
 
     /**
@@ -59,7 +66,8 @@ class AdminTournamentController extends BaseController {
      */
     public function tournamentCreateAction(Request $request)
     {
-        return $this->out($this->twig->render('admin/tournament/create.twig'));
+        $userGroups = $this->gm->getAll();
+        return $this->out($this->twig->render('admin/tournament/create.twig', ['groups' => $userGroups]));
     }
 
     /**
@@ -91,7 +99,9 @@ class AdminTournamentController extends BaseController {
             $request->get('events'),
             $request->get('description'),
             $request->get('start_date'),
-            $request->get('end_date')
+            $request->get('end_date'),
+            $request->get('private'),
+            $request->get('groups')
         );
 
         return $this->out(json_encode(['id' => $tId]), true);

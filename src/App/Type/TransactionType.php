@@ -13,7 +13,7 @@ class TransactionType
 
     const NAMES = [
         'Card deposit',
-        'Membership fee',
+        'Membership contribution',
         'Manual',
         'Tournament join',
         'Tournament refund',
