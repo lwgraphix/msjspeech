@@ -293,6 +293,10 @@ class AdminController extends BaseController {
         }
 
         $sendToParents = $request->get('parents_send') == 'on';
+        $content = $request->get('content') . PHP_EOL;
+        $content .= "==================================" . PHP_EOL;
+        $content .= "This message sent " . $appendix . " by " . Security::getUser()->getFullName() . PHP_EOL;
+
         $this->em->sendMassEmail(
             $list,
             $sendToParents,
