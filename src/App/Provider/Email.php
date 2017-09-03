@@ -129,6 +129,11 @@ class Email
             'partner_name',
             'tournament_name',
             'event_name'
+        ],
+
+        EmailType::TOURNAMENT_REGISTRATION_APPROVED => [
+            'tournament_name',
+            'event_name'
         ]
     ];
 

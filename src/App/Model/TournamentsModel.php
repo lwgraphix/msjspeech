@@ -396,6 +396,26 @@ class TournamentsModel extends BaseModel
                 );
             }
         }
+        else
+        {
+            $tournamentData = $this->getUserEventInfo($userTournamentId);
+            $ownerUser = User::loadById($tournamentData['user_id']);
+            // send emails
+            Email::getInstance()->createMessage(EmailType::TOURNAMENT_REGISTRATION_APPROVED, [
+                'tournament_name' => $tournamentData['tournament_name'],
+                'event_name' => $tournamentData['event_name']
+            ], $ownerUser);
+
+            if (!empty($tournamentData['partner_id']))
+            {
+                $partnerUser = User::loadById($tournamentData['partner_id']);
+                // send emails
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_REGISTRATION_APPROVED, [
+                    'tournament_name' => $tournamentData['tournament_name'],
+                    'event_name' => $tournamentData['event_name']
+                ], $partnerUser);
+            }
+        }
     }
 
     public function getMembersList($tournamentId, $eventId = null, $eventStatus = null)

@@ -18,7 +18,8 @@ class EmailType
     const PARTNER_REQUEST_EXPIRED = 11; // done
     const TOURNAMENT_JUDGE = 12; // done
     const ACCOUNT_RESTORE_ACCESS = 13; // done
-    const PARTNER_CANCELLED = 14;
+    const PARTNER_CANCELLED = 14; // done
+    const TOURNAMENT_REGISTRATION_APPROVED = 15;
 
     const NAMES = [
         'Membership registration',
@@ -35,6 +36,7 @@ class EmailType
         'Partner request expired',
         'Tournament judge',
         'Account restore access',
-        'Partner request cancelled'
+        'Partner request cancelled',
+        'Tournament registration approved'
     ];
 }

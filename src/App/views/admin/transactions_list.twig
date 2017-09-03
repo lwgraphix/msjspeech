@@ -51,7 +51,7 @@
                         <td>{{ item.memo_3 }}</td>
                         <td>{{ item.memo_4 }}</td>
                         <td>{{ item.memo_5 }}</td>
-                        {% if user.role == 5 %}
+                        {% if user.role == 5 and item.type != 0 %}
                             <td>
                                 <button onclick="deleteTransaction({{ item.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
                             </td>
@@ -65,10 +65,35 @@
     {% endif %}
 
     {% if user.role == 5 %}
+        <div class="modal modal-danger fade" id="delete-transaction-confirm">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Deleting transaction</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Do you really want delete this transaction? <b>This action will delete this transaction without any restore.</b></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="deleteTransactionConfirmed()" class="btn btn-outline"><i class="fa fa-check"></i> Yes</button>
+                        <button type="button" data-dismiss="modal" class="btn btn-outline"><i class="fa fa-times"></i> No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
             function deleteTransaction(tId)
             {
-                $.post('/admin/users/transactions/delete', {id: tId}, function(response)
+                window.transaction_id = tId;
+                $("#delete-transaction-confirm").modal('show');
+            }
+
+            function deleteTransactionConfirmed()
+            {
+                $.post('/admin/users/transactions/delete', {id: window.transaction_id}, function(response)
                 {
                     window.location.reload();
                 });

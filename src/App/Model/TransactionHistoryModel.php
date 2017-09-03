@@ -19,6 +19,13 @@ class TransactionHistoryModel extends BaseModel
         return floatval($balance);
     }
 
+    public function getById($transactionId)
+    {
+        $sql = 'SELECT * FROM transaction_history WHERE id = :id';
+        $data = MySQL::get()->fetchOne($sql, ['id' => $transactionId]);
+        return $data;
+    }
+
     public function getHistory($userId)
     {
         $sql = 'SELECT * FROM transaction_history WHERE user_id = :uid AND status = 1 ORDER BY id DESC';

@@ -75,7 +75,21 @@ class AttachmentModel extends BaseModel
             {
                 $filePath = $file->getRealPath();
                 $relativePath = substr($filePath, strlen($attachDirectory) + 1);
-                $za->addFile($filePath, $relativePath);
+
+                // retrieve event name
+                $exploded = explode('_', $relativePath);
+                $uaId = strtok(array_pop($exploded), '.');
+                $eventName = $this->getEventNameByUserAttributeId($uaId);
+                if ($eventName !== false)
+                {
+                    $eventName = preg_replace('/\W/', '', $eventName) . '_'; // clear bad chars
+                    $za->addFile($filePath, $eventName . $relativePath);
+                }
+                else
+                {
+                    $za->addFile($filePath, $relativePath);
+                }
+
             }
         }
 
@@ -86,6 +100,17 @@ class AttachmentModel extends BaseModel
         unlink($tmpFile);
 
         return ['data' => $archiveContent, 'size' => $size];
+    }
+
+    private function getEventNameByUserAttributeId($userAttributeId)
+    {
+        $sql = 'SELECT e.name
+                FROM user_attributes ua
+                INNER JOIN user_tournaments ut ON ut.id = ua.user_tournament_id
+                INNER JOIN events e ON e.id = ut.event_id
+                WHERE ua.id = :uaid';
+        $data = MySQL::get()->fetchColumn($sql, ['uaid' => $userAttributeId]);
+        return $data;
     }
 
     public function getUserAttachment($userId, $userAttributeId)

@@ -121,8 +121,18 @@ class AdminUsersController extends BaseController {
         }
         else
         {
-            Model::get('transaction_history')->deleteTransaction($request->get('id'));
-            return $this->out('ok');
+            $transaction = Model::get('transaction_history')->getById($request->get('id'));
+            if ($transaction['type'] == TransactionType::CARD_DEPOSIT)
+            {
+                FlashMessage::set(false, 'You cant delete card deposit transaction');
+                return $this->out('no');
+            }
+            else
+            {
+                FlashMessage::set(true, 'Transaction successfully deleted');
+                Model::get('transaction_history')->deleteTransaction($request->get('id'));
+                return $this->out('ok');
+            }
         }
     }
 
