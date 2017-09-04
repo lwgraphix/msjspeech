@@ -5,7 +5,8 @@
         "twig/twig": "^2.4",
         "symfony/twig-bridge": "^3.3",
         "stripe/stripe-php": "^5.2",
-        "daniel-zahariev/php-aws-ses": "^0.8.9"
+        "daniel-zahariev/php-aws-ses": "^0.8.9",
+        "sendgrid/sendgrid": "^6.0"
     },
 
     "autoload": {

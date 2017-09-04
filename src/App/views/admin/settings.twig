@@ -13,6 +13,12 @@
                          <option {{ (setting.value == 0) ? 'selected' : '' }} value="0">No</option>
                          <option {{ (setting.value == 1) ? 'selected' : '' }} value="1">Yes</option>
                      </select>
+                {% elseif setting.dropdown is not null %}
+                    <select name="{{ setting.name }}" class="form-control">
+                        {% for drop in setting.dropdown %}
+                            <option {{ (loop.index0 == setting.value) ? 'selected' : '' }} value="{{ loop.index0 }}">{{ drop }}</option>
+                        {% endfor %}
+                    </select>
                 {% else %}
                     <input maxlength="{{ (setting.name == 'site_name') ? '20' : '' }}" name="{{ setting.name }}" value="{{ setting.value }}" type="text" class="form-control" id="{{ setting.name }}">
                 {% endif %}

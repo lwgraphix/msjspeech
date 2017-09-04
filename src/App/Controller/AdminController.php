@@ -293,6 +293,14 @@ class AdminController extends BaseController {
         }
 
         $sendToParents = $request->get('parents_send') == 'on';
+        $sendToStudents = $request->get('students_send') == 'on';
+
+        if ($sendToParents && $sendToStudents)
+        {
+            FlashMessage::set(false, 'You can choose only one "Send to" parameter!');
+            return new RedirectResponse($request->headers->get('referer'));
+        }
+
         $content = $request->get('content') . PHP_EOL;
         $content .= "==================================" . PHP_EOL;
         $content .= "This message sent " . $appendix . " by " . Security::getUser()->getFullName() . PHP_EOL;
@@ -300,6 +308,7 @@ class AdminController extends BaseController {
         $this->em->sendMassEmail(
             $list,
             $sendToParents,
+            $sendToStudents,
             $request->get('subject'),
             $content,
             $appendix

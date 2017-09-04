@@ -4,6 +4,7 @@ namespace App\Provider;
 
 use App\Code\StatusCode;
 use App\Connector\MySQL;
+use App\Type\EmailProviderType;
 use App\Type\EmailType;
 use App\Type\UserType;
 use SimpleEmailService;
@@ -226,33 +227,65 @@ class Email
 
     public function send($to, $subject, $message, User $user, $anotherReceiver = null)
     {
-        $m = new SimpleEmailServiceMessage();
-        $m->addTo($to);
-        $m->setFrom(SystemSettings::getInstance()->get('aws_send_email_from'));
-        $m->setSubject($subject);
-
-        if ($anotherReceiver === null)
+        if (SystemSettings::getInstance()->get('email_provider') == EmailProviderType::AMAZON)
         {
-            if (!empty($user->getParentEmail()))
+            $m = new SimpleEmailServiceMessage();
+            $m->addTo($to);
+            $m->setFrom(SystemSettings::getInstance()->get('send_email_from'));
+            $m->setSubject($subject);
+
+            if ($anotherReceiver === null)
             {
-                $m->addCC($user->getParentEmail());
+                if (!empty($user->getParentEmail()))
+                {
+                    $m->addCC($user->getParentEmail());
+                }
             }
-        }
 
-        $bccReceiver = SystemSettings::getInstance()->get('bcc_receiver');
-        if (!empty($bccReceiver))
+            $bccReceiver = SystemSettings::getInstance()->get('bcc_receiver');
+            if (!empty($bccReceiver))
+            {
+                $m->addBCC($bccReceiver);
+            }
+
+            $m->setMessageFromString($message);
+
+            $ses = new SimpleEmailService(
+                SystemSettings::getInstance()->get('aws_access_key'),
+                SystemSettings::getInstance()->get('aws_secret_key')
+            );
+
+            $ses->sendEmail($m);
+        }
+        elseif (SystemSettings::getInstance()->get('email_provider') == EmailProviderType::SENDGRID)
         {
-            $m->addBCC($bccReceiver);
+            $from = new \SendGrid\Email(null, SystemSettings::getInstance()->get('send_email_from'));
+            $to = new \SendGrid\Email(null, $to);
+            $content = new \SendGrid\Content("text/plain", $message);
+            $mail = new \SendGrid\Mail($from, $subject, $to, $content);
+            // email generated, go to bcc/cc
+
+            if ($anotherReceiver === null)
+            {
+                if (!empty($user->getParentEmail()))
+                {
+                    $mail->personalization[0]->addCc(new \SendGrid\Email(null, $user->getParentEmail()));
+                }
+            }
+
+            $bccReceiver = SystemSettings::getInstance()->get('bcc_receiver');
+            if (!empty($bccReceiver))
+            {
+                $mail->personalization[0]->addBcc(new \SendGrid\Email(null, $bccReceiver));
+            }
+
+            $sendgrid = new \SendGrid(SystemSettings::getInstance()->get('sendgrid_key'));
+            $status = $sendgrid->client->mail()->send()->post($mail);
         }
-
-        $m->setMessageFromString($message);
-
-        $ses = new SimpleEmailService(
-            SystemSettings::getInstance()->get('aws_access_key'),
-            SystemSettings::getInstance()->get('aws_secret_key')
-        );
-
-        $ses->sendEmail($m);
+        else
+        {
+            // unknown provider type
+        }
     }
 }
 

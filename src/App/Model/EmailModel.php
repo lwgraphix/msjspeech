@@ -11,11 +11,13 @@ use App\Provider\Stripe;
 use App\Provider\User;
 use App\Type\AttributeGroupType;
 use App\Type\AttributeType;
+use App\Type\EmailProviderType;
 use App\Type\EmailType;
 use App\Type\EventStatusType;
 use App\Type\TransactionType;
 use App\Type\UserType;
 use App\Provider\SystemSettings;
+use SendGrid\Mail;
 use SimpleEmailService;
 use SimpleEmailServiceMessage;
 
@@ -98,52 +100,137 @@ class EmailModel extends BaseModel
         return $list;
     }
 
-    public function sendMassEmail($list, $sendToParents, $subject, $content, $appendix = null)
+    public function sendMassEmail($list, $sendToParents, $sendToStudents, $subject, $content, $appendix = null)
     {
-        $messages = [];
-
-        foreach ($list as $user) {
-            $m = new SimpleEmailServiceMessage();
-
-            if ($sendToParents) {
-                if (empty($user['parent_email'])) continue; // skip message if parent not exists
-                $m->addTo($user['parent_email']);
-            } else {
-                $m->addTo($user['email']);
-                if (!empty($user['parent_email'])) {
-                    $m->addCC($user['parent_email']);
-                }
-            }
-            $m->setFrom(SystemSettings::getInstance()->get('aws_send_email_from'));
-            $m->setSubject($subject);
-            $m->setMessageFromString($content);
-            $messages[] = $m;
-        }
-
-        $par = ($sendToParents) ? ' (to parents only)' : '';
-        $adminMessageContent = 'This letter was sent by ' . Security::getUser()->getFullName() . ' ' . $appendix . $par . PHP_EOL;
-        $adminMessageContent .= '===============================================' . PHP_EOL;
-        $adminMessageContent .= 'Subject: ' . $subject . PHP_EOL;
-        $adminMessageContent .= 'Content: ' . $content;
-
-        $adminMessage = new SimpleEmailServiceMessage();
-        $adminMessage->addTo(SystemSettings::getInstance()->get('bcc_receiver'));
-        $adminMessage->setFrom(SystemSettings::getInstance()->get('aws_send_email_from'));
-        $adminMessage->setSubject('Mass email started');
-        $adminMessage->setMessageFromString($adminMessageContent);
-
-        $messages[] = $adminMessage;
-
-        $ses = new SimpleEmailService(
-            SystemSettings::getInstance()->get('aws_access_key'),
-            SystemSettings::getInstance()->get('aws_secret_key')
-        );
-
-        $ses->setBulkMode(true);
-        foreach ($messages as $message)
+        if (SystemSettings::getInstance()->get('email_provider') == EmailProviderType::AMAZON)
         {
-            $ses->sendEmail($message);
+            $messages = [];
+
+            foreach ($list as $user) {
+                $m = new SimpleEmailServiceMessage();
+
+                if ($sendToParents) {
+                    if (empty($user['parent_email'])) continue; // skip message if parent not exists
+                    $m->addTo($user['parent_email']);
+                } else {
+                    $m->addTo($user['email']);
+                    if (!empty($user['parent_email']) && !$sendToStudents) {
+                        $m->addCC($user['parent_email']);
+                    }
+                }
+                $m->setFrom(SystemSettings::getInstance()->get('send_email_from'));
+                $m->setSubject($subject);
+                $m->setMessageFromString($content);
+                $messages[] = $m;
+            }
+
+            if ($sendToParents)
+            {
+                $par = ' (to parents only)';
+            }
+            elseif ($sendToStudents)
+            {
+                $par = ' (to students only)';
+            }
+            else
+            {
+                $par = null;
+            }
+
+            $adminMessageContent = 'This letter was sent by ' . Security::getUser()->getFullName() . ' ' . $appendix . $par . PHP_EOL;
+            $adminMessageContent .= '===============================================' . PHP_EOL;
+            $adminMessageContent .= 'Subject: ' . $subject . PHP_EOL;
+            $adminMessageContent .= 'Content: ' . $content;
+
+            $adminMessage = new SimpleEmailServiceMessage();
+            $adminMessage->addTo(SystemSettings::getInstance()->get('bcc_receiver'));
+            $adminMessage->setFrom(SystemSettings::getInstance()->get('send_email_from'));
+            $adminMessage->setSubject('Mass email started');
+            $adminMessage->setMessageFromString($adminMessageContent);
+
+            $messages[] = $adminMessage;
+
+            $ses = new SimpleEmailService(
+                SystemSettings::getInstance()->get('aws_access_key'),
+                SystemSettings::getInstance()->get('aws_secret_key')
+            );
+
+            $ses->setBulkMode(true);
+            foreach ($messages as $message)
+            {
+                $ses->sendEmail($message);
+            }
+            $ses->setBulkMode(false);
         }
-        $ses->setBulkMode(false);
+        elseif (SystemSettings::getInstance()->get('email_provider') == EmailProviderType::SENDGRID)
+        {
+            $messages = [];
+
+            foreach ($list as $user) {
+                $cc = false;
+                if ($sendToParents)
+                {
+                    if (empty($user['parent_email'])) continue; // skip message if parent not exists
+                    $to = $user['parent_email'];
+                } else
+                {
+                    $to = $user['email'];
+                    if (!empty($user['parent_email']) && !$sendToStudents)
+                    {
+                        $cc = $user['parent_email'];
+                    }
+                }
+
+                $mail = new \SendGrid\Mail(
+                    new \SendGrid\Email(null, SystemSettings::getInstance()->get('send_email_from')),
+                    $subject,
+                    $to,
+                    new \SendGrid\Content("text/plain", $content)
+                );
+
+                if ($cc !== false)
+                {
+                    $mail->personalization[0]->addCc($cc);
+                }
+
+                $messages[] = $mail;
+            }
+
+            if ($sendToParents)
+            {
+                $par = ' (to parents only)';
+            }
+            elseif ($sendToStudents)
+            {
+                $par = ' (to students only)';
+            }
+            else
+            {
+                $par = null;
+            }
+
+            $adminMessageContent = 'This letter was sent by ' . Security::getUser()->getFullName() . ' ' . $appendix . $par . PHP_EOL;
+            $adminMessageContent .= '===============================================' . PHP_EOL;
+            $adminMessageContent .= 'Subject: ' . $subject . PHP_EOL;
+            $adminMessageContent .= 'Content: ' . $content;
+
+            $adminMail = new \SendGrid\Mail(
+                new \SendGrid\Email(null, SystemSettings::getInstance()->get('send_email_from')),
+                'Mass email started',
+                new \SendGrid\Email(null, SystemSettings::getInstance()->get('bcc_receiver')),
+                new \SendGrid\Content("text/plain", $adminMessageContent)
+            );
+
+            $messages[] = $adminMail;
+            $sendgrid = new \SendGrid(SystemSettings::getInstance()->get('sendgrid_key'));
+            foreach($messages as $message)
+            {
+                $sendgrid->client->mail()->send()->post($message);
+            }
+        }
+        else
+        {
+            // unknown provider type
+        }
     }
 }

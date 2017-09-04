@@ -15,107 +15,133 @@ class SystemSettings
 
     private $defaults = [
         [
-            'label' => 'Site name (max 20 chars)',
+            'label' => '[System] Site name (max 20 chars)',
             'name' => 'site_name',
             'value' => 'Speech & Debate',
             'boolean' => 0
         ],
 
         [
-            'label' => 'Site URL',
+            'label' => '[System] Site URL',
             'name' => 'site_url',
             'value' => null,
             'boolean' => 0
         ],
 
         [
-            'label' => 'Club user registration allowed',
+            'label' => '[System] Club user registration allowed',
             'name' => 'register_allowed',
             'value' => 0,
             'boolean' => 1
         ],
 
         [
-            'label' =>  'Credit card payment enabled',
-            'name' => 'payment_allowed',
-            'value' => 0,
-            'boolean' => 1,
-        ],
-
-        [
-            'label' => 'Public stripe key for credit card payment',
-            'name' => 'public_stripe_key',
-            'value' => null,
-            'boolean' => 0,
-        ],
-
-        [
-            'label' => 'Private stripe key for credit card payment',
-            'name' => 'private_stripe_key',
-            'value' => null,
-            'boolean' => 0,
-        ],
-
-        [
-            'label' => 'AWS Access key ID',
-            'name' => 'aws_access_key',
-            'value' => null,
-            'boolean' => 0,
-        ],
-
-        [
-            'label' => 'AWS Secret Key',
-            'name' => 'aws_secret_key',
-            'value' => null,
-            'boolean' => 0,
-        ],
-
-        [
-            'label' => 'AWS Send email from',
-            'name' => 'aws_send_email_from',
-            'value' => null,
-            'boolean' => 0,
-        ],
-
-        [
-            'label' => 'BCC send to',
-            'name' => 'bcc_receiver',
-            'value' => null,
-            'boolean' => 0,
-        ],
-
-        [
-            'label' => 'Email signature',
-            'name' => 'email_signature',
-            'value' => null,
-            'boolean' => 0
-        ],
-
-        [
-            'label' => 'Membership fee',
-            'name' => 'membership_fee',
-            'value' => 0,
-            'boolean' => 0
-        ],
-
-        [
-            'label' => 'Allow users negative balance',
+            'label' => '[System] Allow users negative balance',
             'name' => 'negative_balance',
             'value' => 0,
             'boolean' => 1,
         ],
 
         [
-            'label' => 'Google Analytics code',
-            'name' => 'google_code',
+            'label' => '[System] Auto-decline partner request by timeout (in hours)',
+            'name' => 'auto_decline_timeout',
+            'value' => 72,
+            'boolean' => 0
+        ],
+
+        [
+            'label' => '[System] Membership contribution',
+            'name' => 'membership_fee',
+            'value' => 0,
+            'boolean' => 0
+        ],
+
+        [
+            'label' => '[System] Membership contribution text',
+            'name' => 'membership_text',
+            'value' => 0,
+            'boolean' => 0
+        ],
+
+        [
+            'label' => '[Payments] Credit card payment enabled',
+            'name' => 'payment_allowed',
+            'value' => 0,
+            'boolean' => 1,
+        ],
+
+        [
+            'label' => '[Payments] Public stripe key for credit card payment',
+            'name' => 'public_stripe_key',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
+            'label' => '[Payments] Private stripe key for credit card payment',
+            'name' => 'private_stripe_key',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
+            'label' => '[Email] Email provider',
+            'name' => 'email_provider',
+            'value' => 0,
+            'boolean' => 0,
+            'dropdown' => [
+                'Amazon SES',
+                'Sendgrid'
+            ]
+        ],
+
+        [
+            'label' => '[Email] Send email from',
+            'name' => 'send_email_from',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
+            'label' => '[Email] BCC send to',
+            'name' => 'bcc_receiver',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
+            'label' => '[Email] Email signature',
+            'name' => 'email_signature',
+            'value' => null,
+            'boolean' => 0
+        ],
+
+
+        [
+            'label' => '[Email] [AWS] Access key ID',
+            'name' => 'aws_access_key',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
+            'label' => '[Email] [AWS] Secret Key',
+            'name' => 'aws_secret_key',
+            'value' => null,
+            'boolean' => 0,
+        ],
+
+        [
+            'label' => '[Email] [Sendgrid] Secret key',
+            'name' => 'sendgrid_key',
             'value' => null,
             'boolean' => 0
         ],
 
         [
-            'label' => 'Auto-decline partner request by timeout (in hours)',
-            'name' => 'auto_decline_timeout',
-            'value' => 72,
+            'label' => '[Other] Google Analytics code',
+            'name' => 'google_code',
+            'value' => null,
             'boolean' => 0
         ]
     ];
@@ -152,13 +178,15 @@ class SystemSettings
         {
             if (!in_array($defaultSetting['name'], $settingsName))
             {
+                $dropdown = (isset($defaultSetting['dropdown'])) ? json_encode($defaultSetting['dropdown']) : null;
                 // create row
-                $sql = 'INSERT INTO system_settings (label, `name`, `value`, boolean) VALUES (:l, :n, :v, :b)';
+                $sql = 'INSERT INTO system_settings (label, `name`, `value`, boolean, dropdown) VALUES (:l, :n, :v, :b, :d)';
                 MySQL::get()->exec($sql, [
                     'l' => $defaultSetting['label'],
                     'n' => $defaultSetting['name'],
                     'v' => $defaultSetting['value'],
-                    'b' => $defaultSetting['boolean']
+                    'b' => $defaultSetting['boolean'],
+                    'd' => $dropdown
                 ]);
             }
         }
@@ -194,9 +222,14 @@ class SystemSettings
         $sql = 'SELECT * FROM system_settings';
         $data = MySQL::get()->fetchAll($sql);
 
-        foreach($data as $row)
+        foreach($data as &$row)
         {
             // caching all settings
+            if (!empty($row['dropdown']))
+            {
+                $row['dropdown'] = json_decode($row['dropdown'], true);
+            }
+
             $this->settingsRepository[$row['name']] = $row['value'];
         }
 
