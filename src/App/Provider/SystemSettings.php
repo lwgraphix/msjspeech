@@ -59,7 +59,7 @@ class SystemSettings
         [
             'label' => '[System] Membership contribution text',
             'name' => 'membership_text',
-            'value' => 0,
+            'value' => null,
             'boolean' => 0
         ],
 

@@ -172,7 +172,8 @@ class EmailModel extends BaseModel
                 {
                     if (empty($user['parent_email'])) continue; // skip message if parent not exists
                     $to = $user['parent_email'];
-                } else
+                }
+                else
                 {
                     $to = $user['email'];
                     if (!empty($user['parent_email']) && !$sendToStudents)
@@ -184,7 +185,7 @@ class EmailModel extends BaseModel
                 $mail = new \SendGrid\Mail(
                     new \SendGrid\Email(null, SystemSettings::getInstance()->get('send_email_from')),
                     $subject,
-                    $to,
+                    new \SendGrid\Email(null, $to),
                     new \SendGrid\Content("text/plain", $content)
                 );
 
@@ -222,8 +223,9 @@ class EmailModel extends BaseModel
             );
 
             $messages[] = $adminMail;
+
             $sendgrid = new \SendGrid(SystemSettings::getInstance()->get('sendgrid_key'));
-            foreach($messages as $message)
+            foreach($messages as $k => $message)
             {
                 $sendgrid->client->mail()->send()->post($message);
             }
