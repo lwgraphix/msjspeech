@@ -101,7 +101,8 @@ class AdminTournamentController extends BaseController {
             $request->get('start_date'),
             $request->get('end_date'),
             $request->get('private'),
-            $request->get('groups')
+            $request->get('groups'),
+            $request->get('double_entry')
         );
 
         return $this->out(json_encode(['id' => $tId]), true);
@@ -265,7 +266,8 @@ class AdminTournamentController extends BaseController {
             $request->get('description'),
             $request->get('start_date'),
             $request->get('end_date'),
-            intval($request->get('private'))
+            intval($request->get('private')),
+            intval($request->get('double_entry'))
         );
 
         FlashMessage::set(true, 'Tournament data updated!');

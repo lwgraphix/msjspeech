@@ -171,11 +171,11 @@ class TournamentsModel extends BaseModel
         }
     }
 
-    public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events, $description = null, $pStartDate = null, $pEndDate = null, $private, $groups = [])
+    public function create($name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $events, $description = null, $pStartDate = null, $pEndDate = null, $private, $groups = [], $doubleEntry)
     {
         $sql = 'INSERT INTO tournaments
-                (`name`, `event_start`, `entry_deadline`, `drop_deadline`, `approve_method`, `description`, `date_start`, `date_end`, `private`)
-                VALUES (:n, :es, :ed, :dd, :am, :d, :psd, :ped, :p)';
+                (`name`, `event_start`, `entry_deadline`, `drop_deadline`, `approve_method`, `description`, `date_start`, `date_end`, `private`, `double_entry`)
+                VALUES (:n, :es, :ed, :dd, :am, :d, :psd, :ped, :p, :de)';
 
         $tournamentId = MySQL::get()->exec($sql, [
             'n' => trim($name),
@@ -186,7 +186,8 @@ class TournamentsModel extends BaseModel
             'd' => $description,
             'psd' => $pStartDate,
             'ped' => $pEndDate,
-            'p' => $private
+            'p' => $private,
+            'de' => $doubleEntry
         ], true);
 
         foreach($events as $event)
@@ -444,7 +445,7 @@ class TournamentsModel extends BaseModel
         return $data;
     }
 
-    public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $description = null, $pStartDate = null, $pEndDate = null, $private)
+    public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $description = null, $pStartDate = null, $pEndDate = null, $private, $doubleEntry)
     {
         $sql = 'UPDATE tournaments SET
                 `name` = :n,
@@ -455,7 +456,8 @@ class TournamentsModel extends BaseModel
                 `description` = :d,
                 `date_start` = :psd,
                 `date_end` = :ped,
-                `private` = :p
+                `private` = :p,
+                `double_entry` = :de
                 WHERE id = :id';
         MySQL::get()->exec($sql, [
             'n' => $name,
@@ -467,6 +469,7 @@ class TournamentsModel extends BaseModel
             'psd' => str_replace('/', '-', $pStartDate),
             'ped' => str_replace('/', '-', $pEndDate),
             'p' => $private,
+            'de' => $doubleEntry,
             'id' => $id
         ]);
     }
@@ -735,6 +738,7 @@ class TournamentsModel extends BaseModel
                   own_u.username as owner_name,
                   par_u.username as partner_name,
                   e.tournament_id,
+                  t.double_entry,
                   ut.judge_name,
                   ut.judge_email
                 FROM user_tournaments ut
@@ -964,6 +968,16 @@ class TournamentsModel extends BaseModel
         $sql = 'SELECT * FROM user_tournaments WHERE event_id = :eid AND (user_id = :uid OR partner_id = :uid) AND status NOT IN (2, 4, 5)';
         $data = MySQL::get()->fetchOne($sql, ['eid' => $eventId, 'uid' => $userId]);
         return $data !== false;
+    }
+
+    public function getUserEntryCount($userId, $tournamentId)
+    {
+        $sql = 'SELECT count(*)
+                FROM user_tournaments ut
+                INNER JOIN events e ON e.id = ut.event_id
+                WHERE (ut.user_id = :uid OR ut.partner_id = :uid) AND e.tournament_id = :tid AND ut.status IN (0, 1, 3)';
+        $data = MySQL::get()->fetchColumn($sql, ['uid' => $userId, 'tid' => $tournamentId]);
+        return $data;
     }
 
     public function getById($id)

@@ -213,13 +213,20 @@ class TournamentController extends BaseController
             if ($eventInfo['event_status'] == EventStatusType::WAITING_PARTNER_RESPONSE && !DateUtil::isPassed($eventInfo['entry_deadline']))
             {
                 $balance = Security::getUser()->getBalance();
-                if ($balance < $eventInfo['cost'] && intval($request->get('decision')) == 1)
+                if (SystemSettings::getInstance()->get('negative_balance') == 0 && $balance < $eventInfo['cost'] && intval($request->get('decision')) == 1)
                 {
                     FlashMessage::set(false, 'Not enough money for join this debate. Please <a target="_blank" href="/user/balance">deposit</a> money and try join again');
                     return $this->out('no');
                 }
                 else
                 {
+                    $userEntryCount = $this->tm->getUserEntryCount(Security::getUser()->getId(), $eventInfo['tournament_id']);
+                    if ($eventInfo['double_entry'] == 0 && $userEntryCount > 0 && intval($request->get('decision')) == 1)
+                    {
+                        FlashMessage::set(false, 'Double entry not allowed on this tournament');
+                        return $this->out('no');
+                    }
+
                     $status = $this->tm->setPartnerDecision($eventId, $eventInfo, intval($request->get('decision')));
                     if (!$status)
                     {
@@ -342,6 +349,13 @@ class TournamentController extends BaseController
             return new RedirectResponse('/tournament/list');
         }
 
+        $userEntryCount = $this->tm->getUserEntryCount(Security::getUser()->getId(), $tournament['tournament']['id']);
+        if ($tournament['tournament']['double_entry'] == 0 && $userEntryCount > 0)
+        {
+            FlashMessage::set(false, 'Double entry not allowed on this tournament');
+            return new RedirectResponse('/tournament/list');
+        }
+
         $requiredFields = [
             'debate_type' => AttributeType::TEXT
         ];
@@ -400,7 +414,7 @@ class TournamentController extends BaseController
 
         if ($this->tm->isJoined(Security::getUser()->getId(), $request->get('debate_type')))
         {
-            FlashMessage::set(false, 'You are already joined to this debate on this tournament!');
+            FlashMessage::set(false, 'You are already joined or you have pending partner request to this debate on this tournament!');
             return new RedirectResponse($request->headers->get('referer'));
         }
 
