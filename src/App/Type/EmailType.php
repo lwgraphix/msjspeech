@@ -20,6 +20,7 @@ class EmailType
     const ACCOUNT_RESTORE_ACCESS = 13; // done
     const PARTNER_CANCELLED = 14; // done
     const TOURNAMENT_REGISTRATION_APPROVED = 15;
+    const SYSTEM_SETTINGS_CHANGED = 16;
 
     const NAMES = [
         'Membership registration',
@@ -37,6 +38,7 @@ class EmailType
         'Tournament judge',
         'Account restore access',
         'Partner request cancelled',
-        'Tournament registration approved'
+        'Tournament registration approved',
+        'System settings changed'
     ];
 }

@@ -102,6 +102,7 @@ class AdminController extends BaseController {
     public function settingsSaveListAction(Request $request)
     {
         Security::setAccessLevel(UserType::ADMINISTRATOR);
+        $changedFields = null;
         foreach($request->request->all() as $name => $value)
         {
             // check equals
@@ -119,8 +120,14 @@ class AdminController extends BaseController {
                 return new RedirectResponse('/admin/settings');
             }
 
+            $changedFields .= $name . ': from ' . $oldValue . ' to ' . $value . PHP_EOL;
+
             SystemSettings::getInstance()->set($name, $value);
         }
+
+        Email::getInstance()->createMessage(EmailType::SYSTEM_SETTINGS_CHANGED, [
+            'changed_fields' => $changedFields,
+        ], Security::getUser(), SystemSettings::getInstance()->get('bcc_receiver'));
 
         FlashMessage::set(true, 'Settings updated');
         return new RedirectResponse('/admin/settings');

@@ -135,6 +135,10 @@ class Email
         EmailType::TOURNAMENT_REGISTRATION_APPROVED => [
             'tournament_name',
             'event_name'
+        ],
+
+        EmailType::SYSTEM_SETTINGS_CHANGED => [
+            'changed_fields'
         ]
     ];
 

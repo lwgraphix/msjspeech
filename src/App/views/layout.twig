@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{{ system_settings.get('site_name') }}</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
@@ -17,6 +18,30 @@
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script src="/assets/js/jquery-2.2.3.min.js"></script>
+    <style>
+        .sidebar-menu li > a > .fa-angle-right, .sidebar-menu li > a > .pull-right-container > .fa-angle-right {
+            width: auto;
+            height: auto;
+            padding: 0;
+            margin-right: 10px;
+        }
+        .sidebar-menu li.active>a>.fa-angle-right,.sidebar-menu li.active>a>.pull-right-container>.fa-angle-right {
+            -webkit-transform:rotate(90deg);
+            -ms-transform:rotate(90deg);
+            -o-transform:rotate(90deg);
+            transform:rotate(90deg)
+        }
+
+        .table.table-bordered {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .table.table-bordered th.header {
+            vertical-align: top !important;
+            padding-right: 17px !important;
+        }
+    </style>
 </head>
 
 <body class="hold-transition skin-blue sidebar-mini {% block body_classes %}{% endblock %}">

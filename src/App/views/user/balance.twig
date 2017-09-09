@@ -176,21 +176,23 @@
             </thead>
             <tbody>
                 {% for transaction in history %}
-                    <tr>
-                        <td>{{ transaction.id }}</td>
-                        <td data-amount="{{ transaction.amount }}"><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
-                        <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
-                        <td>{{ transaction.memo_1 }}</td>
-                        <td>{{ transaction.memo_2 }}</td>
-                        <td>{{ transaction.memo_3 }}</td>
-                        <td>{{ transaction.memo_4 }}</td>
-                        <td>{{ transaction.memo_5 }}</td>
-                        {% if admin_mode is defined and user.role == 5 and transaction.type != 0%}
-                            <td>
-                                <button onclick="deleteTransaction({{ transaction.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
-                            </td>
-                        {% endif %}
-                    </tr>
+                    {% if not (transaction.amount == 0 and (transaction.type in [3, 4, 5])) or admin_mode is defined %}
+                        <tr>
+                            <td>{{ transaction.id }}</td>
+                            <td data-amount="{{ transaction.amount }}"><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
+                            <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
+                            <td>{{ transaction.memo_1 }}</td>
+                            <td>{{ transaction.memo_2 }}</td>
+                            <td>{{ transaction.memo_3 }}</td>
+                            <td>{{ transaction.memo_4 }}</td>
+                            <td>{{ transaction.memo_5 }}</td>
+                            {% if admin_mode is defined and user.role == 5 and transaction.type != 0%}
+                                <td>
+                                    <button onclick="deleteTransaction({{ transaction.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>

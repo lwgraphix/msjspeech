@@ -18,7 +18,7 @@ class Menu
 
     const HEADER_FORMAT = '<li class="header">%s</li>';
     const ITEM_FORMAT = '<li class="%s"><a href="%s"><i class="fa fa-%s"></i> <span>%s</span></a></li>';
-    const ITEM_MULTILEVEL_START_FORMAT = '<li class="treeview %s"><a href="javascript:;"><i class="fa fa-%s"></i><span>%s</span><span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a><ul class="treeview-menu">';
+    const ITEM_MULTILEVEL_START_FORMAT = '<li class="treeview %s"><a href="javascript:;"><i class="fa fa-%s"></i><span>%s</span><span class="pull-right-container"><i class="fa fa-angle-right pull-right"></i></span></a><ul class="treeview-menu">';
     const ITEM_MULTILEVEL_END_FORMAT = '</ul>';
 
     public function add(MenuGroup $group)
