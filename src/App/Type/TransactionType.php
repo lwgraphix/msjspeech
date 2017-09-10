@@ -17,6 +17,6 @@ class TransactionType
         'Manual',
         'Tournament join',
         'Tournament refund',
-        'Tournament fee'
+        'Tournament fine'
     ];
 }

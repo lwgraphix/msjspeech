@@ -11,9 +11,23 @@ class DateUtil
         return $now > $point;
     }
 
-    public static function convertToUSATime($timestamp)
+    public static function convertToTimestamp($usaDate)
+    {
+        // mm-dd-yyyy
+        $exp = explode('/', $usaDate);
+        return $exp[2] . '-' . $exp[0] . '-' . $exp[1] . ' 00:00:00';
+    }
+
+    public static function convertToUSATime($timestamp, $withoutHours = false)
     {
         $d = new \DateTime($timestamp);
-        return $d->format('m/d/Y h:i A');
+        if ($withoutHours)
+        {
+            return $d->format('m/d/Y');
+        }
+        else
+        {
+            return $d->format('m/d/Y h:i A');
+        }
     }
 }

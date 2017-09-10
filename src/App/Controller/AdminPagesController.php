@@ -80,6 +80,13 @@ class AdminPagesController extends BaseController {
      */
     public function deletePageAction(Request $request)
     {
+        $page = $this->pm->getById($request->get('id'));
+        if ($page['slug'] == 'terms' || $page['slug'] == 'home')
+        {
+            FlashMessage::set(false, 'Access denied');
+            return new RedirectResponse('/admin/pages/list');
+        }
+
         $this->pm->delete($request->get('id'));
         FlashMessage::set(true, 'Page deleted');
         return new RedirectResponse('/admin/pages/list');

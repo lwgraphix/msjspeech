@@ -20,7 +20,11 @@
                         {% endfor %}
                     </select>
                 {% else %}
-                    <input maxlength="{{ (setting.name == 'site_name') ? '20' : '' }}" name="{{ setting.name }}" value="{{ setting.value }}" type="text" class="form-control" id="{{ setting.name }}">
+                    {% if setting.name == 'email_signature' or setting.name == 'membership_text' %}
+                        <textarea class="form-control" rows="3" id="{{ setting.name }}" name="{{ setting.name }}">{{ setting.value }}</textarea>
+                    {% else %}
+                        <input maxlength="{{ (setting.name == 'site_name') ? '20' : '' }}" name="{{ setting.name }}" value="{{ setting.value }}" type="text" class="form-control" id="{{ setting.name }}">
+                    {% endif %}
                 {% endif %}
             </div>
         {% endfor %}

@@ -32,7 +32,9 @@
                         <td>{{ not page.reason ? '-' : page.reason }}</td>
                         <td>
                             <a href="/pages/{{ page.slug }}/edit" class="btn btn-warning btn-xs"><i class="fa fa-pencil"></i> Edit</a>
-                            <button onclick="deletePageConfirm({{ page.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
+                            {% if not (page.slug == 'terms' or page.slug == 'home') %}
+                                <button onclick="deletePageConfirm({{ page.id }})" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i> Delete</button>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

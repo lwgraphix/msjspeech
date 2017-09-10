@@ -16,7 +16,7 @@
         </div>
         <div class="box-body">
             {% set user_balance = (admin_mode is defined) ? view_user.balance : user.balance %}
-            <h4>Your current balance: {{ user_balance|number_format(2, '.', ',') }}$</h4>
+            <h4>Your current balance: {{ ('$' ~ user_balance|number_format(2, '.', ','))|replace({"$-": "-$"}) }}</h4>
 
             {% if system_settings.get('payment_allowed') == 1 %}
                 <button class="btn btn-primary" data-toggle="modal" data-target="#deposit"><i class="fa fa-credit-card"></i> Deposit</button>
@@ -179,7 +179,7 @@
                     {% if not (transaction.amount == 0 and (transaction.type in [3, 4, 5])) or admin_mode is defined %}
                         <tr>
                             <td>{{ transaction.id }}</td>
-                            <td data-amount="{{ transaction.amount }}"><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ transaction.amount|number_format(2, '.', ',') }}$</span></td>
+                            <td data-amount="{{ transaction.amount }}"><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ ('$' ~ transaction.amount|number_format(2, '.', ','))|replace({"$-": "-$"}) }}</span></td>
                             <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
                             <td>{{ transaction.memo_1 }}</td>
                             <td>{{ transaction.memo_2 }}</td>

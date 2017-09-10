@@ -9,9 +9,9 @@ class Tournaments extends AbstractMigration
         $table = $this->table('tournaments');
         $table
             ->addColumn('name', 'string', ['null' => false])
-            ->addColumn('event_start', 'timestamp', ['null' => false])
-            ->addColumn('entry_deadline', 'timestamp', ['null' => false])
-            ->addColumn('drop_deadline', 'timestamp', ['null' => false])
+            ->addColumn('event_start', 'datetime', ['null' => false])
+            ->addColumn('entry_deadline', 'datetime', ['null' => false])
+            ->addColumn('drop_deadline', 'datetime', ['null' => false])
             ->create();
     }
 

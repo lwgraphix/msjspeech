@@ -179,9 +179,9 @@ class TournamentsModel extends BaseModel
 
         $tournamentId = MySQL::get()->exec($sql, [
             'n' => trim($name),
-            'es' => $this->_convertDateToTimestamp($startDate),
-            'ed' => $this->_convertDateToTimestamp($deadlineDate),
-            'dd' => $this->_convertDateToTimestamp($dropDeadlineDate),
+            'es' => $startDate,
+            'ed' => $deadlineDate,
+            'dd' => $dropDeadlineDate,
             'am' => $approveMethod,
             'd' => $description,
             'psd' => $pStartDate,
@@ -461,9 +461,9 @@ class TournamentsModel extends BaseModel
                 WHERE id = :id';
         MySQL::get()->exec($sql, [
             'n' => $name,
-            'es' => $this->_convertDateToTimestamp($startDate),
-            'ed' => $this->_convertDateToTimestamp($deadlineDate),
-            'dd' => $this->_convertDateToTimestamp($dropDeadlineDate),
+            'es' => $startDate,
+            'ed' => $deadlineDate,
+            'dd' => $dropDeadlineDate,
             'am' => $approveMethod,
             'd' => $description,
             'psd' => str_replace('/', '-', $pStartDate),
@@ -617,7 +617,7 @@ class TournamentsModel extends BaseModel
                     -($eventInfo['drop_fee_cost']),
                     TransactionType::TOURNAMENT_FEE,
                     0,
-                    'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
+                    'Drop fine "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
                     null,
                     null,
                     null,
@@ -653,7 +653,7 @@ class TournamentsModel extends BaseModel
                     -($eventInfo['drop_fee_cost']),
                     TransactionType::TOURNAMENT_FEE,
                     0,
-                    'Drop fee "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
+                    'Drop fine "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because you drop tournament after drop deadline',
                     null,
                     null,
                     null,
@@ -1012,12 +1012,5 @@ class TournamentsModel extends BaseModel
         }
 
         return $names;
-    }
-
-    private function _convertDateToTimestamp($date)
-    {
-        // $date - yyyy/mm/dd
-        // needed date yyyy-mm-dd hh:ii:ss
-        return implode('-', (explode('/', $date))) . ' 00:00:00';
     }
 }

@@ -52,7 +52,7 @@
             </div>
 
             <div class="form-group">
-                <label for="approve_method">Approve members method <span style="color: red">*</span></label>
+                <label for="approve_method">Approval method <span style="color: red">*</span></label>
                 <select name="approve_method" id="approve_method" class="form-control">
                     <option value="0">Auto</option>
                     <option value="1">Manually</option>
@@ -144,7 +144,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="dt_drop_cost">Drop fee after deadline <span style="color: red">*</span></label>
+                        <label for="dt_drop_cost">Drop fine after deadline <span style="color: red">*</span></label>
                         <input required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
                     </div>
 
@@ -158,11 +158,11 @@
 {% block javascript %}
     <script src="/assets/js/jquery.inputmask.bundle.min.js"></script>
     <script>
-        $('#reg_start').inputmask('yyyy/mm/dd');
-        $('#reg_deadline').inputmask('yyyy/mm/dd');
-        $('#drop_deadline').inputmask('yyyy/mm/dd');
-        $("#start_date").inputmask('yyyy/mm/dd');
-        $("#end_date").inputmask('yyyy/mm/dd');
+        $('#reg_start').inputmask('mm/dd/yyyy');
+        $('#reg_deadline').inputmask('mm/dd/yyyy');
+        $('#drop_deadline').inputmask('mm/dd/yyyy');
+        $("#start_date").inputmask('mm/dd/yyyy');
+        $("#end_date").inputmask('mm/dd/yyyy');
     </script>
 
     <script>

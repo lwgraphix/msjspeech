@@ -24,7 +24,7 @@
             <th>Parent email</th>
             <th>Created at</th>
             <th>Last login</th>
-            <th>Payed membership fee</th>
+            <th>Paid membership contribution</th>
             <th>Role</th>
             <th>Actions</th>
         </tr>
@@ -40,7 +40,7 @@
                 <td>{{ user.parent_email }}</td>
                 <td>{{ user.created_at|date('m/d/Y h:i A') }}</td>
                 <td>{{ (user.last_login) ? user.last_login|date('m/d/Y h:i A') : '-' }}</td>
-                <td><span class="text-{{ user.payed_fee ? 'success' : 'danger' }}">{{ user.payed_fee ? user.payed_fee|number_format(2, '.', ',') ~ '$' : 'No' }}</span></td>
+                <td><span class="text-{{ user.payed_fee ? 'success' : 'danger' }}">{{ user.payed_fee ? ('$' ~ user.payed_fee|number_format(2, '.', ','))|replace({"$-": "-$"}) : 'No' }}</span></td>
                 <td>{{ roles[user.role] }}</td>
                 <td>
                     <button onclick="changeRole('{{ roles[user.role] }}', {{ user.id }})" class="btn btn-info btn-xs"><i class="fa fa-users"></i> Change user role</button>

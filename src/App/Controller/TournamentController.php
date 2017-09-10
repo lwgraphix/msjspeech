@@ -414,7 +414,7 @@ class TournamentController extends BaseController
 
         if ($this->tm->isJoined(Security::getUser()->getId(), $request->get('debate_type')))
         {
-            FlashMessage::set(false, 'You are already joined or you have pending partner request to this debate on this tournament!');
+            FlashMessage::set(false, 'You have already registered for this event or you have a pending partner request for this event.');
             return new RedirectResponse($request->headers->get('referer'));
         }
 

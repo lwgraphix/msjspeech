@@ -92,14 +92,14 @@ class AdminTournamentController extends BaseController {
     {
         $tId = $this->tm->create(
             $request->get('name'),
-            $request->get('reg_start'),
-            $request->get('reg_deadline'),
-            $request->get('drop_deadline'),
+            DateUtil::convertToTimestamp($request->get('reg_start')),
+            DateUtil::convertToTimestamp($request->get('reg_deadline')),
+            DateUtil::convertToTimestamp($request->get('drop_deadline')),
             $request->get('approve_method'),
             $request->get('events'),
             $request->get('description'),
-            $request->get('start_date'),
-            $request->get('end_date'),
+            DateUtil::convertToTimestamp($request->get('start_date')),
+            DateUtil::convertToTimestamp($request->get('end_date')),
             $request->get('private'),
             $request->get('groups'),
             $request->get('double_entry')
@@ -131,6 +131,13 @@ class AdminTournamentController extends BaseController {
 
         $isStarted = DateUtil::isPassed($tournament['tournament']['event_start']);
         $userGroups = $this->gm->getAll();
+
+        // rewrite date format
+        $tournament['tournament']['event_start'] = DateUtil::convertToUSATime($tournament['tournament']['event_start'], true);
+        $tournament['tournament']['entry_deadline'] = DateUtil::convertToUSATime($tournament['tournament']['entry_deadline'], true);
+        $tournament['tournament']['drop_deadline'] = DateUtil::convertToUSATime($tournament['tournament']['drop_deadline'], true);
+        $tournament['tournament']['date_start'] = DateUtil::convertToUSATime($tournament['tournament']['date_start'], true);
+        $tournament['tournament']['date_end'] = DateUtil::convertToUSATime($tournament['tournament']['date_end'], true);
 
         return $this->out($this->twig->render('admin/tournament/edit.twig', [
             'data' => $tournament,
@@ -254,18 +261,18 @@ class AdminTournamentController extends BaseController {
             }
         }
 
-        $regStart = ($tournamentStarted) ? $tournament['tournament']['event_start'] : $request->get('reg_start');
+        $regStart = ($tournamentStarted) ? $tournament['tournament']['event_start'] : DateUtil::convertToTimestamp($request->get('reg_start'));
 
         $this->tm->update(
             $tournamentId,
             $request->get('name'),
             $regStart,
-            $request->get('reg_deadline'),
-            $request->get('drop_deadline'),
+            DateUtil::convertToTimestamp($request->get('reg_deadline')),
+            DateUtil::convertToTimestamp($request->get('drop_deadline')),
             $request->get('approve_method'),
             $request->get('description'),
-            $request->get('start_date'),
-            $request->get('end_date'),
+            DateUtil::convertToTimestamp($request->get('start_date')),
+            DateUtil::convertToTimestamp($request->get('end_date')),
             intval($request->get('private')),
             intval($request->get('double_entry'))
         );

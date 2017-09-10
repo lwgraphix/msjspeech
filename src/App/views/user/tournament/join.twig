@@ -1,14 +1,14 @@
 {% extends 'layout.twig' %}
 {% block title %}
-    Join tournament "{{ tournament.name }}"
+    Registration for tournament "{{ tournament.name }}"
 {% endblock %}
 
 {% block content %}
     <form onsubmit="return checkboxes_validate()" enctype="multipart/form-data" method="post">
         <div class="form-group">
-            <label for="debate_type">Debate <span style="color: red">*</span></label>
+            <label for="debate_type">Event <span style="color: red">*</span></label>
             <select onchange="loadEvent(this.value)" required name="debate_type" class="form-control" id="debate_type">
-                <option value="" selected>Choose debate</option>
+                <option value="" selected>Choose event</option>
                 {% for event in events %}
                     <option value="{{ event.id }}">{{ event.name }}</option>
                 {% endfor %}
@@ -17,8 +17,8 @@
         <div id="event-details" style="display: none">
             <div class="panel panel-default">
                 <div class="panel-body" style="padding-bottom: 0">
-                    <p><b>Cost:</b> <span id="event-details-cost"></span>$</p>
-                    <p><b>Drop after deadline fee:</b> <span id="event-details-drop_cost"></span>$</p>
+                    <p><b>Cost:</b> $<span id="event-details-cost"></span></p>
+                    <p><b>Drop after deadline fee:</b> $<span id="event-details-drop_cost"></span></p>
                     <p><b>Type:</b> <span id="event-details-debate_type"></span></p>
                     <div class="form-group" id="event-details-partner" style="display: none">
                         <label for="partner_id">Choose partner <span style="color: red">*</span></label>
@@ -76,7 +76,7 @@
             <input required type="checkbox">
             <label style="font-weight: normal;">I agree to the <a target="_blank" href="/pages/terms">terms of service</a></label>
         </div>
-        <button class="btn btn-success btn-block"><i class="fa fa-check"></i> Join this tournament</button>
+        <button class="btn btn-success btn-block"><i class="fa fa-check"></i> Register for this tournament</button>
     </form>
 
     <script>

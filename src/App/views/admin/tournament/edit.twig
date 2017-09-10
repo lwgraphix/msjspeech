@@ -45,7 +45,7 @@
             </div>
 
             <div class="form-group">
-                <label for="approve_method">Approve members method <span style="color: red">*</span></label>
+                <label for="approve_method">Approval method <span style="color: red">*</span></label>
                 <select name="approve_method" id="approve_method" class="form-control">
                     <option {{ data.tournament.approve_method == 0 ? 'selected' : '' }} value="0">Auto</option>
                     <option {{ data.tournament.approve_method == 1 ? 'selected' : '' }} value="1">Manually</option>
@@ -144,7 +144,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="dt_drop_cost">Drop fee after deadline <span style="color: red">*</span></label>
+                                    <label for="dt_drop_cost">Drop fine after deadline <span style="color: red">*</span></label>
                                     <input {{ is_started ? 'disabled' : '' }} value="{{ event.drop_fee_cost }}" required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
                                 </div>
 
@@ -153,7 +153,7 @@
                                 {% endif %}
                             </div>
                             {% if is_started %}
-                                <a style="margin-bottom: 15px; margin-left: 15px" href="/admin/email/send/3?tournament_id={{ data.tournament.id }}&event_id={{ event.id }}" class="btn btn-info"><i class="fa fa-paper-plane"></i> Send mass email to this event applicants</a>
+                                <a style="margin-bottom: 15px; margin-left: 15px" href="/admin/email/send/3?tournament_id={{ data.tournament.id }}&event_id={{ event.id }}" class="btn btn-info"><i class="fa fa-paper-plane"></i> Send mass email to this event participants</a>
                             {% endif %}
                         </div>
                     </form>
@@ -260,7 +260,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="dt_drop_cost">Drop fee after deadline <span style="color: red">*</span></label>
+                        <label for="dt_drop_cost">Drop fine after deadline <span style="color: red">*</span></label>
                         <input required name="dt_drop_cost" id="dt_drop_cost" type="number" class="form-control" />
                     </div>
 
@@ -327,11 +327,11 @@
 {% block javascript %}
     <script src="/assets/js/jquery.inputmask.bundle.min.js"></script>
     <script>
-        $('#reg_start').inputmask('yyyy/mm/dd');
-        $('#reg_deadline').inputmask('yyyy/mm/dd');
-        $('#drop_deadline').inputmask('yyyy/mm/dd');
-        $('#start_date').inputmask('yyyy/mm/dd');
-        $('#end_date').inputmask('yyyy/mm/dd');
+        $('#reg_start').inputmask('mm/dd/yyyy');
+        $('#reg_deadline').inputmask('mm/dd/yyyy');
+        $('#drop_deadline').inputmask('mm/dd/yyyy');
+        $('#start_date').inputmask('mm/dd/yyyy');
+        $('#end_date').inputmask('mm/dd/yyyy');
     </script>
 
     <script>

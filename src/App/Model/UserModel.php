@@ -204,17 +204,24 @@ class UserModel extends BaseModel
         return $data;
     }
 
-    public function restore($userId, $email)
+    public function restore($userId)
     {
-        $exists = MySQL::get()->fetchColumn('SELECT hash FROM restore_users WHERE user_id = :uid AND status = 0', [
+        $exists = MySQL::get()->fetchColumn('SELECT id FROM restore_users WHERE user_id = :uid AND status = 0', [
             'uid' => $userId
         ]);
 
-        if ($exists) return false;
-
         $hash = md5(time() . $userId . rand(0, 99999));
-        $sql = 'INSERT INTO restore_users (hash, user_id, status) VALUES (:h, :uid, 0)';
-        MySQL::get()->exec($sql, ['h' => $hash, 'uid' => $userId]);
+
+        if ($exists)
+        {
+            $sql = 'UPDATE restore_users SET hash = :h WHERE id = :id';
+            MySQL::get()->exec($sql, ['h' => $hash, 'id' => $exists]);
+        }
+        else
+        {
+            $sql = 'INSERT INTO restore_users (hash, user_id, status) VALUES (:h, :uid, 0)';
+            MySQL::get()->exec($sql, ['h' => $hash, 'uid' => $userId]);
+        }
 
         $user = User::loadById($userId);
         Email::getInstance()->createMessage(EmailType::ACCOUNT_RESTORE_ACCESS, [

@@ -50,13 +50,13 @@ class AuthController extends BaseController
 
         if ($user === StatusCode::USER_BAD_CREDENTIALS)
         {
-            FlashMessage::set(false, 'Bad credentials. Check your email/password and try again.');
+            FlashMessage::set(false, 'Incorrect email or password. Please try again.');
         }
         else
         {
             if ($user->getRole() == UserType::PENDING)
             {
-                FlashMessage::set(false, 'Your account in pending approval status. Wait until administrator approve your account.');
+                FlashMessage::set(false, 'You are not allowed to perform this action because your account is still pending. You will receive an email when it is approved.');
             }
             elseif ($user->getRole() == UserType::FROZEN)
             {
@@ -191,8 +191,6 @@ class AuthController extends BaseController
         }
         else
         {
-            // TODO: send email
-
             FlashMessage::set(true, 'You are registered! You can access your profile after administrator approvement. Wait for email message with approve status.');
             return new RedirectResponse('/');
         }
@@ -269,23 +267,13 @@ class AuthController extends BaseController
     public function authRestorePersistAction(Request $request)
     {
         $user = $this->um->getByEmail($request->get('email'));
-        if (!$user)
-        {
-            FlashMessage::set(true, 'If you are registered, you will receive reset link on your email');
-        }
-        else
-        {
-            $status = $this->um->restore($user['id'], $user['email']);
-            if (!$status)
-            {
-                FlashMessage::set(false, 'You already requested account restore. Check your email');
-            }
-            else
-            {
-                FlashMessage::set(true, 'If you are registered, you will receive reset link on your email');
-            }
 
+        if ($user !== false)
+        {
+            $this->um->restore($user['id']);
         }
+
+        FlashMessage::set(true, 'If you are registered, you will receive reset link on your email');
 
         return new RedirectResponse($request->headers->get('referer'));
     }

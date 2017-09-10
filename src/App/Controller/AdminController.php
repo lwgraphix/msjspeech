@@ -321,7 +321,7 @@ class AdminController extends BaseController {
             $appendix
         );
 
-        FlashMessage::set(true, 'Messages sended');
+        FlashMessage::set(true, 'Message sent');
         return new RedirectResponse($request->headers->get('referer'));
     }
 
