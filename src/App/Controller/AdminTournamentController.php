@@ -399,7 +399,7 @@ class AdminTournamentController extends BaseController {
 
         if (DateUtil::isPassed($tournament['tournament']['event_start']))
         {
-            FlashMessage::set(false, 'Tournament is started! You can\'t edit this tournament.');
+            FlashMessage::set(false, 'You cannot edit this tournament because registration for this tournament has already opened. Contact a user with administrator access.');
             return new RedirectResponse('/');
         }
 

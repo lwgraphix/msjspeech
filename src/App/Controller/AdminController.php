@@ -150,7 +150,7 @@ class AdminController extends BaseController {
             $binaryArchive = Model::get('attachment')->getAllAttachmentZip($attrId);
             if (!$binaryArchive)
             {
-                FlashMessage::set(false, 'Not found files for this field');
+                FlashMessage::set(false, 'Did not find files for this field');
                 return new RedirectResponse($request->headers->get('referer'));
             }
             else
@@ -308,17 +308,14 @@ class AdminController extends BaseController {
             return new RedirectResponse($request->headers->get('referer'));
         }
 
-        $content = $request->get('content') . PHP_EOL;
-        $content .= "==================================" . PHP_EOL;
-        $content .= "This message sent " . $appendix . " by " . Security::getUser()->getFullName() . PHP_EOL;
-
         $this->em->sendMassEmail(
             $list,
             $sendToParents,
             $sendToStudents,
             $request->get('subject'),
-            $content,
-            $appendix
+            $request->get('content'),
+            $appendix,
+            Security::getUser()
         );
 
         FlashMessage::set(true, 'Message sent');
@@ -336,7 +333,7 @@ class AdminController extends BaseController {
 
         if ($type > count($templates) - 1)
         {
-            FlashMessage::set(false, 'Email type not exists');
+            FlashMessage::set(false, 'Email type does not exist');
             return new RedirectResponse('/admin/email/list');
         }
 
@@ -359,7 +356,7 @@ class AdminController extends BaseController {
 
         if ($type > count($templates) - 1)
         {
-            FlashMessage::set(false, 'Email type not exists');
+            FlashMessage::set(false, 'Email type does not exist');
             return new RedirectResponse('/admin/email/list');
         }
 

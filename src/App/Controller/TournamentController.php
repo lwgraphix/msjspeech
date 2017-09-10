@@ -223,14 +223,14 @@ class TournamentController extends BaseController
                     $userEntryCount = $this->tm->getUserEntryCount(Security::getUser()->getId(), $eventInfo['tournament_id']);
                     if ($eventInfo['double_entry'] == 0 && $userEntryCount > 0 && intval($request->get('decision')) == 1)
                     {
-                        FlashMessage::set(false, 'Double entry not allowed on this tournament');
+                        FlashMessage::set(false, 'Double entry not allowed at this tournament');
                         return $this->out('no');
                     }
 
                     $status = $this->tm->setPartnerDecision($eventId, $eventInfo, intval($request->get('decision')));
                     if (!$status)
                     {
-                        FlashMessage::set(false, 'You already joined this event with other partner');
+                        FlashMessage::set(false, 'You have already registered for this event with another partner.');
                         return $this->out('no');
                     }
                     else
@@ -278,19 +278,19 @@ class TournamentController extends BaseController
 
         if (!DateUtil::isPassed($tournament['tournament']['event_start']))
         {
-            FlashMessage::set(false, 'Tournament registration is not started! You can\'t join this tournament.');
+            FlashMessage::set(false, 'Registration for this tournament is not open yet.');
             return new RedirectResponse('/tournament/list');
         }
 
         if (DateUtil::isPassed($tournament['tournament']['entry_deadline']))
         {
-            FlashMessage::set(false, 'Tournament registration is ended! You can\'t join this tournament.');
+            FlashMessage::set(false, 'The registration deadline for this tournament has passed');
             return new RedirectResponse('/tournament/list');
         }
 
         if (!$this->tm->isUserAllowedToJoin($tournamentId, Security::getUser()->getId(), $tournament['tournament']['private']))
         {
-            FlashMessage::set(false, 'You dont allowed to join this tournament');
+            FlashMessage::set(false, 'You are not allowed to register for this tournament.');
             return new RedirectResponse('/tournament/list');
         }
 
@@ -333,26 +333,26 @@ class TournamentController extends BaseController
 
         if (!DateUtil::isPassed($tournament['tournament']['event_start']))
         {
-            FlashMessage::set(false, 'Tournament registration is not started! You can\'t join this tournament.');
+            FlashMessage::set(false, 'Registration for this tournament is not open yet.');
             return new RedirectResponse('/tournament/list');
         }
 
         if (DateUtil::isPassed($tournament['tournament']['entry_deadline']))
         {
-            FlashMessage::set(false, 'Tournament registration is ended! You can\'t join this tournament.');
+            FlashMessage::set(false, 'The registration deadline for this tournament has passed');
             return new RedirectResponse('/tournament/list');
         }
 
         if (!$this->tm->isUserAllowedToJoin($tournamentId, Security::getUser()->getId(), $tournament['tournament']['private']))
         {
-            FlashMessage::set(false, 'You dont allowed to join this tournament');
+            FlashMessage::set(false, 'You are not allowed to register for this tournament.');
             return new RedirectResponse('/tournament/list');
         }
 
         $userEntryCount = $this->tm->getUserEntryCount(Security::getUser()->getId(), $tournament['tournament']['id']);
         if ($tournament['tournament']['double_entry'] == 0 && $userEntryCount > 0)
         {
-            FlashMessage::set(false, 'Double entry not allowed on this tournament');
+            FlashMessage::set(false, 'Double entry not allowed at this tournament');
             return new RedirectResponse('/tournament/list');
         }
 
@@ -380,7 +380,7 @@ class TournamentController extends BaseController
                 $fld = $request->files->get($field);
                 if ($fld->getClientMimeType() != 'application/pdf')
                 {
-                    FlashMessage::set(false, 'You can upload only PDF file!');
+                    FlashMessage::set(false, 'File types other than PDF are not allowed.');
                     return new RedirectResponse($request->headers->get('referer'));
                 }
             }
@@ -391,7 +391,7 @@ class TournamentController extends BaseController
 
             if ($fld === null)
             {
-                FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
+                FlashMessage::set(false, 'You forgot to fill out one or more of the required fields. Please fill it out and try again.');
                 return new RedirectResponse($request->headers->get('referer'));
             }
         }
@@ -408,7 +408,7 @@ class TournamentController extends BaseController
 
         if ($eventInfo === null)
         {
-            FlashMessage::set(false, 'Selected debate type not found.');
+            FlashMessage::set(false, 'Selected event not found.');
             return new RedirectResponse($request->headers->get('referer'));
         }
 
@@ -424,21 +424,21 @@ class TournamentController extends BaseController
         {
             if ($request->get('partner_id') === null)
             {
-                FlashMessage::set(false, 'You need to select your partner for join this debate');
+                FlashMessage::set(false, 'You need to select a partner to register for this event.');
                 return new RedirectResponse($request->headers->get('referer'));
             }
             else
             {
                 if ($request->get('partner_id') == Security::getUser()->getId())
                 {
-                    FlashMessage::set(false, 'You can\'t join tournament with yourself as partner');
+                    FlashMessage::set(false, 'You are not allowed to select yourself as your own partner.');
                     return new RedirectResponse($request->headers->get('referer'));
                 }
                 else
                 {
                     if (!$this->tm->isUserAllowedToJoin($tournamentId, $request->get('partner_id'), $tournament['tournament']['private']))
                     {
-                        FlashMessage::set(false, 'Your partner can\'t join this tournament');
+                        FlashMessage::set(false, 'The partner you selected is not allowed to register for this tournament.');
                         return new RedirectResponse($request->headers->get('referer'));
                     }
                     else
@@ -470,7 +470,7 @@ class TournamentController extends BaseController
                 $partnerUser
             );
 
-            FlashMessage::set(true, 'You successfully joined the tournament');
+            FlashMessage::set(true, 'You have successfully registered for this tournament.');
             return new RedirectResponse('/tournament/list');
         }
     }

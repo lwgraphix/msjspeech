@@ -15,7 +15,7 @@ class TransactionType
         'Card deposit',
         'Membership contribution',
         'Manual',
-        'Tournament join',
+        'Tournament registration',
         'Tournament refund',
         'Tournament fine'
     ];

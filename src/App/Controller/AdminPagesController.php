@@ -111,7 +111,7 @@ class AdminPagesController extends BaseController {
 
         if ($status !== true && $status == StatusCode::PAGE_SLUG_EXISTS)
         {
-            FlashMessage::set(false, 'Page with this slug exists! Choose another slug for page and try again.');
+            FlashMessage::set(false, 'This slug is already used by another page.');
             return $this->out($this->twig->render('admin/pages/create.twig', [
                 'flash_message' => FlashMessage::get(),
                 'categories' => $categories
@@ -146,7 +146,7 @@ class AdminPagesController extends BaseController {
 
         if ($status !== true && $status == StatusCode::PAGE_SLUG_EXISTS)
         {
-            FlashMessage::set(false, 'Page with this slug exists! Choose another slug for page and try again.');
+            FlashMessage::set(false, 'This slug is already used by another page.');
             return $this->out($this->twig->render('admin/pages/create.twig', [
                 'flash_message' => FlashMessage::get(),
                 'bad_submit' => true,
@@ -187,7 +187,7 @@ class AdminPagesController extends BaseController {
         $status = $this->cm->create($request->get('name'), $request->get('parent_id'));
         if ($status !== true && $status == StatusCode::CATEGORY_MAX_DEPTH)
         {
-            FlashMessage::set(false, 'Category max depth reached! Category don\'t created.');
+            FlashMessage::set(false, 'Category max depth reached! Category not created.');
 
         }
         else
@@ -209,7 +209,7 @@ class AdminPagesController extends BaseController {
 
         if ($status !== true && $status == StatusCode::CATEGORY_IS_PARENT)
         {
-            FlashMessage::set(false, 'Category have childrens! Remove all childrens of category and try again.');
+            FlashMessage::set(false, 'Category have children! Remove all children of category and try again.');
             return new RedirectResponse('/admin/pages/categories');
         }
         else

@@ -273,7 +273,7 @@ class UserController extends BaseController
 
                 if ($fld->getClientMimeType() != 'application/pdf')
                 {
-                    FlashMessage::set(false, 'You can upload only PDF file!');
+                    FlashMessage::set(false, 'File types other than PDF are not allowed.');
                     return new RedirectResponse($request->headers->get('referer'));
                 }
             }
@@ -284,7 +284,7 @@ class UserController extends BaseController
 
             if ($fld === null)
             {
-                FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
+                FlashMessage::set(false, 'You forgot to fill out one or more of the required fields. Please fill it out and try again.');
                 return new RedirectResponse($request->headers->get('referer'));
             }
         }
@@ -292,13 +292,13 @@ class UserController extends BaseController
         // email validation
         if (!filter_var($request->get('email'), FILTER_VALIDATE_EMAIL))
         {
-            FlashMessage::set(false, 'Wrong email address format. Check the typing of email correct and try again.');
+            FlashMessage::set(false, 'Wrong format for student email address. Please check for typos and try again.');
             return new RedirectResponse($request->headers->get('referer'));
         }
 
         if (!empty($request->get('parent_email')) && !filter_var($request->get('parent_email'), FILTER_VALIDATE_EMAIL))
         {
-            FlashMessage::set(false, 'Wrong parent email address format. Check the typing of email correct and try again.');
+            FlashMessage::set(false, 'Wrong format for parent email address. Please check for typos and try again.');
             return new RedirectResponse($request->headers->get('referer'));
         }
 
@@ -315,12 +315,12 @@ class UserController extends BaseController
         {
             if ($status == StatusCode::USER_EMAIL_EXISTS)
             {
-                FlashMessage::set(false, 'User with this email exists! Try another email.');
+                FlashMessage::set(false, 'This email address is already being used by another account');
                 return new RedirectResponse($request->headers->get('referer'));
             }
             else
             {
-                FlashMessage::set(false, 'Internal error. Please contact with administrator.');
+                FlashMessage::set(false, 'Internal error. Please contact your administrator.');
                 return new RedirectResponse($request->headers->get('referer'));
             }
         }

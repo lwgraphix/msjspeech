@@ -60,7 +60,7 @@ class AuthController extends BaseController
             }
             elseif ($user->getRole() == UserType::FROZEN)
             {
-                FlashMessage::set(false, 'Your account is frozen. Contact with administrator.');
+                FlashMessage::set(false, 'Your account is frozen. Contact your administrator.');
             }
             else
             {
@@ -116,7 +116,7 @@ class AuthController extends BaseController
                 $fld = $request->files->get($field);
                 if ($fld->getClientMimeType() != 'application/pdf')
                 {
-                    FlashMessage::set(false, 'You can upload only PDF file!');
+                    FlashMessage::set(false, 'File types other than PDF are not allowed.');
                     $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
                     return $this->out($this->twig->render('auth/register.twig', [
                         'attributes' => $attributes,
@@ -131,7 +131,7 @@ class AuthController extends BaseController
 
             if ($fld === null)
             {
-                FlashMessage::set(false, 'One of field is empty. Please fill all required fields and try again.');
+                FlashMessage::set(false, 'You forgot to fill out one or more of the required fields. Please fill it out and try again.');
                 $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
                 return $this->out($this->twig->render('auth/register.twig', [
                     'attributes' => $attributes,
@@ -143,7 +143,7 @@ class AuthController extends BaseController
         // email validation
         if (!filter_var($request->get('email'), FILTER_VALIDATE_EMAIL))
         {
-            FlashMessage::set(false, 'Wrong email address format. Check the typing of email correct and try again');
+            FlashMessage::set(false, 'Wrong format for student email address. Please check for typos and try again.');
             $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
             return $this->out($this->twig->render('auth/register.twig', [
                 'attributes' => $attributes,
@@ -153,7 +153,7 @@ class AuthController extends BaseController
 
         if (!filter_var($request->get('parent_email'), FILTER_VALIDATE_EMAIL))
         {
-            FlashMessage::set(false, 'Wrong parent email address format. Check the typing of email correct and try again');
+            FlashMessage::set(false, 'Wrong format for parent email address. Please check for typos and try again.');
             $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
             return $this->out($this->twig->render('auth/register.twig', [
                 'attributes' => $attributes,
@@ -168,7 +168,7 @@ class AuthController extends BaseController
         {
             if ($status == StatusCode::USER_EMAIL_EXISTS)
             {
-                FlashMessage::set(false, 'User with this email exists! Try another email or <a href="/auth/restore">restore</a> your account access.');
+                FlashMessage::set(false, 'This email address is already being used by another account. Try another email or <a href="/auth/restore">restore</a> your account access.');
                 return new RedirectResponse('/auth/register');
             }
             elseif ($status == StatusCode::STRIPE_CHARGE_FAILED)
@@ -181,7 +181,7 @@ class AuthController extends BaseController
             }
             else
             {
-                FlashMessage::set(false, 'Internal error. Please contact with administrator.');
+                FlashMessage::set(false, 'Internal error. Please contact your administrator.');
                 $attributes = Model::get('attribute')->getAll(AttributeGroupType::REGISTER);
                 return $this->out($this->twig->render('auth/register.twig', [
                     'attributes' => $attributes,
@@ -191,7 +191,7 @@ class AuthController extends BaseController
         }
         else
         {
-            FlashMessage::set(true, 'You are registered! You can access your profile after administrator approvement. Wait for email message with approve status.');
+            FlashMessage::set(true, 'You are registered! Your account is currently pending. You will receive an email when it is approved.');
             return new RedirectResponse('/');
         }
     }
@@ -273,7 +273,7 @@ class AuthController extends BaseController
             $this->um->restore($user['id']);
         }
 
-        FlashMessage::set(true, 'If you are registered, you will receive reset link on your email');
+        FlashMessage::set(true, 'If the email you entered is tied to an existing account, you will be emailed a password reset link.');
 
         return new RedirectResponse($request->headers->get('referer'));
     }

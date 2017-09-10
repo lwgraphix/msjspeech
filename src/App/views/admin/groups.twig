@@ -1,12 +1,12 @@
 {% extends 'layout.twig' %}
 {% block title %}
-    Members groups
+    Member group
 {% endblock %}
 
 {% block content_header %}
     <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title" style="width: 100%">Create new members group</h3>
+            <h3 class="box-title" style="width: 100%">Create new member group</h3>
         </div>
         <div class="box-body">
             <form method="post" action="/admin/groups/create">
@@ -16,7 +16,7 @@
                 </div>
                 <div class="form-group">
                     <input name="joinable" type="checkbox" checked id="joinable" />
-                    <label for="joinable">Can user join</label>
+                    <label for="joinable">Members can add themselves</label>
                 </div>
                 <button class="btn btn-success btn-block"><i class="fa fa-plus"></i> Create group</button>
             </form>
@@ -31,7 +31,7 @@
             <tr>
                 <th>#</th>
                 <th>Name</th>
-                <th>Can user join</th>
+                <th>Members can add themselves</th>
                 <th>Actions</th>
             </tr>
             </thead>

@@ -100,8 +100,13 @@ class EmailModel extends BaseModel
         return $list;
     }
 
-    public function sendMassEmail($list, $sendToParents, $sendToStudents, $subject, $content, $appendix = null)
+    public function sendMassEmail($list, $sendToParents, $sendToStudents, $subject, $content, $appendix = null, User $senderUser)
     {
+
+        $messageContent = $content;
+        $messageContent .= "==================================" . PHP_EOL;
+        $messageContent .= "This message sent " . $appendix . " by " . $senderUser->getFullName() . PHP_EOL;
+
         if (SystemSettings::getInstance()->get('email_provider') == EmailProviderType::AMAZON)
         {
             $messages = [];
@@ -120,7 +125,7 @@ class EmailModel extends BaseModel
                 }
                 $m->setFrom(SystemSettings::getInstance()->get('send_email_from'));
                 $m->setSubject($subject);
-                $m->setMessageFromString($content);
+                $m->setMessageFromString($messageContent);
                 $messages[] = $m;
             }
 
@@ -186,7 +191,7 @@ class EmailModel extends BaseModel
                     new \SendGrid\Email(null, SystemSettings::getInstance()->get('send_email_from')),
                     $subject,
                     new \SendGrid\Email(null, $to),
-                    new \SendGrid\Content("text/plain", $content)
+                    new \SendGrid\Content("text/plain", $messageContent)
                 );
 
                 if ($cc !== false)

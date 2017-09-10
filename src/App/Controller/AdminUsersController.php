@@ -124,7 +124,7 @@ class AdminUsersController extends BaseController {
             $transaction = Model::get('transaction_history')->getById($request->get('id'));
             if ($transaction['type'] == TransactionType::CARD_DEPOSIT)
             {
-                FlashMessage::set(false, 'You cant delete card deposit transaction');
+                FlashMessage::set(false, 'You are not allowed to delete card deposit transactions');
                 return $this->out('no');
             }
             else

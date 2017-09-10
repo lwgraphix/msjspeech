@@ -113,9 +113,8 @@
 
         {% if system_settings.get('membership_fee') > 0 and system_settings.get('payment_allowed') == 1 %}
             <blockquote>
-                <p>Membership contribution</p>
+                <p>Membership contribution ${{ system_settings.get('membership_fee') }}</p>
             </blockquote>
-            <h4>Recommended membership contribution: {{ system_settings.get('membership_fee') }}$</h4>
             <p>{{ system_settings.get('membership_text')|replace({"\n": "<br />"})|raw }}</p>
 
             <div style="width: 500px">

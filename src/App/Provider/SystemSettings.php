@@ -29,14 +29,14 @@ class SystemSettings
         ],
 
         [
-            'label' => '[System] Club user registration allowed',
+            'label' => '[System] Member registration allowed',
             'name' => 'register_allowed',
             'value' => 0,
             'boolean' => 1
         ],
 
         [
-            'label' => '[System] Allow users negative balance',
+            'label' => '[System] Allow members with a negative balance to register for tournaments',
             'name' => 'negative_balance',
             'value' => 0,
             'boolean' => 1,
@@ -103,7 +103,7 @@ class SystemSettings
         ],
 
         [
-            'label' => '[Email] BCC send to',
+            'label' => '[Email] BCC sent to',
             'name' => 'bcc_receiver',
             'value' => null,
             'boolean' => 0,
