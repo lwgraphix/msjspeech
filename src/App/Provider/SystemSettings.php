@@ -64,6 +64,13 @@ class SystemSettings
         ],
 
         [
+            'label' => '[System] Member registration description text (html tags supported)',
+            'name' => 'membership_registration_description',
+            'value' => null,
+            'boolean' => 0
+        ],
+
+        [
             'label' => '[Payments] Credit card payment enabled',
             'name' => 'payment_allowed',
             'value' => 0,

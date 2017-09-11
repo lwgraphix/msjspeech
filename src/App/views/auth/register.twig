@@ -28,6 +28,9 @@
 {% block content %}
     <form enctype="multipart/form-data" id="signup_form" method="POST">
 
+        <p>
+            {{ system_settings.get('membership_registration_description')|raw }}
+        </p>
         <blockquote>
             <p>General information</p>
         </blockquote>

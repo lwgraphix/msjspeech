@@ -180,7 +180,7 @@
                         <tr>
                             <td>{{ transaction.id }}</td>
                             <td data-amount="{{ transaction.amount }}"><span class="text-{{ (transaction.amount < 0) ? 'danger' : 'success' }}">{{ ('$' ~ transaction.amount|number_format(2, '.', ','))|replace({"$-": "-$"}) }}</span></td>
-                            <td>{{ transaction.timestamp|replace({'-': '/'}) }}</td>
+                            <td>{{ transaction.timestamp|date('m/d/Y h:i A') }}</td>
                             <td>{{ transaction.memo_1 }}</td>
                             <td>{{ transaction.memo_2 }}</td>
                             <td>{{ transaction.memo_3 }}</td>

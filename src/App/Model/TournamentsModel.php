@@ -381,6 +381,14 @@ class TournamentsModel extends BaseModel
                 $data['event_id']
             );
 
+            $ownerUser = User::loadById($data['user_id']);
+            Email::getInstance()->createMessage(EmailType::TOURNAMENT_REGISTRATION_REJECTED, [
+                'tournament_name' => $data['tournament_name'],
+                'event_name' => $data['event_name'],
+                'event_cost' => $data['cost'],
+                'link_account_balance' => Security::getHost() . 'user/balance'
+            ], $ownerUser);
+
             if ($data['partner_id'] !== null)
             {
                 $this->thm->createTransaction(
@@ -395,6 +403,14 @@ class TournamentsModel extends BaseModel
                     null,
                     $data['event_id']
                 );
+
+                $partnerUser = User::loadById($data['partner_id']);
+                Email::getInstance()->createMessage(EmailType::TOURNAMENT_REGISTRATION_REJECTED, [
+                    'tournament_name' => $data['tournament_name'],
+                    'event_name' => $data['event_name'],
+                    'event_cost' => $data['cost'],
+                    'link_account_balance' => Security::getHost() . 'user/balance'
+                ], $partnerUser);
             }
         }
         else

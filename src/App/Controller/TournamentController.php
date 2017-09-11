@@ -84,14 +84,14 @@ class TournamentController extends BaseController
         $eventInfo = $this->tm->getUserEventInfo($eventId);
         if (!$eventInfo)
         {
-            FlashMessage::set(false, 'Record not found');
+            FlashMessage::set(false, 'Tournament not found');
             return new RedirectResponse('/tournament/list');
         }
         else
         {
             if ($eventInfo['tournament_status'] == TournamentType::CANCELLED)
             {
-                FlashMessage::set(false, 'Record not found');
+                FlashMessage::set(false, 'Tournament not found');
                 return new RedirectResponse('/tournament/list');
             }
 
@@ -107,7 +107,7 @@ class TournamentController extends BaseController
                 {
                     if (Security::getUser()->getId() != $eventInfo['partner_id'])
                     {
-                        FlashMessage::set(false, 'Record not found');
+                        FlashMessage::set(false, 'Tournament not found');
                         return new RedirectResponse('/tournament/list');
                     }
                 }
@@ -140,14 +140,14 @@ class TournamentController extends BaseController
         $eventInfo = $this->tm->getUserEventInfo($eventId);
         if (!$eventInfo)
         {
-            FlashMessage::set(false, 'Record not found');
+            FlashMessage::set(false, 'Tournament not found');
             return $this->out('ok');
         }
         else
         {
             if ($eventInfo['tournament_status'] == TournamentType::CANCELLED)
             {
-                FlashMessage::set(false, 'Record not found');
+                FlashMessage::set(false, 'Tournament not found');
                 return $this->out('ok');
             }
 
@@ -166,7 +166,7 @@ class TournamentController extends BaseController
 
             if (!in_array($eventInfo['event_status'], $allowedStatusesToDrop))
             {
-                FlashMessage::set(false, 'Cant drop this tournament');
+                FlashMessage::set(false, 'You have already dropped from this tournament');
                 return $this->out('no');
             }
             else
@@ -193,14 +193,14 @@ class TournamentController extends BaseController
         $eventInfo = $this->tm->getUserEventInfo($eventId);
         if (!$eventInfo)
         {
-            FlashMessage::set(false, 'Record not found');
+            FlashMessage::set(false, 'Tournament not found');
             return $this->out('ok');
         }
         else
         {
             if ($eventInfo['tournament_status'] == TournamentType::CANCELLED)
             {
-                FlashMessage::set(false, 'Record not found');
+                FlashMessage::set(false, 'Tournament not found');
                 return $this->out('ok');
             }
 
@@ -215,7 +215,7 @@ class TournamentController extends BaseController
                 $balance = Security::getUser()->getBalance();
                 if (SystemSettings::getInstance()->get('negative_balance') == 0 && $balance < $eventInfo['cost'] && intval($request->get('decision')) == 1)
                 {
-                    FlashMessage::set(false, 'Not enough money for join this debate. Please <a target="_blank" href="/user/balance">deposit</a> money and try join again');
+                    FlashMessage::set(false, 'Please <a target="_blank" href="/user/balance">add</a> money to your account balance before you register for this tournament. Please contact your club leadership if this does not work for you.');
                     return $this->out('no');
                 }
                 else
@@ -457,7 +457,7 @@ class TournamentController extends BaseController
         //check balance
         if (SystemSettings::getInstance()->get('negative_balance') == 0 && $eventInfo['cost'] > Security::getUser()->getBalance())
         {
-            FlashMessage::set(false, 'Not enough money for join this debate. Please <a target="_blank" href="/user/balance">deposit</a> money and try join again');
+            FlashMessage::set(false, 'Please <a target="_blank" href="/user/balance">add</a> money to your account balance before you register for this tournament. Please contact your club leadership if this does not work for you.');
             return new RedirectResponse($request->headers->get('referer'));
         }
         else

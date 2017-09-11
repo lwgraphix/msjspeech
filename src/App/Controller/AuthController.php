@@ -50,7 +50,7 @@ class AuthController extends BaseController
 
         if ($user === StatusCode::USER_BAD_CREDENTIALS)
         {
-            FlashMessage::set(false, 'Incorrect email or password. Please try again.');
+            FlashMessage::set(false, 'Incorrect email and/or password. Please try again.');
         }
         else
         {

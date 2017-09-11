@@ -22,7 +22,7 @@ class MenuBuilder
                 $adminGroup->add(new MenuItem('System settings', '/admin/settings', 'cog'));
             }
             $adminGroup
-                ->add(new MenuItem('Edit registration form', '/admin/signup/edit', 'user-plus'))
+                ->add(new MenuItem('Member registration form', '/admin/signup/edit', 'user-plus'))
                 ->add(new MenuItem('Member list', '/admin/users/list', 'list-ol'))
                 ->add(new MenuItem('Content management', null, 'file-text', [
                     new MenuItem('Create new page', '/admin/pages/create', 'plus'),
@@ -33,7 +33,7 @@ class MenuBuilder
                     new MenuItem('Create new tournament', '/admin/tournament/create', 'plus'),
                     new MenuItem('Tournament list', '/admin/tournament/list', 'list'),
                 ]))
-                ->add(new MenuItem('Member group', '/admin/groups/list', 'users'))
+                ->add(new MenuItem('Member groups', '/admin/groups/list', 'users'))
                 ->add(new MenuItem('Email templates', '/admin/email/list', 'envelope'))
                 ->add(new MenuItem('Member transactions', '/admin/transactions/list', 'money'))
             ;

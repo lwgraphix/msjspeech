@@ -139,6 +139,13 @@ class Email
 
         EmailType::SYSTEM_SETTINGS_CHANGED => [
             'changed_fields'
+        ],
+
+        EmailType::TOURNAMENT_REGISTRATION_REJECTED => [
+            'tournament_name',
+            'event_name',
+            'event_cost',
+            'link_account_balance'
         ]
     ];
 

@@ -29,7 +29,7 @@ class BaseController {
         if ($user !== null && $userRole == UserType::FROZEN)
         {
             $this->session->remove('user');
-            FlashMessage::set(false, 'You are frozen by administrator');
+            FlashMessage::set(false, 'Your account has been frozen');
             header('Location: /auth/login');
             die;
         }

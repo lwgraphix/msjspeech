@@ -237,7 +237,7 @@ class AdminController extends BaseController {
             break;
 
             case 2:
-                $appendix = 'to user group "'. Model::get('group')->getById($request->get('group_id'))['name'] .'"';
+                $appendix = 'to member group "'. Model::get('group')->getById($request->get('group_id'))['name'] .'"';
             break;
 
             case 3:
@@ -286,7 +286,7 @@ class AdminController extends BaseController {
                 break;
 
             case 2:
-                $appendix = 'to user group "'. Model::get('group')->getById($request->get('group_id'))['name'] .'"';
+                $appendix = 'to member group "'. Model::get('group')->getById($request->get('group_id'))['name'] .'"';
                 break;
 
             case 3:

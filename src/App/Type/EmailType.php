@@ -21,6 +21,7 @@ class EmailType
     const PARTNER_CANCELLED = 14; // done
     const TOURNAMENT_REGISTRATION_APPROVED = 15;
     const SYSTEM_SETTINGS_CHANGED = 16;
+    const TOURNAMENT_REGISTRATION_REJECTED = 17;
 
     const NAMES = [
         'Membership registration',
@@ -39,6 +40,7 @@ class EmailType
         'Password recovery',
         'Partner request cancelled',
         'Tournament registration approved',
-        'System settings changed'
+        'System settings changed',
+        'Tournament registration rejected'
     ];
 }

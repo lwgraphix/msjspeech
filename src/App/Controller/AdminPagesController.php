@@ -209,7 +209,7 @@ class AdminPagesController extends BaseController {
 
         if ($status !== true && $status == StatusCode::CATEGORY_IS_PARENT)
         {
-            FlashMessage::set(false, 'Category have children! Remove all children of category and try again.');
+            FlashMessage::set(false, 'This category contains sub-categories. You must delete all sub-categories inside this category before deleting the category.');
             return new RedirectResponse('/admin/pages/categories');
         }
         else
