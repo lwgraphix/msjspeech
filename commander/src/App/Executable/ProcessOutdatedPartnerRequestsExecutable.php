@@ -67,7 +67,7 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
             ($eventInfo['cost']),
             TransactionType::TOURNAMENT_REFUND,
             0,
-            'Refund for tournament "'.$eventInfo['tournament_name'].'", event: "'. $eventInfo['event_name'] .'" because partner request is timed out',
+            'Refund for "'.$eventInfo['tournament_name'].'" in "'. $eventInfo['event_name'] .'" because partner request is timed out',
             null,
             null,
             null,
@@ -124,7 +124,7 @@ class ProcessOutdatedPartnerRequestsExecutable extends BaseExecutable
         $timeoutHours = SystemSettings::getInstance()->get('auto_decline_timeout');
         foreach($requests as $request)
         {
-            if (floatval($request['diff']) >= floatval($timeoutHours) || $this->dateIsPassed($request['entry_deadline']))
+            if (floatval($request['diff']) >= floatval($timeoutHours))
             {
                 $eventInfo = $this->getUserEventInfo($request['id']);
                 $this->decline($request['id'], $eventInfo);
