@@ -22,6 +22,7 @@ class EmailType
     const TOURNAMENT_REGISTRATION_APPROVED = 15;
     const SYSTEM_SETTINGS_CHANGED = 16;
     const TOURNAMENT_REGISTRATION_REJECTED = 17;
+    const EMAIL_TEMPLATE_CHANGED = 18;
 
     const NAMES = [
         'Membership registration',
@@ -41,6 +42,7 @@ class EmailType
         'Partner request cancelled',
         'Tournament registration approved',
         'System settings changed',
-        'Tournament registration rejected'
+        'Tournament registration rejected',
+        'Email template changed'
     ];
 }

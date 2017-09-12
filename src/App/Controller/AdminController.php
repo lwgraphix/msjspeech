@@ -360,7 +360,17 @@ class AdminController extends BaseController {
             return new RedirectResponse('/admin/email/list');
         }
 
+        $oldData = Email::getInstance()->getTemplate(EmailType::EMAIL_TEMPLATE_CHANGED);
         Email::getInstance()->updateTemplate($type, $request->get('subject'), $request->get('content'));
+
+        Email::getInstance()->createMessage(EmailType::EMAIL_TEMPLATE_CHANGED, [
+            'name' => $templates[$type],
+            'old_subject' => $oldData['subject'],
+            'old_body' => $oldData['content'],
+            'new_subject' => $request->get('subject'),
+            'new_body' => $request->get('content')
+        ], Security::getUser(), SystemSettings::getInstance()->get('bcc_receiver'));
+
         FlashMessage::set(true, 'Template updated');
         return new RedirectResponse($request->headers->get('referer'));
     }

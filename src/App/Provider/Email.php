@@ -146,6 +146,14 @@ class Email
             'event_name',
             'event_cost',
             'link_account_balance'
+        ],
+
+        EmailType::EMAIL_TEMPLATE_CHANGED => [
+            'name',
+            'old_subject',
+            'old_body',
+            'new_subject',
+            'new_body'
         ]
     ];
 
