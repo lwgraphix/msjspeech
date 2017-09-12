@@ -15,7 +15,7 @@ class SystemSettings
 
     private $defaults = [
         [
-            'label' => '[System] Site name (max 20 chars)',
+            'label' => '[System] Site name',
             'name' => 'site_name',
             'value' => 'Speech & Debate',
             'boolean' => 0
