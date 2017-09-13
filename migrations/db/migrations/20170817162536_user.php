@@ -18,6 +18,17 @@ class User extends AbstractMigration
             ->addColumn('parent_email', 'string', ['null' => true])
             ->addColumn('role', 'integer', ['null' => false, 'default' => 0])
         ->create();
+
+        $table->insert([
+            [
+                'email' => 'admin@admin.com',
+                'username' => 'Administrator',
+                'password' => '$2y$10$.AsP9qYVzIG3wVL8PoqWp.11lTPF3E8uMKcsNAOA6apkSLfubaTLW',
+                'first_name' => 'Admin',
+                'last_name' => 'Admin',
+                'role' => 5
+            ]
+        ])->saveData();
     }
 
     public function down()
