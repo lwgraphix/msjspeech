@@ -1,11 +1,11 @@
 Speech and Debate
 =
-##Requirements:
+## Requirements:
 1. PHP 7.0 or above
 2. Nginx
 3. MySQL
 
-##Required PHP modules:
+## Required PHP modules:
 1. mysql
 2. curl
 3. mbstring
@@ -13,7 +13,7 @@ Speech and Debate
 5. apcu
 6. xml
 
-##Installation:
+## Installation:
 1. Install required PHP modules
 2. Clone this repository
 3. Create directory `_cache` and execute `chmod 777 _cache`
