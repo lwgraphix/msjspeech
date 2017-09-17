@@ -1,6 +1,8 @@
 function copyTable(button_obj, class_name)
 {
     var el = $("." + class_name)[0];
+    var display = $(el).css('display');
+    $(el).css('display', 'table');
     // select
     var body = document.body, range, sel;
     if (document.createRange && window.getSelection) {
@@ -36,6 +38,7 @@ function copyTable(button_obj, class_name)
 
     // some funny animation
     $(button_obj).text('Copied!');
+    $(el).css('display', display);
     setTimeout(function()
     {
         $(button_obj).html('<i class="fa fa-clipboard"></i> Copy table content');
