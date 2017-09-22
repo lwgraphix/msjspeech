@@ -151,14 +151,6 @@ class UserController extends BaseController
         {
             $oldBalance = Security::getUser()->getBalance();
 
-            Email::getInstance()->createMessage(EmailType::TRANSACTION_CREATE, [
-                'increased_or_decreased' => 'increased',
-                'amount' => floatval($amount),
-                'old_balance' => $oldBalance,
-                'new_balance' => Security::getUser()->getBalance(),
-                'link_account_balance' => Security::getHost() . 'user/balance'
-            ], Security::getUser());
-
             Model::get('transaction_history')->createTransaction(
                 Security::getUser()->getId(),
                 $amount,
@@ -173,6 +165,15 @@ class UserController extends BaseController
             );
 
             FlashMessage::set(true, 'Your account deposited ' . $amount . '$');
+
+            Email::getInstance()->createMessage(EmailType::TRANSACTION_CREATE, [
+                'increased_or_decreased' => 'increased',
+                'amount' => floatval($amount),
+                'old_balance' => $oldBalance,
+                'new_balance' => Security::getUser()->getBalance(),
+                'link_account_balance' => Security::getHost() . 'user/balance'
+            ], Security::getUser());
+
             return new RedirectResponse('/user/balance');
         }
     }
