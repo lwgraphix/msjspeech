@@ -68,7 +68,19 @@ class AdminUsersController extends BaseController {
             FlashMessage::set(false, 'Role not found');
             return new RedirectResponse('/admin/users/list');
         }
-        return $this->out($this->twig->render('admin/users/list.twig', ['users' => $users, 'roles' => $roles]));
+
+        $uaNames = [];
+        $attrs = $this->am->getAll(AttributeGroupType::REGISTER);
+        foreach($attrs as $attr)
+        {
+            $uaNames[$attr['id']] = $attr['label'];
+        }
+
+        return $this->out($this->twig->render('admin/users/list.twig', [
+            'users' => $users,
+            'roles' => $roles,
+            'attr_names' => $uaNames
+        ]));
     }
 
     /**

@@ -422,6 +422,11 @@ class UserModel extends BaseModel
     {
         $sql = 'SELECT * FROM users';
         $data = MySQL::get()->fetchAll($sql);
+        foreach($data as &$row)
+        {
+            $attributes = Model::get('attribute')->getUserAttributes($row['id']);
+            $row['attrs'] = $attributes;
+        }
         return $data;
     }
 
@@ -429,6 +434,11 @@ class UserModel extends BaseModel
     {
         $sql = 'SELECT * FROM users WHERE role = :r';
         $data = MySQL::get()->fetchAll($sql, ['r' => $role]);
+        foreach($data as &$row)
+        {
+            $attributes = Model::get('attribute')->getUserAttributes($row['id']);
+            $row['attrs'] = $attributes;
+        }
         return $data;
     }
 

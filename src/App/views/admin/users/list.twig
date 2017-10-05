@@ -26,6 +26,9 @@
             <th>Last login</th>
             <th>Paid membership contribution</th>
             <th>Role</th>
+            {% for attr in attr_names %}
+                <th>{{ attr }}</th>
+            {% endfor %}
             <th>Actions</th>
         </tr>
         </thead>
@@ -33,7 +36,7 @@
         {% for user in users %}
             <tr>
                 <td>{{ user.id }}</td>
-                <td><a  href="/user/profile?user_id={{ user.id }}">{{ user.email }}</a></td>
+                <td><a href="/user/profile?user_id={{ user.id }}">{{ user.email }}</a></td>
                 <td>{{ user.first_name }} {{ user.last_name }}</td>
                 <td>{{ user.username }}</td>
                 <td>{{ user.parent_first_name }} {{ user.parent_last_name }}</td>
@@ -42,6 +45,25 @@
                 <td>{{ (user.last_login) ? user.last_login|date('m/d/Y h:i A') : '-' }}</td>
                 <td><span class="text-{{ user.payed_fee ? 'success' : 'danger' }}">{{ user.payed_fee ? ('$' ~ user.payed_fee|number_format(2, '.', ','))|replace({"$-": "-$"}) : 'No' }}</span></td>
                 <td>{{ roles[user.role] }}</td>
+                {% for attr_id, attr in attr_names %}
+                    <td>
+                        {% if attr_id in user.attrs|keys %}
+                            {% if user.attrs[attr_id].type in [0, 1] %}
+                                {{ user.attrs[attr_id].value ? user.attrs[attr_id].value : '-' }}
+                            {% elseif user.attrs[attr_id].type == 2 %}
+                                {{ user.attrs[attr_id].value ? user.attrs[attr_id].value|join(', ') : '-' }}
+                            {% elseif user.attrs[attr_id].type == 3 %}
+                                {% if user.attrs[attr_id].value %}
+                                    <button type="button" onclick="showAttach({{ user.attrs[attr_id].user_attr_id }}, {{ user.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                {% endfor %}
                 <td>
                     <button onclick="changeRole('{{ roles[user.role] }}', {{ user.id }})" class="btn btn-info btn-xs"><i class="fa fa-users"></i> Change user role</button>
                     <a href="/user/balance?user_id={{ user.id }}" class="btn btn-primary btn-xs"><i class="fa fa-credit-card"></i> Transactions</a>
@@ -84,6 +106,12 @@
     </div>
 
     <script>
+
+        function showAttach(id, uid)
+        {
+            window.open('/attachment/' + id + '?user_id=' + uid, '_blank');
+        }
+
         $(function() {
             $("table").tablesorter({
             });

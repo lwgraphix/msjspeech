@@ -236,6 +236,9 @@
             </form>
         {% endfor %}
     </div>
+    {% if not is_started %}
+        <button onclick="addNewObject('fields')" class="btn btn-primary"><i class="fa fa-plus"></i> Add new field</button>
+    {% endif %}
 
     <script type="text/html" id="debates-template">
         <form id="debates_$1">
