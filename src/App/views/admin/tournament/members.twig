@@ -20,6 +20,7 @@
                     <th>User</th>
                     <th>Partner</th>
                     <th>Registration information</th>
+                    <th>Join timestamp</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -39,6 +40,7 @@
                         <td>
                             <a href="/tournament/view/{{ item.id }}?user_id={{ item.own_id }}"  class="btn btn-xs btn-info"><i class="fa fa-eye"></i> View</a>
                         </td>
+                        <td>{{ (item.join_timestamp) ? item.join_timestamp|date('m/d/Y h:i A') : '-' }}</td>
                         <td>
                             {% if global.request.get('event') == 0 %}
                                 <button onclick="setDecision(this, {{ item.id }}, 1)" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Approve</button>

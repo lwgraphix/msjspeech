@@ -237,7 +237,7 @@ class TournamentsModel extends BaseModel
             if ($eventPartnerCount == 1) return false;
 
             // accepted
-            $sql = 'UPDATE user_tournaments SET status = :s WHERE id = :id';
+            $sql = 'UPDATE user_tournaments SET status = :s, join_timestamp = NOW() WHERE id = :id';
             $newStatus = ($eventInfo['approve_method'] == 0) ? EventStatusType::APPROVED : EventStatusType::WAITING_FOR_APPROVE;
             MySQL::get()->exec($sql, [
                 's' => $newStatus,
@@ -441,6 +441,7 @@ class TournamentsModel extends BaseModel
         $eventWhere = ($eventId === null) ? '' : 'AND e.id = ' . $eventId;
         $sql = 'SELECT
                   ut.id,
+                  ut.join_timestamp,
                   own.id as own_id,
                   CONCAT(own.first_name, \' \', own.last_name) as own_name,
                   own.email as own_email,
@@ -775,8 +776,8 @@ class TournamentsModel extends BaseModel
     public function join($data, $tournament, $event, User $user, $partnerUser = null)
     {
         // create user-tournament row
-        $sql = 'INSERT INTO user_tournaments (user_id, event_id, partner_id, status, judge_name, judge_email)
-                VALUES (:uid, :eid, :pid, :s, :jn, :je)';
+        $sql = 'INSERT INTO user_tournaments (user_id, event_id, partner_id, status, judge_name, judge_email, join_timestamp)
+                VALUES (:uid, :eid, :pid, :s, :jn, :je, NOW())';
         $partnerId = ($partnerUser === null) ? null : $partnerUser['id'];
 
         if (isset($data['judge_name'], $data['judge_email']))
