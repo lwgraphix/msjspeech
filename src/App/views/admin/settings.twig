@@ -23,7 +23,20 @@
                     {% if setting.name == 'email_signature' or setting.name == 'membership_text' or setting.name == 'membership_registration_description' %}
                         <textarea class="form-control" rows="6" id="{{ setting.name }}" name="{{ setting.name }}">{{ setting.value }}</textarea>
                     {% else %}
-                        <input name="{{ setting.name }}" value="{{ setting.value }}" type="text" class="form-control" id="{{ setting.name }}">
+                        {% if setting.name == 'public_stripe_key' or setting.name == 'private_stripe_key' %}
+                            {% if setting.value != '' %}
+                                {% set masked = '' %}
+                                {% for i in 0..setting.value|length - 4 %}
+                                    {% set masked = masked ~ '*' %}
+                                {% endfor %}
+                                {% set masked = masked ~ setting.value|slice(-4) %}
+                                <input name="{{ setting.name }}" placeholder="{{ masked }}" type="text" class="form-control" id="{{ setting.name }}">
+                            {% else %}
+                                <input name="{{ setting.name }}" value="{{ setting.value }}" type="text" class="form-control" id="{{ setting.name }}">
+                            {% endif %}
+                        {% else %}
+                            <input name="{{ setting.name }}" value="{{ setting.value }}" type="text" class="form-control" id="{{ setting.name }}">
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             </div>

@@ -11,6 +11,6 @@ class EventStatusType
     const DECLINED_BY_PARTNER = 4;
     const DROPPED = 5;
 
-    const NAMES = ['Waiting for approve', 'Approved', 'Declined', 'Waiting partner response', 'Declined by partner', 'Dropped'];
+    const NAMES = ['Waiting for approve', 'Approved', 'Declined by officer', 'Waiting partner response', 'Declined by partner', 'Dropped'];
     const COLORS = ['label-info', 'label-success', 'label-danger', 'label-info', 'label-danger', 'label-danger'];
 }

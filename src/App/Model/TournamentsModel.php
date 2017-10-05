@@ -458,6 +458,11 @@ class TournamentsModel extends BaseModel
                 INNER JOIN events e ON e.id = ut.event_id '. $eventWhere .'
                 WHERE e.tournament_id = :tid ' . $statusWhere;
         $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId]);
+        foreach($data as &$row)
+        {
+            $attributes = Model::get('attribute')->getUserAttributes($row['id']);
+            $row['attrs'] = $attributes;
+        }
         return $data;
     }
 

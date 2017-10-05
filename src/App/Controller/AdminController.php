@@ -103,17 +103,30 @@ class AdminController extends BaseController {
     {
         Security::setAccessLevel(UserType::ADMINISTRATOR);
         $changedFields = null;
+
+        $oldBcc = SystemSettings::getInstance()->get('bcc_receiver');
+
         foreach($request->request->all() as $name => $value)
         {
             // check equals
             $oldValue = SystemSettings::getInstance()->get($name);
             if ($oldValue == $value) continue;
 
+            if ($name == 'private_stripe_key')
+            {
+                if (!empty($oldValue) && empty($request->get('private_stripe_key'))) continue;
+            }
+
+            if ($name == 'public_stripe_key')
+            {
+                if (!empty($oldValue) && empty($request->get('public_stripe_key'))) continue;
+            }
+
             if (
                 $name == 'payment_allowed'
                 && $value == 1
-                && empty($request->get('private_stripe_key'))
-                && empty($request->get('public_stripe_key'))
+                && (empty($request->get('private_stripe_key')) && empty(SystemSettings::getInstance()->get('private_stripe_key')))
+                && (empty($request->get('public_stripe_key')) && empty(SystemSettings::getInstance()->get('public_stripe_key')))
             )
             {
                 FlashMessage::set(false, 'Can\'t enable payment without stripe keys!');
@@ -127,7 +140,7 @@ class AdminController extends BaseController {
 
         Email::getInstance()->createMessage(EmailType::SYSTEM_SETTINGS_CHANGED, [
             'changed_fields' => $changedFields,
-        ], Security::getUser(), SystemSettings::getInstance()->get('bcc_receiver'));
+        ], Security::getUser(), $oldBcc);
 
         FlashMessage::set(true, 'Settings updated');
         return new RedirectResponse('/admin/settings');
