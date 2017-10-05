@@ -329,7 +329,7 @@ class AdminTournamentController extends BaseController {
     public function tournamentMembersList(Request $request, $tournamentId)
     {
         $requestedStatus = $request->get('event', 0);
-        $list = $this->tm->getMembersList($tournamentId, null, $requestedStatus);
+        $list = ($requestedStatus != -1) ? $this->tm->getMembersList($tournamentId, null, $requestedStatus) : $this->tm->getMembersList($tournamentId);
         $tournamentData = $this->tm->getById($tournamentId);
 
         if (!$tournamentData['tournament'])

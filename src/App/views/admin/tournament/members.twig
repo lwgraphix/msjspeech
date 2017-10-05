@@ -8,6 +8,7 @@
         {% for event_status in event_statuses %}
             <li class="{{ global.request.get('event') == loop.index0 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event={{ loop.index0 }}">{{ event_status }}</a></li>
         {% endfor %}
+        <li class="{{ global.request.get('event') == -1 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event=-1">All</a></li>
     </ul>
 
     {% if list|length %}
