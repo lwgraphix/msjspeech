@@ -101,9 +101,9 @@ class TournamentsModel extends BaseModel
                     FROM user_tournaments ut
                     INNER JOIN events e ON e.id = ut.event_id
                     INNER JOIN tournaments t ON t.id = e.tournament_id
-                    WHERE ut.status IN (0, 1, 3)';
+                    WHERE ut.status IN (0, 1, 3) AND t.id = :tid';
 
-            $applications = MySQL::get()->fetchAll($sql);
+            $applications = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId]);
             $utIds = [];
             foreach($applications as $application)
             {
