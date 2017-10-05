@@ -17,7 +17,7 @@
     <ul class="list-group" style="margin-bottom: 0">
         <li class="list-group-item"><b>Tournament: </b>{{ event.tournament_name }}</li>
         <li class="list-group-item"><b>Status: </b><span class="label {{ event_colors[event.event_status] }}">{{ event_statuses[event.event_status] }}</span></li>
-        <li class="list-group-item"><b>Description: </b>{{ event.tournament_description ? event.tournament_description : 'Not specified' }}</li>
+        <li class="list-group-item"><b>Description: </b>{{ event.tournament_description ? event.tournament_description|raw : 'Not specified' }}</li>
         <li class="list-group-item"><b>Event: </b>{{ event.event_name }}</li>
         <li class="list-group-item"><b>Cost: </b>{{ event.cost|number_format(2, '.', ',') }}$</li>
         <li class="list-group-item"><b>Judge name: </b>{{ event.judge_name ? event.judge_name : 'Not specified' }}</li>

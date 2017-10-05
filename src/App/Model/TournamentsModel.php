@@ -996,6 +996,16 @@ class TournamentsModel extends BaseModel
         return $data;
     }
 
+    public function getPartnerEntryCount($userId, $tournamentId)
+    {
+        $sql = 'SELECT count(*)
+                FROM user_tournaments ut
+                INNER JOIN events e ON e.id = ut.event_id
+                WHERE (ut.user_id = :uid OR ut.partner_id = :uid) AND e.tournament_id = :tid AND ut.status IN (0, 1)';
+        $data = MySQL::get()->fetchColumn($sql, ['uid' => $userId, 'tid' => $tournamentId]);
+        return $data;
+    }
+
     public function getById($id)
     {
         $tournament = MySQL::get()->fetchOne('SELECT * FROM tournaments WHERE id = :id', ['id' => $id]);

@@ -220,7 +220,7 @@ class TournamentController extends BaseController
                 }
                 else
                 {
-                    $userEntryCount = $this->tm->getUserEntryCount(Security::getUser()->getId(), $eventInfo['tournament_id']);
+                    $userEntryCount = $this->tm->getPartnerEntryCount(Security::getUser()->getId(), $eventInfo['tournament_id']);
                     if ($eventInfo['double_entry'] == 0 && $userEntryCount > 0 && intval($request->get('decision')) == 1)
                     {
                         FlashMessage::set(false, 'Double entry not allowed at this tournament');
@@ -443,11 +443,19 @@ class TournamentController extends BaseController
                     }
                     else
                     {
-                        $partnerUser = Model::get('user')->getById($request->get('partner_id'));
-                        if (!$partnerUser)
+                        if ($this->tm->getPartnerEntryCount($request->get('partner_id'), $tournamentId) > 0 && $eventInfo['double_entry'] == 0)
                         {
-                            FlashMessage::set(false, 'Partner not found');
+                            FlashMessage::set(false, 'Your partner already joined tournament where double entry not allowed');
                             return new RedirectResponse($request->headers->get('referer'));
+                        }
+                        else
+                        {
+                            $partnerUser = Model::get('user')->getById($request->get('partner_id'));
+                            if (!$partnerUser)
+                            {
+                                FlashMessage::set(false, 'Partner not found');
+                                return new RedirectResponse($request->headers->get('referer'));
+                            }
                         }
                     }
                 }

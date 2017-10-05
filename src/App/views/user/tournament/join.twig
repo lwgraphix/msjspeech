@@ -31,7 +31,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <p><b>Description:</b> {{ tournament.description ? tournament.description : 'Not specified' }}</p>
+                    <p><b>Description:</b> {{ tournament.description ? tournament.description|raw : 'Not specified' }}</p>
                 </div>
             </div>
         </div>

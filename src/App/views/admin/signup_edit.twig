@@ -93,6 +93,9 @@
             <form id="attr_{{ loop.index0 }}" data-id="{{ attribute.id }}">
                 <div class="panel panel-default">
                     <div class="panel-body" style="padding-bottom: 0">
+                        {% if attribute.type == 3 %}
+                            <a target="_blank" href="/admin/attachment/download/{{ attribute.id }}" class="btn btn-success" style="margin-bottom: 10px"><i class="fa fa-download"></i> Download attachments</a>
+                        {% endif %}
                         <div class="form-group">
                             <label for="attr">Label</label>
                             <input name="label" value="{{ attribute.label }}" class="form-control" type="text" />
