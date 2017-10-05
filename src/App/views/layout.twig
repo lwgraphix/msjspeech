@@ -129,11 +129,11 @@
         </section>
     </div>
     <footer class="main-footer">
-        {{ system_settings.get('google_code') }}
+        {{ system_settings.get('google_code')|raw }}
         <div class="pull-right hidden-xs">
             <b>Development: <a href="http://dekamaru.com">dekamaru</a> | Design: <a href="https://adminlte.io">Almsaeed Studio</a></b>
         </div>
-        <strong>Copyright © {{ date('Y')|date('Y') }} {{ system_settings.get('site_name') }}. All rights reserved.</strong>
+        <strong>Copyright © {{ date('Y')|date('Y') }} Artem Raskin. All rights reserved.</strong>
     </footer>
     <div class="control-sidebar-bg"></div>
 </div>
