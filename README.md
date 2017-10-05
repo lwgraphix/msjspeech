@@ -15,8 +15,9 @@ Speech and Debate
 
 ## Installation:
 1. Install required PHP modules
+    * Set `post_max_size` and `upload_max_filesize` to 256M in php.ini
 2. Clone this repository
-3. Create directory `_cache` and execute `chmod 777 _cache`
+3. Create directory `_cache` and `uploads` and execute `chmod -R 777 _cache uploads`
 4. Execute `composer update` in every folder that contains `composer.json` (this, commander, migrations)
 5. Add cron task `0 * * * * /usr/bin/php [ABSOLUTE_PATH_TO_DIR]/commander/run.php process:partner_requests`
 6. Create new database in MySQL with any name
