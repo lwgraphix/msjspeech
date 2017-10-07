@@ -18,7 +18,8 @@
         <tr>
             <th>#</th>
             <th>Email</th>
-            <th>Name</th>
+            <th>First name</th>
+            <th>Last name</th>
             <th>Username</th>
             <th>Parent name</th>
             <th>Parent email</th>
@@ -37,7 +38,8 @@
             <tr>
                 <td>{{ user.id }}</td>
                 <td><a href="/user/profile?user_id={{ user.id }}">{{ user.email }}</a></td>
-                <td>{{ user.first_name }} {{ user.last_name }}</td>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.last_name }}</td>
                 <td>{{ user.username }}</td>
                 <td>{{ user.parent_first_name }} {{ user.parent_last_name }}</td>
                 <td>{{ user.parent_email }}</td>

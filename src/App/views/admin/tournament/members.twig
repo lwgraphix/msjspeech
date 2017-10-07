@@ -20,7 +20,8 @@
                         <th>#</th>
                         <th>Event</th>
                         <th>Email</th>
-                        <th>Name</th>
+                        <th>First name</th>
+                        <th>Last name</th>
                         <th>Username</th>
                         <th>Parent name</th>
                         <th>Parent email</th>
@@ -96,7 +97,8 @@
                             <td>{{ loop.index }}</td>
                             <td>{{ item.event_name }}</td>
                             <td><a href="/user/profile?user_id={{ item.id }}">{{ item.email }}</a></td>
-                            <td>{{ item.first_name }} {{ item.last_name }}</td>
+                            <td>{{ item.first_name }}</td>
+                            <td>{{ item.last_name }}</td>
                             <td>{{ item.username }}</td>
                             <td>{{ item.parent_first_name }} {{ item.parent_last_name }}</td>
                             <td>{{ item.parent_email }}</td>
