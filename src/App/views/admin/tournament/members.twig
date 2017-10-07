@@ -10,6 +10,7 @@
         {% endfor %}
         <li class="{{ global.request.get('event') == -1 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event=-1">Approved (entry info)</a></li>
         <li class="{{ global.request.get('event') == -2 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event=-2">Approved (individual info)</a></li>
+        <li class="{{ global.request.get('event') == -3 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event=-3">All</a></li>
     </ul>
 
     {% if list|length %}
@@ -31,6 +32,9 @@
                     {% else %}
                         <th>#</th>
                         <th>Event</th>
+                        {% if global.request.get('event') == -3 %}
+                            <th>Status</th>
+                        {% endif %}
                         <th>User</th>
                         <th>Partner</th>
                         <th>Registration information</th>
@@ -50,6 +54,9 @@
                         <tr>
                             <td>{{ loop.index }}</td>
                             <td>{{ item.name }}</td>
+                            {% if global.request.get('event') == -3 %}
+                                <td><span class="label {{ event_colors[item.event_status] }}">{{ event_statuses[item.event_status] }}</span></td>
+                            {% endif %}
                             <td>{{ item.own_name }} (<a  href="/user/profile?user_id={{ item.own_id }}">{{ item.own_email }}</a>)</td>
                             <td>
                                 {% if not item.par_id is null %}

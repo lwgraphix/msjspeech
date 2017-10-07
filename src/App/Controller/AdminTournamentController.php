@@ -332,12 +332,16 @@ class AdminTournamentController extends BaseController {
         switch($requestedStatus)
         {
             case -1:
-                // all joins
-                $list = $this->tm->getMembersList($tournamentId);
+                // all approved joins
+                $list = $this->tm->getMembersList($tournamentId, null, EventStatusType::APPROVED);
                 break;
             case -2:
-                // all members
+                // all approved non-grouped joins
                 $list = $this->tm->getTournamentMembersList($tournamentId);
+                break;
+            case -3:
+                // ALL
+                $list = $this->tm->getMembersList($tournamentId);
                 break;
             default:
                 // by status
@@ -378,7 +382,8 @@ class AdminTournamentController extends BaseController {
             'event_statuses' => EventStatusType::NAMES,
             'tournament' => $tournamentData,
             'user_attr_names' => $uaNames,
-            't_attr_names' => $tNames
+            't_attr_names' => $tNames,
+            'event_colors' => EventStatusType::COLORS
         ]));
     }
 

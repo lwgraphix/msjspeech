@@ -444,6 +444,7 @@ class TournamentsModel extends BaseModel
                   ut.join_timestamp,
                   ut.judge_name,
                   ut.judge_email,
+                  ut.status as event_status,
                   own.id as own_id,
                   CONCAT(own.first_name, \' \', own.last_name) as own_name,
                   own.email as own_email,
