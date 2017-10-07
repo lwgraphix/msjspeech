@@ -34,7 +34,7 @@
                         <td>{{ tournament.date_end|date('m/d/Y') }}</td>
                         <td>
                             {% if tournament.reg_started %}
-                                <a href="/admin/tournament/members/{{ tournament.id }}" class="btn btn-xs btn-info"><i class="fa fa-check"></i> Member list</a>
+                                <a href="/admin/tournament/members/{{ tournament.id }}" class="btn btn-xs btn-info"><i class="fa fa-check"></i> Entry list</a>
                             {% endif %}
                             <a href="/admin/tournament/edit/{{ tournament.id }}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i> Edit</a>
                             {% if tournament.reg_started and user.role == 5 %}
