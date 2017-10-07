@@ -430,6 +430,19 @@ class UserModel extends BaseModel
         return $data;
     }
 
+    public function getByIds($ids = [])
+    {
+        if (count($ids) == 0) return false;
+        $sql = 'SELECT * FROM users WHERE id IN ('. implode(',', $ids) .')';
+        $data = MySQL::get()->fetchAll($sql);
+        foreach($data as &$row)
+        {
+            $attributes = Model::get('attribute')->getUserAttributes($row['id']);
+            $row['attrs'] = $attributes;
+        }
+        return $data;
+    }
+
     public function getAllByRole($role)
     {
         $sql = 'SELECT * FROM users WHERE role = :r';

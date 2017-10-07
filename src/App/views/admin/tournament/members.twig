@@ -8,48 +8,119 @@
         {% for event_status in event_statuses %}
             <li class="{{ global.request.get('event') == loop.index0 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event={{ loop.index0 }}">{{ event_status }}</a></li>
         {% endfor %}
-        <li class="{{ global.request.get('event') == -1 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event=-1">All</a></li>
+        <li class="{{ global.request.get('event') == -1 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event=-1">All tournament joins</a></li>
+        <li class="{{ global.request.get('event') == -2 ? 'active' : '' }}"><a href="/admin/tournament/members/{{ global.request.get('tournamentId') }}?event=-2">All tournament members</a></li>
     </ul>
 
     {% if list|length %}
         <table style="margin-top: 20px" class="table table-bordered">
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Event</th>
-                    <th>User</th>
-                    <th>Partner</th>
-                    <th>Registration information</th>
-                    <th>Join timestamp</th>
-                    <th>Actions</th>
+                    {% if global.request.get('event') == -2 %}
+                        <th>#</th>
+                        <th>Event</th>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Parent name</th>
+                        <th>Parent email</th>
+                        {% for attr in user_attr_names %}
+                            <th>{{ attr }}</th>
+                        {% endfor %}
+                    {% else %}
+                        <th>#</th>
+                        <th>Event</th>
+                        <th>User</th>
+                        <th>Partner</th>
+                        <th>Registration information</th>
+                        <th>Join timestamp</th>
+                        <th>Judge name</th>
+                        <th>Judge email</th>
+                        {% for attr in t_attr_names %}
+                            <th>{{ attr }}</th>
+                        {% endfor %}
+                        <th>Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for item in list %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ item.name }}</td>
-                        <td>{{ item.own_name }} (<a  href="/user/profile?user_id={{ item.own_id }}">{{ item.own_email }}</a>)</td>
-                        <td>
-                            {% if not item.par_id is null %}
-                                {{ item.par_name }} (<a  href="/user/profile?user_id={{ item.par_id }}">{{ item.par_email }}</a>)
-                            {% else %}
-                                No
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="/tournament/view/{{ item.id }}?user_id={{ item.own_id }}"  class="btn btn-xs btn-info"><i class="fa fa-eye"></i> View</a>
-                        </td>
-                        <td>{{ (item.join_timestamp) ? item.join_timestamp|date('m/d/Y h:i A') : '-' }}</td>
-                        <td>
-                            {% if global.request.get('event') == 0 %}
-                                <button onclick="setDecision(this, {{ item.id }}, 1)" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Approve</button>
-                                <button onclick="setDecision(this, {{ item.id }}, 0)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Decline</button>
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                    </tr>
+                    {% if global.request.get('event') != -2 %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.own_name }} (<a  href="/user/profile?user_id={{ item.own_id }}">{{ item.own_email }}</a>)</td>
+                            <td>
+                                {% if not item.par_id is null %}
+                                    {{ item.par_name }} (<a  href="/user/profile?user_id={{ item.par_id }}">{{ item.par_email }}</a>)
+                                {% else %}
+                                    No
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/tournament/view/{{ item.id }}?user_id={{ item.own_id }}"  class="btn btn-xs btn-info"><i class="fa fa-eye"></i> View</a>
+                            </td>
+                            <td>{{ (item.join_timestamp) ? item.join_timestamp|date('m/d/Y h:i A') : '-' }}</td>
+                            <td>{{ item.judge_name ? item.judge_name : '-' }}</td>
+                            <td>{{ item.judge_email ? item.judge_email : '-' }}</td>
+                            {% for attr_id, attr in t_attr_names %}
+                                <td>
+                                    {% if attr_id in item.attrs|keys %}
+                                        {% if item.attrs[attr_id].type in [0, 1] %}
+                                            {{ item.attrs[attr_id].value ? item.attrs[attr_id].value : '-' }}
+                                        {% elseif item.attrs[attr_id].type == 2 %}
+                                            {{ item.attrs[attr_id].value ? item.attrs[attr_id].value|join(', ') : '-' }}
+                                        {% elseif item.attrs[attr_id].type == 3 %}
+                                            {% if item.attrs[attr_id].value %}
+                                                <button type="button" onclick="showAttach({{ item.attrs[attr_id].user_attr_id }}, {{ item.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            <td>
+                                {% if global.request.get('event') == 0 %}
+                                    <button onclick="setDecision(this, {{ item.id }}, 1)" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Approve</button>
+                                    <button onclick="setDecision(this, {{ item.id }}, 0)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Decline</button>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.event_name }}</td>
+                            <td><a href="/user/profile?user_id={{ item.id }}">{{ item.email }}</a></td>
+                            <td>{{ item.first_name }} {{ item.last_name }}</td>
+                            <td>{{ item.username }}</td>
+                            <td>{{ item.parent_first_name }} {{ item.parent_last_name }}</td>
+                            <td>{{ item.parent_email }}</td>
+                            {% for attr_id, attr in user_attr_names %}
+                                <td>
+                                    {% if attr_id in item.attrs|keys %}
+                                        {% if item.attrs[attr_id].type in [0, 1] %}
+                                            {{ item.attrs[attr_id].value ? item.attrs[attr_id].value : '-' }}
+                                        {% elseif item.attrs[attr_id].type == 2 %}
+                                            {{ item.attrs[attr_id].value ? item.attrs[attr_id].value|join(', ') : '-' }}
+                                        {% elseif item.attrs[attr_id].type == 3 %}
+                                            {% if item.attrs[attr_id].value %}
+                                                <button type="button" onclick="showAttach({{ item.attrs[attr_id].user_attr_id }}, {{ item.id }})" class="btn btn-success btn-xs"><i class="fa fa-eye"></i> View</button>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
@@ -58,6 +129,11 @@
     {% endif %}
 
     <script>
+        function showAttach(id, uid)
+        {
+            window.open('/attachment/' + id + '?user_id=' + uid, '_blank');
+        }
+
         function setDecision(obj, id, state)
         {
             $.post('/admin/tournament/approve/{{ global.request.get('tournamentId') }}/decision', {id: id, state: state}, function (response) {

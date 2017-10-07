@@ -329,8 +329,37 @@ class AdminTournamentController extends BaseController {
     public function tournamentMembersList(Request $request, $tournamentId)
     {
         $requestedStatus = $request->get('event', 0);
-        $list = ($requestedStatus != -1) ? $this->tm->getMembersList($tournamentId, null, $requestedStatus) : $this->tm->getMembersList($tournamentId);
+        switch($requestedStatus)
+        {
+            case -1:
+                // all joins
+                $list = $this->tm->getMembersList($tournamentId);
+                break;
+            case -2:
+                // all members
+                $list = $this->tm->getTournamentMembersList($tournamentId);
+                break;
+            default:
+                // by status
+                $list = $this->tm->getMembersList($tournamentId, null, $requestedStatus);
+                break;
+        }
         $tournamentData = $this->tm->getById($tournamentId);
+
+        // load attribute headers
+        $uaNames = [];
+        $attrs = $this->am->getAll(AttributeGroupType::REGISTER);
+        foreach($attrs as $attr)
+        {
+            $uaNames[$attr['id']] = $attr['label'];
+        }
+
+        $tNames = [];
+        $attrs = $this->am->getAll(AttributeGroupType::TOURNAMENT, $tournamentId);
+        foreach($attrs as $attr)
+        {
+            $tNames[$attr['id']] = $attr['label'];
+        }
 
         if (!$tournamentData['tournament'])
         {
@@ -347,7 +376,9 @@ class AdminTournamentController extends BaseController {
         return $this->out($this->twig->render('admin/tournament/members.twig', [
             'list' => $list,
             'event_statuses' => EventStatusType::NAMES,
-            'tournament' => $tournamentData
+            'tournament' => $tournamentData,
+            'user_attr_names' => $uaNames,
+            't_attr_names' => $tNames
         ]));
     }
 

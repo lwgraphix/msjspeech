@@ -442,6 +442,8 @@ class TournamentsModel extends BaseModel
         $sql = 'SELECT
                   ut.id,
                   ut.join_timestamp,
+                  ut.judge_name,
+                  ut.judge_email,
                   own.id as own_id,
                   CONCAT(own.first_name, \' \', own.last_name) as own_name,
                   own.email as own_email,
@@ -461,10 +463,36 @@ class TournamentsModel extends BaseModel
         $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId]);
         foreach($data as &$row)
         {
-            $attributes = Model::get('attribute')->getUserAttributes($row['id']);
+            $attributes = Model::get('attribute')->getUserAttributes($row['own_id'], AttributeGroupType::TOURNAMENT, $row['id']);
             $row['attrs'] = $attributes;
         }
         return $data;
+    }
+
+    public function getTournamentMembersList($tournamentId)
+    {
+        // get user ids in tournament
+        $sql = 'SELECT ut.user_id, ut.partner_id, e.name
+                FROM user_tournaments ut
+                INNER JOIN events e ON e.id = ut.event_id
+                WHERE e.tournament_id = :tid AND ut.status IN (0, 1)';
+        $data = MySQL::get()->fetchAll($sql, ['tid' => $tournamentId]);
+        $userData = [];
+        foreach($data as $row)
+        {
+            $userData[$row['user_id']] = $row['name'];
+            if (!empty($row['partner_id']))
+            {
+                $userData[$row['partner_id']] = $row['name'];
+            }
+        }
+        $userIds = array_unique(array_keys($userData));
+        $list = Model::get('user')->getByIds($userIds);
+        foreach($list as &$row)
+        {
+            $row['event_name'] = $userData[$row['id']];
+        }
+        return $list;
     }
 
     public function update($id, $name, $startDate, $deadlineDate, $dropDeadlineDate, $approveMethod, $description = null, $pStartDate = null, $pEndDate = null, $private, $doubleEntry)
