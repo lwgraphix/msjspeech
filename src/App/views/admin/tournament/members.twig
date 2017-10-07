@@ -87,6 +87,8 @@
                                 {% if global.request.get('event') == 0 %}
                                     <button onclick="setDecision(this, {{ item.id }}, 1)" class="btn btn-xs btn-success"><i class="fa fa-check"></i> Approve</button>
                                     <button onclick="setDecision(this, {{ item.id }}, 0)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Decline</button>
+                                {% elseif global.request.get('event') == 1 %}
+                                    <button onclick="setDecision(this, {{ item.id }}, 0)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i> Decline</button>
                                 {% else %}
                                     -
                                 {% endif %}
