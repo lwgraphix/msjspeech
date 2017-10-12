@@ -329,7 +329,7 @@ class UserModel extends BaseModel
                     }
                     else
                     {
-                        if ($attribute['type'] == AttributeType::ATTACHMENT)
+                        if ($attribute['type'] == AttributeType::ATTACHMENT && $data['attr_' . $attribute['id']] !== null)
                         {
                             $uaId = MySQL::get()->exec($sql, [
                                 'uid' => $user->getId(),

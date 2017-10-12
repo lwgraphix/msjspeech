@@ -15,6 +15,7 @@ use App\Type\AttributeType;
 use App\Type\EmailType;
 use App\Type\TransactionType;
 use App\Type\UserType;
+use App\Util\File;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -49,6 +50,8 @@ class UserController extends BaseController
      */
     public function profileAction(Request $request)
     {
+        $this->twig->addGlobal('max_filesize', File::asBytes(ini_get('post_max_size')));
+        $this->twig->addGlobal('max_filesize_php', ini_get('post_max_size'));
         // admin mode
         $groups = Model::get('group')->getAll();
 
