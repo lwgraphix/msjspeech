@@ -95,7 +95,7 @@ class AdminUsersController extends BaseController {
 
         $this->thm->createTransaction(
             $request->get('user_id'),
-            floatval($request->get('amount')),
+            round(floatval($request->get('amount')), 2),
             TransactionType::MANUAL,
             Security::getUser()->getId(),
             $request->get('memo1'),
