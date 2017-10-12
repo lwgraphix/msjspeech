@@ -57,8 +57,15 @@
 
     {% if not event.partner_id is null and event.event_status == 3 %}
         {% if user.id == event.partner_id %}
-            <button onclick="setDecision(1)" style="margin-top: 15px" class="btn btn-block btn-success"><i class="fa fa-check"></i> Accept request</button>
-            <button onclick="setDecision(0)" class="btn btn-block btn-danger"><i class="fa fa-remove"></i> Decline request</button>
+            <form onsubmit="return false;">
+                <div>
+                    <input required type="checkbox">
+                    <label style="font-weight: normal;">I, the parent/guardian, and I, the student, have read through, understood, and agree to follow the <a target="_blank" href="/pages/terms">{{ system_settings.get('site_name') }} policies</a></label>
+                </div>
+
+                <button type="submit" onclick="setDecision(1)" style="margin-top: 15px" class="btn btn-block btn-success"><i class="fa fa-check"></i> Accept request</button>
+                <button type="submit" onclick="setDecision(0)" class="btn btn-block btn-danger"><i class="fa fa-remove"></i> Decline request</button>
+            </form>
         {% endif %}
     {% endif %}
 
