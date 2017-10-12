@@ -168,10 +168,15 @@ class AdminController extends BaseController {
             }
             else
             {
+
+                $attribute = Model::get('attribute')->getById($attrId);
+                $name = str_replace(' ', '_', $attribute['label']); // Replaces all spaces with hyphens.
+                $name = preg_replace('/[^A-Za-z0-9\-]/', '', $name); // Removes special chars.
+
                 $response = new Response();
                 $response->headers->add([
                     'Content-Type' => 'application/octet-stream',
-                    'Content-Disposition' => 'attachment; filename=attachment_'. $attrId .'.zip',
+                    'Content-Disposition' => 'attachment; filename='. $name .'.zip',
                     'Content-Description' => 'File Transfer',
                     'Expires' => 0,
                     'Cache-Control' => 'must-revalidate',

@@ -41,6 +41,13 @@ class AttributeModel extends BaseModel
         return $data;
     }
 
+    public function getById($attributeId)
+    {
+        $sql = 'SELECT * FROM attributes WHERE id = :id';
+        $data = MySQL::get()->fetchOne($sql, ['id' => $attributeId]);
+        return $data;
+    }
+
     public function deleteAttributesByUserTournamentId($userTournamentId)
     {
         $sql = 'SELECT ua.id, a.type, ua.value
