@@ -190,6 +190,21 @@
             return status;
         }
 
+        function check_attachments()
+        {
+            var max_filesize = {{ max_filesize }};
+            var status = true;
+            $("input[type=file]").each(function() {
+                if ($(this).val() != '' && $(this)[0].files[0].size > max_filesize)
+                {
+                    status = false;
+                    alert('Max upload filesize: {{ max_filesize_php }}, field "' + $(this).parent().find('label')[0].innerText + '" is wrong');
+                }
+            });
+            return status;
+        }
+
+
         function register(form, token)
         {
             if (token !== null)
@@ -206,6 +221,7 @@
             }
 
             if (!checkboxes_validate()) return false;
+            if (!check_attachments()) return false;
 
             form.submit();
         }

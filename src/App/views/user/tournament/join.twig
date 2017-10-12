@@ -4,7 +4,7 @@
 {% endblock %}
 
 {% block content %}
-    <form onsubmit="return checkboxes_validate()" enctype="multipart/form-data" method="post">
+    <form onsubmit="return checkboxes_validate() && check_attachments()" enctype="multipart/form-data" method="post">
         <div class="form-group">
             <label for="debate_type">Event <span style="color: red">*</span></label>
             <select onchange="loadEvent(this.value)" required name="debate_type" class="form-control" id="debate_type">
@@ -106,6 +106,20 @@
                     $("#event-details").show();
                 }
             })
+        }
+
+        function check_attachments()
+        {
+            var max_filesize = {{ max_filesize }};
+            var status = true;
+            $("input[type=file]").each(function() {
+                if ($(this).val() != '' && $(this)[0].files[0].size > max_filesize)
+                {
+                    status = false;
+                    alert('Max upload filesize: {{ max_filesize_php }}, field "' + $(this).parent().find('label')[0].innerText + '" is wrong');
+                }
+            });
+            return status;
         }
 
         function checkboxes_validate()

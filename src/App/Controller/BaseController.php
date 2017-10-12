@@ -8,6 +8,7 @@ use App\Provider\Security;
 use App\Provider\SystemSettings;
 use App\Provider\User;
 use App\Type\UserType;
+use App\Util\File;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,6 +38,8 @@ class BaseController {
         $this->twig->addGlobal('menu', MenuBuilder::generate($userRole));
         $this->twig->addGlobal('user', $user);
         $this->twig->addGlobal('system_settings', SystemSettings::getInstance());
+        $this->twig->addGlobal('max_filesize', File::asBytes(ini_get('post_max_size')));
+        $this->twig->addGlobal('max_filesize_php', ini_get('post_max_size'));
 
         $flash = FlashMessage::get();
         if ($flash['status'] !== null)

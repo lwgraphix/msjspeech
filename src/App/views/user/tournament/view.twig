@@ -57,15 +57,13 @@
 
     {% if not event.partner_id is null and event.event_status == 3 %}
         {% if user.id == event.partner_id %}
-            <form onsubmit="return false;">
-                <div>
-                    <input required type="checkbox">
-                    <label style="font-weight: normal;">I, the parent/guardian, and I, the student, have read through, understood, and agree to follow the <a target="_blank" href="/pages/terms">{{ system_settings.get('site_name') }} policies</a></label>
-                </div>
+            <div>
+                <input id="terms_check" type="checkbox">
+                <label style="font-weight: normal;">I, the parent/guardian, and I, the student, have read through, understood, and agree to follow the <a target="_blank" href="/pages/terms">{{ system_settings.get('site_name') }} policies</a></label>
+            </div>
 
-                <button type="submit" onclick="setDecision(1)" style="margin-top: 15px" class="btn btn-block btn-success"><i class="fa fa-check"></i> Accept request</button>
-                <button type="submit" onclick="setDecision(0)" class="btn btn-block btn-danger"><i class="fa fa-remove"></i> Decline request</button>
-            </form>
+            <button onclick="setDecision(1)" style="margin-top: 15px" class="btn btn-block btn-success"><i class="fa fa-check"></i> Accept request</button>
+            <button onclick="setDecision(0)" class="btn btn-block btn-danger"><i class="fa fa-remove"></i> Decline request</button>
         {% endif %}
     {% endif %}
 
@@ -103,16 +101,23 @@
 
         function setDecision(state)
         {
-            $.post(window.location, {decision: state}, function(response) {
-                if (response == 'no')
-                {
-                    window.location = window.location;
-                }
-                else
-                {
-                    window.location = '/tournament/list';
-                }
-            });
+            if($("#terms_check:checked").length == 0)
+            {
+                alert('You must accept terms and conditions');
+            }
+            else
+            {
+                $.post(window.location, {decision: state}, function(response) {
+                    if (response == 'no')
+                    {
+                        window.location = window.location;
+                    }
+                    else
+                    {
+                        window.location = '/tournament/list';
+                    }
+                });
+            }
         }
     </script>
 {% endblock %}
