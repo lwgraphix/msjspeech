@@ -231,6 +231,11 @@ class Email
         {
             if (in_array($name, $template['available_variables']))
             {
+                if ($name == 'old_balance' || $name == 'new_balance')
+                {
+                    $value = round($value, 2);
+                }
+
                 $replacement['[' . $name . ']'] = $value;
             }
         }
