@@ -141,7 +141,7 @@ class UserController extends BaseController
             return new RedirectResponse('/user/balance');
         }
 
-        $amount = round(floatval($amount), 2);
+        $amount = floatval($amount);
 
         $description = Security::getUser()->getFullName() . ' - ' . Security::getUser()->getEmail() . ' (#'. Security::getUser()->getId() .')';
         $charge = Stripe::charge($token, $amount, $description);
