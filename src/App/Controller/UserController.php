@@ -308,7 +308,7 @@ class UserController extends BaseController
 
         if ($adminMode)
         {
-            $status = $this->um->update($loadedUser, array_merge($request->request->all(), $request->files->all()), true);
+            $status = $this->um->update($loadedUser, array_merge($request->request->all(), $request->files->all()), true, Security::getUser());
         }
         else
         {

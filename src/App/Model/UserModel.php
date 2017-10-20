@@ -197,6 +197,44 @@ class UserModel extends BaseModel
         return true;
     }
 
+    public function getProfileForm($userId)
+    {
+        // Generate email
+        $userObject = User::loadById($userId);
+        $form = 'Email: ' . $userObject->getEmail() . PHP_EOL;
+        $form .= 'First name: ' . $userObject->getFirstName() . PHP_EOL;
+        $form .= 'Last name: ' . $userObject->getLastName() . PHP_EOL;
+        $form .= 'Parent email: ' . $userObject->getParentEmail() . PHP_EOL;
+        $form .= 'Parent first name: ' . $userObject->getParentFirstName() . PHP_EOL;
+        $form .= 'Parent last name: ' . $userObject->getParentLastName() . PHP_EOL;
+
+        $attrs = Model::get('attribute')->getUserAttributes($userObject->getId());
+
+        foreach($attrs as $attr)
+        {
+            $form .= $attr['label'] . ': ';
+
+            if ($attr['type'] == AttributeType::TEXT || $attr['type'] == AttributeType::DROPDOWN)
+            {
+                $value = $attr['value'];
+            }
+            elseif ($attr['type'] == AttributeType::CHECKBOX)
+            {
+                $value = implode(',', $attr['value']);
+            }
+            elseif ($attr['type'] == AttributeType::ATTACHMENT)
+            {
+                $value = Security::getHost() . 'attachment/' . $attr['user_attr_id'];
+            }
+
+            if (empty($value)) $value = 'Not specified';
+
+            $form .= $value . PHP_EOL;
+        }
+
+        return $form;
+    }
+
     public function getByEmail($email)
     {
         $sql = 'SELECT * FROM users WHERE email = :e';
@@ -248,8 +286,11 @@ class UserModel extends BaseModel
         MySQL::get()->exec($sql, ['h' => $hash]);
     }
 
-    public function update(User $user, $data, $adminMode = false)
+    public function update(User $user, $data, $adminMode = false, User $adminUser = null)
     {
+
+        $oldForm = $this->getProfileForm($user->getId());
+
         if ($user->getEmail() != $data['email'])
         {
             // check if email is exists
@@ -310,6 +351,8 @@ class UserModel extends BaseModel
                 {
                     $data['attr_' . $attribute['id']] = null;
                 }
+
+                if (empty($data['attr_' . $attribute['id']]) && !$attribute['required']) continue; //skip if attribute not edited
 
                 if (!in_array($attribute['id'], $userAttributesIds)) // if not exists - create new
                 {
@@ -403,6 +446,24 @@ class UserModel extends BaseModel
             }
         }
 
+        $newForm = $this->getProfileForm($user->getId());
+
+        if($adminMode)
+        {
+            Email::getInstance()->createMessage(EmailType::PROFILE_ADMIN_EDIT, [
+                'officer_name' => $adminUser->getFullName(),
+                'old_form' => $oldForm,
+                'new_form' => $newForm
+            ], $user, SystemSettings::getInstance()->get('bcc_receiver'));
+        }
+        else
+        {
+            Email::getInstance()->createMessage(EmailType::PROFILE_EDIT, [
+                'old_form' => $oldForm,
+                'new_form' => $newForm
+            ], $user);
+        }
+
         return true;
     }
 
@@ -452,6 +513,7 @@ class UserModel extends BaseModel
         {
             $attributes = Model::get('attribute')->getUserAttributes($row['id']);
             $row['attrs'] = $attributes;
+            $row['balance'] = Model::get('transaction_history')->getBalance($row['id']);
         }
         return $data;
     }

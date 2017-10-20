@@ -23,6 +23,8 @@ class EmailType
     const SYSTEM_SETTINGS_CHANGED = 16;
     const TOURNAMENT_REGISTRATION_REJECTED = 17;
     const EMAIL_TEMPLATE_CHANGED = 18;
+    const PROFILE_EDIT = 19;
+    const PROFILE_ADMIN_EDIT = 20;
 
     const NAMES = [
         'Membership registration',
@@ -43,6 +45,8 @@ class EmailType
         'Tournament registration approved',
         'System settings changed',
         'Tournament registration rejected',
-        'Email template changed'
+        'Email template changed',
+        'Profile edit',
+        'Profile admin edit'
     ];
 }

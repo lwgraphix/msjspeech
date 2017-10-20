@@ -154,6 +154,17 @@ class Email
             'old_body',
             'new_subject',
             'new_body'
+        ],
+
+        EmailType::PROFILE_EDIT => [
+            'old_form',
+            'new_form'
+        ],
+
+        EmailType::PROFILE_ADMIN_EDIT => [
+            'officer_name',
+            'old_form',
+            'new_form'
         ]
     ];
 
