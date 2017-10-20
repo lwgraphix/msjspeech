@@ -24,7 +24,8 @@ Speech and Debate
 7. Go to `app/config`, remove `example` filename postfix and change options regarding your database and needed application options
 8. Do it same with `migrations/phinx.yml`
 9. Go to `migrations` and execute `vendor/bin/phinx migrate` to initialize database structure
-10. Go to website url and log in. User: `admin@admin.com`, password: `admin`
-11. Change all system settings
-12. Load all your email templates 
-13. You are welcome!
+10. Execute SQL query `SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));` in database.
+11. Go to website url and log in. User: `admin@admin.com`, password: `admin`
+12. Change all system settings
+13. Load all your email templates 
+14. You are welcome!

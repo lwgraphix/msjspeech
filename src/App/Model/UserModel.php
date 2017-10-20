@@ -426,6 +426,7 @@ class UserModel extends BaseModel
         {
             $attributes = Model::get('attribute')->getUserAttributes($row['id']);
             $row['attrs'] = $attributes;
+            $row['balance'] = Model::get('transaction_history')->getBalance($row['id']);
         }
         return $data;
     }

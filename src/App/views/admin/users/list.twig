@@ -23,6 +23,7 @@
             <th>Username</th>
             <th>Parent name</th>
             <th>Parent email</th>
+            <th>Balance</th>
             <th>Created at</th>
             <th>Last login</th>
             <th>Paid membership contribution</th>
@@ -43,6 +44,7 @@
                 <td>{{ user.username }}</td>
                 <td>{{ user.parent_first_name }} {{ user.parent_last_name }}</td>
                 <td>{{ user.parent_email }}</td>
+                <td>{{ (user.balance < 0) ? '-$' ~ user.balance|replace({'-': ''})|number_format(2, '.', ',') : '$' ~ user.balance|number_format(2, '.', ',') }}</td>
                 <td>{{ user.created_at|date('m/d/Y h:i A') }}</td>
                 <td>{{ (user.last_login) ? user.last_login|date('m/d/Y h:i A') : '-' }}</td>
                 <td><span class="text-{{ user.payed_fee ? 'success' : 'danger' }}">{{ user.payed_fee ? ('$' ~ user.payed_fee|number_format(2, '.', ','))|replace({"$-": "-$"}) : 'No' }}</span></td>
