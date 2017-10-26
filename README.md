@@ -13,14 +13,14 @@ Speech and Debate
 5. apcu
 6. xml
 
-## Nginx configuration example:
+## Nginx configuration example (HTTP):
 File: `/etc/nginx/sites-enabled/speech.conf`
 
 Warning: check carefully `root` path and `fastcgi_pass` path and change to your server settings! 
 ```
 server {
     listen 80;
-    server_name DOMAIN.NAME;
+    server_name washingtondebate.club;
     root /home/debate/speech-and-debate/web;
 
     location / {
@@ -35,9 +35,47 @@ server {
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
     }
 
-    include php;
     access_log /var/log/nginx/speech.access.log;
     error_log /var/log/nginx/speech.error.log;
+}
+```
+
+## Nginx configuration example (HTTPS):
+```
+server {
+    listen 80;
+    server_name washingtondebate.club;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443;
+    server_name washingtondebate.club;
+    root /home/debate/speech-and-debate/web;
+
+    ssl on;
+    ssl_certificate /etc/letsencrypt/live/washingtondebate.club/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/washingtondebate.club/privkey.pem;
+
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    #add_header Strict-Transport-Security "max-age=31536000; includeSubdomains";
+
+    location / {
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+            try_files $uri = 404;
+            include fastcgi_params;
+            fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+        
+    access_log /var/log/nginx/debates.access.log;
+    error_log /var/log/nginx/debates.error.log;
+
 }
 ```
 
