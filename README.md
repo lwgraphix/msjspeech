@@ -13,6 +13,34 @@ Speech and Debate
 5. apcu
 6. xml
 
+## Nginx configuration example:
+File: `/etc/nginx/sites-enabled/speech.conf`
+
+Warning: check carefully `root` path and `fastcgi_pass` path and change to your server settings! 
+```
+server {
+    listen 80;
+    server_name DOMAIN.NAME;
+    root /home/debate/speech-and-debate/web;
+
+    location / {
+        try_files $uri /index.php$is_args$args;
+    }
+    
+    location ~ \.php$ {
+        try_files $uri = 404;
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    include php;
+    access_log /var/log/nginx/speech.access.log;
+    error_log /var/log/nginx/speech.error.log;
+}
+```
+
 ## Installation:
 1. Install required PHP modules
     * Set `post_max_size` and `upload_max_filesize` to 256M in php.ini
