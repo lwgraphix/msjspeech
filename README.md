@@ -66,8 +66,7 @@ server {
     }
 
     location ~ \.php$ {
-            try_files $uri = 404;
-            include fastcgi_params;
+            try_files $uri = 404; include fastcgi_params;
             fastcgi_pass unix:/run/php/php7.0-fpm.sock;
             fastcgi_index index.php;
             fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
