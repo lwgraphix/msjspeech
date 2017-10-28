@@ -99,7 +99,7 @@ server {
 1. Copy project directory with another name (`speech-and-debate` to `speech-and-debate-old`)
 2. Go to new directory -> `app/config` -> change or add to `system.ini` next row: `copy_mode = "on"`
 3. Change `database_mysql.ini` db to new database name (`debate_old`)
-4. Create copy of old nginx configuration (located at `/etc/nginx/sites-enabled/`) with new name
+4. Create new nginx configuration and configure it (use `HTTP` (not `HTTPS`!!!) example from above part of tutorial)
 5. Change in new nginx configuration `root` and `server_name` path
 6. Reload nginx (`/etc/init.d/nginx reload`)
 7. Dont forget copy your database to old database
