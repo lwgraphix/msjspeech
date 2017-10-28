@@ -106,4 +106,4 @@ server {
 
 ## How to copy your current database to another database
 1. On current engine directory go to `commander`
-2. Execute command: `php run.php db:migrate ANOTHER_DATABASE_NAME`
+2. Execute command AS ROOT: `php run.php db:migrate ANOTHER_DATABASE_NAME`
