@@ -20,7 +20,7 @@ class DbMigrateExecutable extends BaseExecutable
     {
         $dbname = $this->getInput()->getArgument('dbname');
         $dbSettings = parse_ini_file(MySQL::SETTINGS_PATH);
-        exec('mysqldump -uroot '. $dbSettings['db'] .'" > copy.sql');
+        exec('mysqldump -uroot "'. $dbSettings['db'] .'" > copy.sql');
         $sql = 'DROP DATABASE IF EXISTS '. $dbname .'; CREATE DATABASE IF NOT EXISTS '. $dbname .'; USE '. $dbname .';' . PHP_EOL;
         $copyPath = __DIR__ . '/../../../copy.sql';
         $resultSQL = $sql . file_get_contents($copyPath);
