@@ -33,7 +33,8 @@ class Bootstrap
         }
 
         $config = array(
-            'debug' => $systemCfg['debug'] == 'on'
+            'debug' => $systemCfg['debug'] == 'on',
+            'copy_mode' => $systemCfg['copy_mode'] == 'on'
         );
 
         if ($config['debug']) Debug::enable();

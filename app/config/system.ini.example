@@ -3,3 +3,4 @@
 #   * debug - on/off: enables or disables debug
 
 debug = "on"
+copy_mode = "off"

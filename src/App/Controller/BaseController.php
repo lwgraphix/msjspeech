@@ -35,6 +35,14 @@ class BaseController {
             die;
         }
 
+        if (Security::getUser() !== null && Security::getUser()->getRole() != UserType::ADMINISTRATOR && $app['copy_mode'])
+        {
+            $this->session->remove('user');
+            FlashMessage::set(false, 'Administration access only');
+            header('Location: /auth/login');
+            die;
+        }
+
         $this->twig->addGlobal('menu', MenuBuilder::generate($userRole));
         $this->twig->addGlobal('user', $user);
         $this->twig->addGlobal('system_settings', SystemSettings::getInstance());
@@ -46,6 +54,8 @@ class BaseController {
         {
             $this->twig->addGlobal('flash_message', $flash);
         }
+
+
     }
 
     public function outJSON($code, $data = [])
