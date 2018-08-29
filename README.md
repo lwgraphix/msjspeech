@@ -4,6 +4,7 @@ Speech and Debate
 1. PHP 7.0 or above
 2. Nginx
 3. MySQL
+4. Composer
 
 ## Required PHP modules:
 1. mysql
